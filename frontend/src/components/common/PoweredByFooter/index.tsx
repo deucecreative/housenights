@@ -21,6 +21,9 @@ import {getConfig} from "../../../utilites/config.ts";
 export const PoweredByFooter = (
     props: React.DetailedHTMLProps<React.HTMLAttributes<HTMLDivElement>, HTMLDivElement>
 ) => {
+    let year = new Date().getFullYear();
+    let appName = getConfig("VITE_APP_NAME", "");
+
     if (iHavePurchasedALicence()) {
         return <></>;
     }
@@ -57,6 +60,11 @@ export const PoweredByFooter = (
         </>
     ) : (
         <>
+            {appName && (
+                <>
+                    &copy; {year} {appName}.{" "}
+                </>
+            )}
             {t`Powered by`}{" "}
             <a
                 href={link}
@@ -65,7 +73,6 @@ export const PoweredByFooter = (
             >
                 Hi.Events
             </a>{" "}
-            🚀
         </>
     );
 
