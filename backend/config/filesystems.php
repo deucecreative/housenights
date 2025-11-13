@@ -55,7 +55,7 @@ return [
             'endpoint' => env('AWS_ENDPOINT'),
             'use_path_style_endpoint' => env('AWS_USE_PATH_STYLE_ENDPOINT', false),
             'throw' => env('FILESYSTEM_DISK_THROW_EXCEPTIONS', false),
-            'visibility' => 'public',
+            'visibility' => env('AWS_PUBLIC_BUCKET_VISIBILITY', 'public'),
         ],
         's3-private' => [
             'driver' => 's3',
