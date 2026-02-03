@@ -9,7 +9,10 @@ use HiEvents\Http\Actions\Affiliates\CreateAffiliateAction;
 use HiEvents\Http\Actions\Affiliates\DeleteAffiliateAction;
 use HiEvents\Http\Actions\Affiliates\ExportAffiliatesAction;
 use HiEvents\Http\Actions\Affiliates\GetAffiliateAction;
+use HiEvents\Http\Actions\Affiliates\GetAffiliateByMagicLinkAction;
 use HiEvents\Http\Actions\Affiliates\GetAffiliatesAction;
+use HiEvents\Http\Actions\Affiliates\RequestAffiliateMagicLinkAction;
+use HiEvents\Http\Actions\Affiliates\SendAffiliateMagicLinkAction;
 use HiEvents\Http\Actions\Affiliates\UpdateAffiliateAction;
 use HiEvents\Http\Actions\Attendees\CheckInAttendeeAction;
 use HiEvents\Http\Actions\Attendees\CreateAttendeeAction;
@@ -328,6 +331,7 @@ $router->middleware(['auth:api'])->group(
         $router->get('/events/{event_id}/affiliates/{affiliate_id}', GetAffiliateAction::class);
         $router->delete('/events/{event_id}/affiliates/{affiliate_id}', DeleteAffiliateAction::class);
         $router->post('/events/{event_id}/affiliates/export', ExportAffiliatesAction::class);
+        $router->post('/events/{event_id}/affiliates/{affiliate_id}/magic-link', SendAffiliateMagicLinkAction::class);
 
         // Messages
         $router->post('/events/{event_id}/messages', SendMessageAction::class);
@@ -429,6 +433,10 @@ $router->prefix('/public')->group(
 
         // Color themes
         $router->get('/color-themes', GetColorThemesAction::class);
+
+        // Affiliate Portal
+        $router->post('/affiliate/request-magic-link', RequestAffiliateMagicLinkAction::class);
+        $router->get('/affiliate/{token}', GetAffiliateByMagicLinkAction::class);
     }
 );
 
