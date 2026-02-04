@@ -13,6 +13,10 @@ class AccountDomainObject extends Generated\AccountDomainObjectAbstract
     /** @var Collection<int, AccountStripePlatformDomainObject>|null */
     private ?Collection $stripePlatforms = null;
 
+    private ?AccountVatSettingDomainObject $accountVatSetting = null;
+
+    private ?AccountMessagingTierDomainObject $messagingTier = null;
+
     public function getApplicationFee(): AccountApplicationFeeDTO
     {
         /** @var AccountConfigurationDomainObject $applicationFee */
@@ -42,6 +46,26 @@ class AccountDomainObject extends Generated\AccountDomainObjectAbstract
     public function setAccountStripePlatforms(Collection $stripePlatforms): void
     {
         $this->stripePlatforms = $stripePlatforms;
+    }
+
+    public function getAccountVatSetting(): ?AccountVatSettingDomainObject
+    {
+        return $this->accountVatSetting;
+    }
+
+    public function setAccountVatSetting(AccountVatSettingDomainObject $accountVatSetting): void
+    {
+        $this->accountVatSetting = $accountVatSetting;
+    }
+
+    public function getMessagingTier(): ?AccountMessagingTierDomainObject
+    {
+        return $this->messagingTier;
+    }
+
+    public function setMessagingTier(AccountMessagingTierDomainObject $messagingTier): void
+    {
+        $this->messagingTier = $messagingTier;
     }
 
     /**

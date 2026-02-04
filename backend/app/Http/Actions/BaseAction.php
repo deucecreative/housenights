@@ -63,7 +63,7 @@ abstract class BaseAction extends Controller
 
     /**
      * @param class-string<BaseResource> $resource
-     * @param Collection|DomainObjectInterface|LengthAwarePaginator|BaseDTO|Paginator $data
+     * @param Collection|DomainObjectInterface|LengthAwarePaginator|BaseDTO|Paginator|BaseDataObject $data
      * @param int $statusCode
      * @param array $meta
      * @param array $headers
@@ -142,6 +142,21 @@ abstract class BaseAction extends Controller
         return new JsonResponse($data, $statusCode);
     }
 
+    protected function xmlResponse(
+        string $xmlContent,
+        int    $statusCode = ResponseCodes::HTTP_OK,
+        array  $headers = [],
+    ): LaravelResponse
+    {
+        $defaultHeaders = [
+            'Content-Type' => 'application/xml',
+        ];
+
+        $allHeaders = array_merge($defaultHeaders, $headers);
+
+        return Response::make($xmlContent, $statusCode, $allHeaders);
+    }
+
     protected function isActionAuthorized(
         int    $entityId,
         string $entityType,
@@ -172,6 +187,23 @@ abstract class BaseAction extends Controller
             }
 
             return $accountId;
+        }
+
+        throw new UnauthorizedException();
+    }
+
+    protected function getAuthenticatedUserRole(): Role
+    {
+        if (Auth::check()) {
+            /** @var AuthUserService $service */
+            $service = app(AuthUserService::class);
+            $role = $service->getAuthenticatedUserRole();
+
+            if ($role === null) {
+                throw new UnauthorizedException(__('No user role found in token'));
+            }
+
+            return $role;
         }
 
         throw new UnauthorizedException();

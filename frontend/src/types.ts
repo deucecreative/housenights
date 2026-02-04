@@ -36,10 +36,21 @@ export interface AcceptInvitationRequest {
     email: string;
     password: string;
     password_confirmation: string;
+    marketing_opt_in?: boolean;
 }
 
 export interface RegisterAccountRequest extends AcceptInvitationRequest {
     locale: SupportedLocales;
+    utm_source?: string | null;
+    utm_medium?: string | null;
+    utm_campaign?: string | null;
+    utm_term?: string | null;
+    utm_content?: string | null;
+    referrer_url?: string | null;
+    landing_page?: string | null;
+    gclid?: string | null;
+    fbclid?: string | null;
+    utm_raw?: Record<string, string> | null;
 }
 
 export interface ResetPasswordRequest {
@@ -55,6 +66,13 @@ export interface ColorTheme {
     homepage_primary_text_color: string;
     homepage_secondary_color: string;
     homepage_secondary_text_color: string;
+}
+
+export interface HomepageThemeSettings {
+    accent: string;
+    background: string;
+    mode: 'light' | 'dark';
+    background_type: 'COLOR' | 'MIRROR_COVER_IMAGE';
 }
 
 export interface LoginResponse {
@@ -85,6 +103,7 @@ export interface User {
     role?: 'ADMIN' | 'ORGANIZER' | 'SUPERADMIN';
     is_account_owner?: boolean;
     locale?: SupportedLocales;
+    marketing_opted_in_at?: string | null;
 }
 
 export interface Account {
@@ -128,6 +147,7 @@ export interface StripeConnectAccount {
     platform: string | null;
     account_type: string | null;
     is_primary: boolean;
+    country?: string;
 }
 
 export interface StripeConnectAccountsResponse {
@@ -152,11 +172,17 @@ export interface Image {
     size: number;
     mime_type: string;
     type: ImageType;
+    width?: number | null;
+    height?: number | null;
+    avg_colour?: string | null;
+    lqip_base64?: string | null;
 }
 
 export type ImageType = 'EVENT_COVER' | 'EDITOR_IMAGE' | 'ORGANIZER_LOGO' | 'ORGANIZER_COVER' | 'ORGANIZER_IMAGE' | 'TICKET_LOGO';
 
 export type PaymentProvider = 'STRIPE' | 'OFFLINE';
+
+export type AttendeeDetailsCollectionMethod = 'PER_TICKET' | 'PER_ORDER';
 
 export interface EventSettings {
     event_id?: IdParam;
@@ -167,6 +193,7 @@ export interface EventSettings {
     product_page_message: string;
     post_checkout_message: string;
     support_email?: string;
+    notify_organizer_of_new_orders: boolean;
     order_timeout_in_minutes?: number;
     homepage_background_color: string;
     homepage_primary_color: string;
@@ -185,6 +212,7 @@ export interface EventSettings {
     allow_search_engine_indexing?: boolean;
     price_display_mode?: 'INCLUSIVE' | 'EXCLUSIVE';
     hide_getting_started_page: boolean;
+    attendee_details_collection_method?: AttendeeDetailsCollectionMethod;
 
     // Payment settings
     offline_payment_instructions: string;
@@ -210,6 +238,18 @@ export interface EventSettings {
         layout_type?: 'default' | 'modern';
         enabled?: boolean;
     };
+
+    // Marketing settings
+    show_marketing_opt_in?: boolean;
+
+    // Platform fee settings
+    pass_platform_fee_to_buyer?: boolean;
+
+    // Self-service settings
+    allow_attendee_self_edit?: boolean;
+
+    // Simplified homepage theme settings (new 2-color + mode system)
+    homepage_theme_settings?: HomepageThemeSettings;
 }
 
 export interface VenueAddress {
@@ -288,6 +328,7 @@ export interface EventStatistics {
     sales_total_before_additions: number;
     total_fee: number;
     products_sold: number;
+    attendees_registered: number;
     total_refunded: number;
 }
 
@@ -357,16 +398,12 @@ export interface Organizer {
 export interface OrganizerSettings {
     id: IdParam;
     organizer_id: IdParam;
+    default_attendee_details_collection_method?: AttendeeDetailsCollectionMethod;
+    default_show_marketing_opt_in?: boolean;
+    default_pass_platform_fee_to_buyer?: boolean;
+    default_allow_attendee_self_edit?: boolean;
     homepage_visibility: 'PUBLIC' | 'PRIVATE' | 'PASSWORD_PROTECTED';
-    homepage_theme_settings: {
-        homepage_background_color: string;
-        homepage_primary_color: string;
-        homepage_primary_text_color: string;
-        homepage_secondary_color: string;
-        homepage_secondary_text_color: string;
-        homepage_content_background_color: string;
-        homepage_background_type?: 'COLOR' | 'MIRROR_COVER_IMAGE';
-    }
+    homepage_theme_settings: HomepageThemeSettings;
     website_url?: string;
     location_details?: VenueAddress;
     social_media_handles?: {
@@ -499,6 +536,8 @@ export interface Product {
     taxes_and_fees?: TaxAndFee[];
     is_hidden?: boolean;
     product_category_id?: IdParam;
+    is_highlighted?: boolean;
+    highlight_message?: string;
 }
 
 export interface ProductCategory {
@@ -860,6 +899,14 @@ export enum ReportTypes {
     ProductSales = 'product_sales',
     DailySales = 'daily_sales_report',
     PromoCodes = 'promo_codes_report',
+}
+
+export enum OrganizerReportTypes {
+    RevenueSummary = 'revenue_summary',
+    EventsPerformance = 'events_performance',
+    TaxSummary = 'tax_summary',
+    CheckInSummary = 'check_in_summary',
+    PlatformFees = 'platform_fees',
 }
 
 export interface Webhook {

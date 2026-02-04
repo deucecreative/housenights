@@ -38,10 +38,13 @@ class AccountRepository extends BaseRepository implements AccountRepositoryInter
         $query = $this->model
             ->select('accounts.*')
             ->withCount(['events', 'users'])
-            ->with(['users' => function ($query) {
-                $query->select('users.id', 'users.first_name', 'users.last_name', 'users.email')
-                    ->withPivot('role');
-            }]);
+            ->with([
+                'users' => function ($query) {
+                    $query->select('users.id', 'users.first_name', 'users.last_name', 'users.email')
+                        ->withPivot('role');
+                },
+                'messagingTier',
+            ]);
 
         if ($search) {
             $query->where(function ($q) use ($search) {
@@ -54,5 +57,21 @@ class AccountRepository extends BaseRepository implements AccountRepositoryInter
         }
 
         return $query->orderBy('created_at', 'desc')->paginate($perPage);
+    }
+
+    public function getAccountWithDetails(int $accountId): Account
+    {
+        return $this->model
+            ->withCount(['events', 'users'])
+            ->with([
+                'configuration',
+                'account_vat_setting',
+                'messagingTier',
+                'users' => function ($query) {
+                    $query->select('users.id', 'users.first_name', 'users.last_name', 'users.email')
+                        ->withPivot('role');
+                }
+            ])
+            ->findOrFail($accountId);
     }
 }

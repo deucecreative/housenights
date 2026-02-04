@@ -15,6 +15,7 @@ class Url
     public const ORDER_SUMMARY = 'app.frontend_urls.order_summary';
     public const ORGANIZER_ORDER_SUMMARY = 'app.frontend_urls.organizer_order_summary';
     public const AFFILIATE_PORTAL = 'app.frontend_urls.affiliate_portal';
+    public const TICKET_LOOKUP = 'app.frontend_urls.ticket_lookup';
 
     public static function getFrontEndUrlFromConfig(string $key, array $queryParams = []): string
     {

@@ -10,7 +10,7 @@ import {Card} from "../../../common/Card";
 import classes from "./EventDashboard.module.scss";
 import {useGetEventStats} from "../../../../queries/useGetEventStats.ts";
 import {formatCurrency} from "../../../../utilites/currency.ts";
-import {formatDate} from "../../../../utilites/dates.ts";
+import {formatDateWithLocale} from "../../../../utilites/dates.ts";
 import {Button, Skeleton} from "@mantine/core";
 import {useMediaQuery} from "@mantine/hooks";
 import {IconAlertCircle, IconX} from "@tabler/icons-react";
@@ -22,6 +22,7 @@ import {useEffect, useState} from 'react';
 import {StripePlatform} from "../../../../types.ts";
 import {isHiEvents} from "../../../../utilites/helpers.ts";
 import {StripeConnectButton} from "../../../common/StripeConnectButton";
+import {trackEvent, AnalyticsEvents} from "../../../../utilites/analytics.ts";
 
 export const DashBoardSkeleton = () => {
     return (
@@ -67,6 +68,7 @@ export const EventDashboard = () => {
     };
 
     const handleStatusToggle = () => {
+        const newStatus = event?.status === 'LIVE' ? 'DRAFT' : 'LIVE';
         const message = event?.status === 'LIVE'
             ? t`Are you sure you want to make this event draft? This will make the event invisible to the public`
             : t`Are you sure you want to make this event public? This will make the event visible to the public`;
@@ -74,9 +76,12 @@ export const EventDashboard = () => {
         confirmationDialog(message, () => {
             statusToggleMutation.mutate({
                 eventId,
-                status: event?.status === 'LIVE' ? 'DRAFT' : 'LIVE'
+                status: newStatus
             }, {
                 onSuccess: () => {
+                    if (newStatus === 'LIVE') {
+                        trackEvent(AnalyticsEvents.EVENT_PUBLISHED);
+                    }
                     showSuccess(t`Event status updated`);
                 },
                 onError: (error: any) => {
@@ -87,7 +92,7 @@ export const EventDashboard = () => {
     }
 
     const dateRange = (eventStats && event)
-        ? `${formatDate(eventStats.start_date, 'MMM DD', event?.timezone)} - ${formatDate(eventStats.end_date, 'MMM DD', event?.timezone)}`
+        ? `${formatDateWithLocale(eventStats.start_date, 'chartDate', event?.timezone)} - ${formatDateWithLocale(eventStats.end_date, 'chartDate', event?.timezone)}`
         : '';
 
     const shouldShowChecklist = (isChecklistVisible && event && accountIsFetched && account?.is_saas_mode_enabled) && (
@@ -255,7 +260,7 @@ export const EventDashboard = () => {
                     <AreaChart
                         h={300}
                         data={eventStats?.daily_stats.map(stat => ({
-                            date: formatDate(stat.date, 'MMM DD', event.timezone),
+                            date: formatDateWithLocale(stat.date, 'chartDate', event.timezone),
                             orders_created: stat.orders_created,
                             products_sold: stat.products_sold,
                             attendees_registered: stat.attendees_registered,
@@ -287,9 +292,11 @@ export const EventDashboard = () => {
 
                     <AreaChart
                         h={300}
+                        pl={40}
+                        pr={40}
                         data={eventStats?.daily_stats.map(stat => {
                             return ({
-                                date: formatDate(stat.date, 'MMM DD', event.timezone),
+                                date: formatDateWithLocale(stat.date, 'chartDate', event.timezone),
                                 total_fees: stat.total_fees,
                                 total_sales_gross: stat.total_sales_gross,
                                 total_tax: stat.total_tax,

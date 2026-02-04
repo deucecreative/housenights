@@ -8,6 +8,8 @@ use Brick\Math\Exception\RoundingNecessaryException;
 use Brick\Money\Exception\UnknownCurrencyException;
 use Carbon\Carbon;
 use HiEvents\DomainObjects\Enums\PaymentProviders;
+use HiEvents\DomainObjects\EventSettingDomainObject;
+use HiEvents\DomainObjects\Generated\EventSettingDomainObjectAbstract;
 use HiEvents\DomainObjects\Generated\OrderDomainObjectAbstract;
 use HiEvents\DomainObjects\Generated\StripePaymentDomainObjectAbstract;
 use HiEvents\DomainObjects\OrderDomainObject;
@@ -18,10 +20,12 @@ use HiEvents\DomainObjects\Status\OrderPaymentStatus;
 use HiEvents\DomainObjects\Status\OrderStatus;
 use HiEvents\Events\OrderStatusChangedEvent;
 use HiEvents\Exceptions\CannotAcceptPaymentException;
+use HiEvents\Exceptions\Stripe\StripeClientConfigurationException;
 use HiEvents\Repository\Eloquent\StripePaymentsRepository;
 use HiEvents\Repository\Eloquent\Value\Relationship;
 use HiEvents\Repository\Interfaces\AffiliateRepositoryInterface;
 use HiEvents\Repository\Interfaces\AttendeeRepositoryInterface;
+use HiEvents\Repository\Interfaces\EventSettingsRepositoryInterface;
 use HiEvents\Repository\Interfaces\OrderRepositoryInterface;
 use HiEvents\Services\Domain\Order\OrderApplicationFeeService;
 use HiEvents\Services\Domain\Payment\Stripe\StripeRefundExpiredOrderService;
@@ -39,17 +43,18 @@ use Throwable;
 class PaymentIntentSucceededHandler
 {
     public function __construct(
-        private readonly OrderRepositoryInterface                        $orderRepository,
-        private readonly StripePaymentsRepository                        $stripePaymentsRepository,
-        private readonly AffiliateRepositoryInterface                    $affiliateRepository,
-        private readonly ProductQuantityUpdateService                    $quantityUpdateService,
-        private readonly StripeRefundExpiredOrderService                 $refundExpiredOrderService,
-        private readonly AttendeeRepositoryInterface                     $attendeeRepository,
-        private readonly DatabaseManager                                 $databaseManager,
-        private readonly LoggerInterface                                 $logger,
-        private readonly Repository                                      $cache,
-        private readonly DomainEventDispatcherService                    $domainEventDispatcherService,
-        private readonly OrderApplicationFeeService                      $orderApplicationFeeService,
+        private readonly OrderRepositoryInterface         $orderRepository,
+        private readonly StripePaymentsRepository         $stripePaymentsRepository,
+        private readonly AffiliateRepositoryInterface     $affiliateRepository,
+        private readonly ProductQuantityUpdateService     $quantityUpdateService,
+        private readonly StripeRefundExpiredOrderService  $refundExpiredOrderService,
+        private readonly AttendeeRepositoryInterface      $attendeeRepository,
+        private readonly DatabaseManager                  $databaseManager,
+        private readonly LoggerInterface                  $logger,
+        private readonly Repository                       $cache,
+        private readonly DomainEventDispatcherService     $domainEventDispatcherService,
+        private readonly OrderApplicationFeeService       $orderApplicationFeeService,
+        private readonly EventSettingsRepositoryInterface $eventSettingsRepository,
     )
     {
     }
@@ -93,7 +98,12 @@ class PaymentIntentSucceededHandler
 
             $this->quantityUpdateService->updateQuantitiesFromOrder($updatedOrder);
 
-            OrderStatusChangedEvent::dispatch($updatedOrder);
+            /** @var EventSettingDomainObject $eventSettings */
+            $eventSettings = $this->eventSettingsRepository->findFirstWhere([
+                EventSettingDomainObjectAbstract::EVENT_ID => $updatedOrder->getEventId(),
+            ]);
+
+            event(new OrderStatusChangedEvent($updatedOrder, createInvoice: $eventSettings->getEnableInvoicing()));
 
             $this->domainEventDispatcherService->dispatch(
                 new OrderEvent(
@@ -135,7 +145,6 @@ class PaymentIntentSucceededHandler
             attributes: [
                 StripePaymentDomainObjectAbstract::LAST_ERROR => $paymentIntent->last_payment_error?->toArray(),
                 StripePaymentDomainObjectAbstract::AMOUNT_RECEIVED => $paymentIntent->amount_received,
-                StripePaymentDomainObjectAbstract::APPLICATION_FEE => $paymentIntent->application_fee_amount ?? 0,
                 StripePaymentDomainObjectAbstract::PAYMENT_METHOD_ID => is_string($paymentIntent->payment_method)
                     ? $paymentIntent->payment_method
                     : $paymentIntent->payment_method?->id,
@@ -160,6 +169,7 @@ class PaymentIntentSucceededHandler
      * @throws MathException
      * @throws UnknownCurrencyException
      * @throws NumberFormatException
+     * @throws StripeClientConfigurationException
      * @todo We could check to see if there are products available, and if so, complete the order.
      *       This would be a better user experience.
      *
@@ -190,7 +200,7 @@ class PaymentIntentSucceededHandler
      * @throws CannotAcceptPaymentException
      * @throws MathException
      * @throws UnknownCurrencyException
-     * @throws NumberFormatException
+     * @throws NumberFormatException|StripeClientConfigurationException
      */
     private function validatePaymentAndOrderStatus(
         StripePaymentDomainObjectAbstract $stripePayment,
