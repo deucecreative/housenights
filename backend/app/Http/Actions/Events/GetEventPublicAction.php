@@ -29,6 +29,7 @@ class GetEventPublicAction extends BaseAction
             'eventId' => $eventId,
             'ipAddress' => $this->getClientIp($request),
             'promoCode' => strtolower($request->string('promo_code')),
+            'affiliateCode' => $request->has('aff') ? $request->string('aff')->toString() : null,
             'isAuthenticated' => $this->isUserAuthenticated(),
         ]));
 

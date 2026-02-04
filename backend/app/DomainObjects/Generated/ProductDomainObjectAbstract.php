@@ -26,6 +26,7 @@ abstract class ProductDomainObjectAbstract extends \HiEvents\DomainObjects\Abstr
     final public const HIDE_WHEN_SOLD_OUT = 'hide_when_sold_out';
     final public const SHOW_QUANTITY_REMAINING = 'show_quantity_remaining';
     final public const IS_HIDDEN_WITHOUT_PROMO_CODE = 'is_hidden_without_promo_code';
+    final public const IS_HIDDEN_WITHOUT_AFFILIATE_LINK = 'is_hidden_without_affiliate_link';
     final public const ORDER = 'order';
     final public const CREATED_AT = 'created_at';
     final public const UPDATED_AT = 'updated_at';
@@ -53,6 +54,7 @@ abstract class ProductDomainObjectAbstract extends \HiEvents\DomainObjects\Abstr
     protected bool $hide_when_sold_out = false;
     protected bool $show_quantity_remaining = false;
     protected bool $is_hidden_without_promo_code = false;
+    protected bool $is_hidden_without_affiliate_link = false;
     protected int $order;
     protected string $created_at;
     protected ?string $updated_at = null;
@@ -83,6 +85,7 @@ abstract class ProductDomainObjectAbstract extends \HiEvents\DomainObjects\Abstr
                     'hide_when_sold_out' => $this->hide_when_sold_out ?? null,
                     'show_quantity_remaining' => $this->show_quantity_remaining ?? null,
                     'is_hidden_without_promo_code' => $this->is_hidden_without_promo_code ?? null,
+                    'is_hidden_without_affiliate_link' => $this->is_hidden_without_affiliate_link ?? null,
                     'order' => $this->order ?? null,
                     'created_at' => $this->created_at ?? null,
                     'updated_at' => $this->updated_at ?? null,
@@ -270,6 +273,17 @@ abstract class ProductDomainObjectAbstract extends \HiEvents\DomainObjects\Abstr
     public function getIsHiddenWithoutPromoCode(): bool
     {
         return $this->is_hidden_without_promo_code;
+    }
+
+    public function setIsHiddenWithoutAffiliateLink(bool $is_hidden_without_affiliate_link): self
+    {
+        $this->is_hidden_without_affiliate_link = $is_hidden_without_affiliate_link;
+        return $this;
+    }
+
+    public function getIsHiddenWithoutAffiliateLink(): bool
+    {
+        return $this->is_hidden_without_affiliate_link;
     }
 
     public function setOrder(int $order): self

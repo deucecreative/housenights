@@ -70,7 +70,8 @@ class GetPublicEventHandler
 
         return $event->setProductCategories($this->productFilterService->filter(
             productsCategories: $event->getProductCategories(),
-            promoCode: $promoCodeDomainObject
+            promoCode: $promoCodeDomainObject,
+            hasAffiliateCode: !empty($data->affiliateCode),
         ));
     }
 }

@@ -1,24 +1,24 @@
-import {Button} from "@mantine/core";
-import {GenericModalProps, IdParam, Product, ProductPriceType, ProductType, TaxAndFee} from "../../../types.ts";
-import {useForm} from "@mantine/form";
-import {useParams} from "react-router";
-import {Modal} from "../../common/Modal";
-import {ProductForm} from "../../forms/ProductForm";
-import {useEffect} from "react";
-import {useGetTaxesAndFees} from "../../../queries/useGetTaxesAndFees.ts";
-import {t} from "@lingui/macro";
-import {useCreateProduct} from "../../../mutations/useCreateProduct.ts";
-import {useGetProduct} from "../../../queries/useGetProduct.ts";
-import {showError, showSuccess} from "../../../utilites/notifications.tsx";
+import { Button } from "@mantine/core";
+import { GenericModalProps, IdParam, Product, ProductPriceType, ProductType, TaxAndFee } from "../../../types.ts";
+import { useForm } from "@mantine/form";
+import { useParams } from "react-router";
+import { Modal } from "../../common/Modal";
+import { ProductForm } from "../../forms/ProductForm";
+import { useEffect } from "react";
+import { useGetTaxesAndFees } from "../../../queries/useGetTaxesAndFees.ts";
+import { t } from "@lingui/macro";
+import { useCreateProduct } from "../../../mutations/useCreateProduct.ts";
+import { useGetProduct } from "../../../queries/useGetProduct.ts";
+import { showError, showSuccess } from "../../../utilites/notifications.tsx";
 
 interface DuplicateProductModalProps extends GenericModalProps {
     originalProductId: IdParam;
 }
 
-export const DuplicateProductModal = ({onClose, originalProductId}: DuplicateProductModalProps) => {
-    const {eventId} = useParams();
-    const {data: taxesAndFees, isFetched: taxesAndFeesLoaded} = useGetTaxesAndFees();
-    const {data: originalProduct} = useGetProduct(eventId, originalProductId);
+export const DuplicateProductModal = ({ onClose, originalProductId }: DuplicateProductModalProps) => {
+    const { eventId } = useParams();
+    const { data: taxesAndFees, isFetched: taxesAndFeesLoaded } = useGetTaxesAndFees();
+    const { data: originalProduct } = useGetProduct(eventId, originalProductId);
     const createProductMutation = useCreateProduct();
 
     const form = useForm<Product>({
@@ -35,6 +35,7 @@ export const DuplicateProductModal = ({onClose, originalProductId}: DuplicatePro
             show_quantity_remaining: false,
             hide_when_sold_out: false,
             is_hidden_without_promo_code: false,
+            is_hidden_without_affiliate_link: false,
             is_highlighted: false,
             highlight_message: undefined,
             type: ProductPriceType.Paid,
@@ -94,7 +95,7 @@ export const DuplicateProductModal = ({onClose, originalProductId}: DuplicatePro
     }, [taxesAndFeesLoaded]);
 
     const handleDuplicateProduct = (values: Product) => {
-        createProductMutation.mutate({eventId, productData: values}, {
+        createProductMutation.mutate({ eventId, productData: values }, {
             onSuccess: () => {
                 showSuccess(t`Successfully Duplicated Product`);
                 form.reset();
@@ -112,7 +113,7 @@ export const DuplicateProductModal = ({onClose, originalProductId}: DuplicatePro
     return (
         <Modal onClose={onClose} heading={t`Duplicate Product`} opened size={"lg"} withCloseButton>
             <form onSubmit={form.onSubmit(handleDuplicateProduct)}>
-                <ProductForm form={form}/>
+                <ProductForm form={form} />
                 <Button type="submit" fullWidth disabled={createProductMutation.isPending}>
                     {createProductMutation.isPending ? t`Working...` : t`Duplicate Product`}
                 </Button>

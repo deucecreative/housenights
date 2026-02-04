@@ -1,4 +1,4 @@
-import {useState} from 'react';
+import { useState } from 'react';
 import {
     IconCalendarEvent,
     IconClock,
@@ -16,11 +16,11 @@ import {
 } from "@tabler/icons-react";
 import classes from "../ProductsTable.module.scss";
 import classNames from "classnames";
-import {Badge, Button, Group, Menu, Progress, Tooltip} from "@mantine/core";
+import { Badge, Button, Group, Menu, Progress, Tooltip } from "@mantine/core";
 import Truncate from "../../Truncate";
-import {t, Trans} from "@lingui/macro";
-import {relativeDate} from "../../../../utilites/dates.ts";
-import {formatCurrency} from "../../../../utilites/currency.ts";
+import { t, Trans } from "@lingui/macro";
+import { relativeDate } from "../../../../utilites/dates.ts";
+import { formatCurrency } from "../../../../utilites/currency.ts";
 import {
     IdParam,
     MessageType,
@@ -30,14 +30,14 @@ import {
     ProductPriceType,
     ProductType
 } from "../../../../types.ts";
-import {useDisclosure} from "@mantine/hooks";
-import {useDeleteProduct} from "../../../../mutations/useDeleteProduct.ts";
-import {showError, showSuccess} from "../../../../utilites/notifications.tsx";
-import {EditProductModal} from "../../../modals/EditProductModal";
-import {SendMessageModal} from "../../../modals/SendMessageModal";
-import {SortArrows} from "../../SortArrows";
-import {useSortProducts} from "../../../../mutations/useSortProducts.ts";
-import {DuplicateProductModal} from "../../../modals/DuplicateProductModal";
+import { useDisclosure } from "@mantine/hooks";
+import { useDeleteProduct } from "../../../../mutations/useDeleteProduct.ts";
+import { showError, showSuccess } from "../../../../utilites/notifications.tsx";
+import { EditProductModal } from "../../../modals/EditProductModal";
+import { SendMessageModal } from "../../../modals/SendMessageModal";
+import { SortArrows } from "../../SortArrows";
+import { useSortProducts } from "../../../../mutations/useSortProducts.ts";
+import { DuplicateProductModal } from "../../../modals/DuplicateProductModal";
 
 interface SortableProductProps {
     product: Product;
@@ -46,7 +46,7 @@ interface SortableProductProps {
     categories: ProductCategory[];
 }
 
-export const SortableProduct = ({product, currencyCode, category, categories}: SortableProductProps) => {
+export const SortableProduct = ({ product, currencyCode, category, categories }: SortableProductProps) => {
     const [isEditModalOpen, editModal] = useDisclosure(false);
     const [isDuplicateModalOpen, duplicateModal] = useDisclosure(false);
     const [isMessageModalOpen, messageModal] = useDisclosure(false);
@@ -64,7 +64,7 @@ export const SortableProduct = ({product, currencyCode, category, categories}: S
     }
 
     const handleDeleteProduct = (productId: IdParam, eventId: IdParam) => {
-        deleteMutation.mutate({productId, eventId}, {
+        deleteMutation.mutate({ productId, eventId }, {
             onSuccess: () => {
                 showSuccess(t`Product deleted successfully`);
             },
@@ -78,20 +78,20 @@ export const SortableProduct = ({product, currencyCode, category, categories}: S
 
     const getStatusInfo = (product: Product) => {
         if (product.is_sold_out) {
-            return {label: t`Sold Out`, color: 'red', variant: 'filled' as const};
+            return { label: t`Sold Out`, color: 'red', variant: 'filled' as const };
         }
         if (product.is_before_sale_start_date) {
-            return {label: t`Scheduled`, color: 'blue', variant: 'light' as const};
+            return { label: t`Scheduled`, color: 'blue', variant: 'light' as const };
         }
         if (product.is_after_sale_end_date) {
-            return {label: t`Ended`, color: 'gray', variant: 'light' as const};
+            return { label: t`Ended`, color: 'gray', variant: 'light' as const };
         }
         if (product.is_hidden) {
-            return {label: t`Hidden`, color: 'gray', variant: 'outline' as const};
+            return { label: t`Hidden`, color: 'gray', variant: 'outline' as const };
         }
         return product.is_available
-            ? {label: t`On Sale`, color: 'green', variant: 'light' as const}
-            : {label: t`Paused`, color: 'orange', variant: 'light' as const};
+            ? { label: t`On Sale`, color: 'green', variant: 'light' as const }
+            : { label: t`Paused`, color: 'orange', variant: 'light' as const };
     }
 
     const getStatusTooltip = (product: Product) => {
@@ -105,14 +105,14 @@ export const SortableProduct = ({product, currencyCode, category, categories}: S
     const getPriceRange = (product: Product) => {
         const productPrices: ProductPrice[] = product.prices as ProductPrice[];
         if (!Array.isArray(productPrices) || productPrices.length === 0) {
-            return {display: t`Price not set`, isFree: false};
+            return { display: t`Price not set`, isFree: false };
         }
 
         if (product.type !== ProductPriceType.Tiered) {
             if (productPrices[0].price <= 0) {
-                return {display: t`Free`, isFree: true};
+                return { display: t`Free`, isFree: true };
             }
-            return {display: formatCurrency(productPrices[0].price, currencyCode), isFree: false};
+            return { display: formatCurrency(productPrices[0].price, currencyCode), isFree: false };
         }
 
         const prices = productPrices.map(productPrice => productPrice.price);
@@ -120,11 +120,11 @@ export const SortableProduct = ({product, currencyCode, category, categories}: S
         const maxPrice = Math.max(...prices);
 
         if (minPrice <= 0 && maxPrice <= 0) {
-            return {display: t`Free`, isFree: true};
+            return { display: t`Free`, isFree: true };
         }
 
         if (minPrice === maxPrice) {
-            return {display: formatCurrency(minPrice, currencyCode), isFree: false};
+            return { display: formatCurrency(minPrice, currencyCode), isFree: false };
         }
 
         return {
@@ -193,10 +193,10 @@ export const SortableProduct = ({product, currencyCode, category, categories}: S
 
             updatedCategories = categories.map((cat, index) => {
                 if (index === categoryIndex) {
-                    return {...cat, products: sourceProducts};
+                    return { ...cat, products: sourceProducts };
                 }
                 if (index === targetCategoryIndex) {
-                    return {...cat, products: targetProducts};
+                    return { ...cat, products: targetProducts };
                 }
                 return cat;
             });
@@ -209,7 +209,7 @@ export const SortableProduct = ({product, currencyCode, category, categories}: S
                 [updatedProducts[newIndex], updatedProducts[currentIndex]];
 
             updatedCategories = categories.map(cat =>
-                cat.id === category.id ? {...cat, products: updatedProducts} : cat
+                cat.id === category.id ? { ...cat, products: updatedProducts } : cat
             );
         }
 
@@ -247,7 +247,7 @@ export const SortableProduct = ({product, currencyCode, category, categories}: S
         <>
             <div className={classNames(
                 classes.productCard,
-                {[classes.soldOut]: product.is_sold_out}
+                { [classes.soldOut]: product.is_sold_out }
             )}>
                 {/* Sort controls */}
                 <div className={classes.sortControls}>
@@ -294,20 +294,22 @@ export const SortableProduct = ({product, currencyCode, category, categories}: S
                                         {t`Donation`}
                                     </Badge>
                                 )}
-                                {(product.is_hidden_without_promo_code || product.is_hidden) && (
+                                {(product.is_hidden_without_promo_code || product.is_hidden_without_affiliate_link || product.is_hidden) && (
                                     <Tooltip
                                         label={product.is_hidden
                                             ? t`Hidden from public view`
-                                            : t`Only visible with promo code`}
+                                            : product.is_hidden_without_affiliate_link
+                                                ? t`Only visible via affiliate link`
+                                                : t`Only visible with promo code`}
                                         withArrow
                                     >
                                         <Badge
                                             variant="light"
                                             color="gray"
                                             size="sm"
-                                            leftSection={product.is_hidden_without_promo_code ? <IconLock size={12} /> : <IconEyeOff size={12} />}
+                                            leftSection={product.is_hidden_without_promo_code || product.is_hidden_without_affiliate_link ? <IconLock size={12} /> : <IconEyeOff size={12} />}
                                         >
-                                            {product.is_hidden_without_promo_code ? t`Promo Only` : t`Hidden`}
+                                            {product.is_hidden_without_affiliate_link ? t`Affiliate Only` : product.is_hidden_without_promo_code ? t`Promo Only` : t`Hidden`}
                                         </Badge>
                                     </Tooltip>
                                 )}
@@ -338,7 +340,7 @@ export const SortableProduct = ({product, currencyCode, category, categories}: S
                             </Tooltip>
                         </div>
                         <h3 className={classes.productTitle}>
-                            <Truncate text={product.title} length={80}/>
+                            <Truncate text={product.title} length={80} />
                         </h3>
                     </div>
 
@@ -350,7 +352,7 @@ export const SortableProduct = ({product, currencyCode, category, categories}: S
                             <div className={classes.priceValue}>
                                 <span className={classNames(
                                     classes.priceAmount,
-                                    {[classes.freePrice]: priceInfo.isFree}
+                                    { [classes.freePrice]: priceInfo.isFree }
                                 )}>
                                     {priceInfo.display}
                                 </span>
@@ -454,7 +456,7 @@ export const SortableProduct = ({product, currencyCode, category, categories}: S
                                 {isTicket && (
                                     <Menu.Item
                                         onClick={() => handleModalClick(product.id, messageModal)}
-                                        leftSection={<IconSend size={14}/>}
+                                        leftSection={<IconSend size={14} />}
                                     >
                                         {t`Message Attendees`}
                                     </Menu.Item>
@@ -462,13 +464,13 @@ export const SortableProduct = ({product, currencyCode, category, categories}: S
 
                                 <Menu.Item
                                     onClick={() => handleModalClick(product.id, editModal)}
-                                    leftSection={<IconPencil size={14}/>}
+                                    leftSection={<IconPencil size={14} />}
                                 >
                                     <Trans>Edit {isTicket ? t`Ticket` : t`Product`}</Trans>
                                 </Menu.Item>
                                 <Menu.Item
                                     onClick={() => handleModalClick(product.id, duplicateModal)}
-                                    leftSection={<IconCopyPlus size={14}/>}
+                                    leftSection={<IconCopyPlus size={14} />}
                                 >
                                     {t`Duplicate`}
                                 </Menu.Item>
@@ -478,7 +480,7 @@ export const SortableProduct = ({product, currencyCode, category, categories}: S
                                 <Menu.Item
                                     onClick={() => handleDeleteProduct(product.id, product.event_id)}
                                     color="red"
-                                    leftSection={<IconTrash size={14}/>}
+                                    leftSection={<IconTrash size={14} />}
                                 >
                                     {t`Delete`}
                                 </Menu.Item>
@@ -489,8 +491,8 @@ export const SortableProduct = ({product, currencyCode, category, categories}: S
             </div>
 
             {isDuplicateModalOpen &&
-                <DuplicateProductModal originalProductId={productId} onClose={duplicateModal.close}/>}
-            {isEditModalOpen && <EditProductModal productId={productId} onClose={editModal.close}/>}
+                <DuplicateProductModal originalProductId={productId} onClose={duplicateModal.close} />}
+            {isEditModalOpen && <EditProductModal productId={productId} onClose={editModal.close} />}
             {isMessageModalOpen && (
                 <SendMessageModal
                     onClose={messageModal.close}

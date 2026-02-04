@@ -25,6 +25,7 @@ class ProductFilterService
     private ?AccountConfigurationDomainObject $accountConfiguration = null;
     private ?EventSettingDomainObject $eventSettings = null;
     private ?string $eventCurrency = null;
+    private bool $hasAffiliateCode = false;
 
     public function __construct(
         private readonly TaxAndFeeCalculationService            $taxCalculationService,
@@ -47,8 +48,10 @@ class ProductFilterService
         Collection             $productsCategories,
         ?PromoCodeDomainObject $promoCode = null,
         bool                   $hideSoldOutProducts = true,
+        bool                   $hasAffiliateCode = false,
     ): Collection
     {
+        $this->hasAffiliateCode = $hasAffiliateCode;
         if ($productsCategories->isEmpty()) {
             return $productsCategories;
         }
@@ -107,6 +110,11 @@ class ProductFilterService
                 $promoCode
                 && $promoCode->appliesToProduct($product)
             );
+    }
+
+    private function isHiddenByAffiliateLink(ProductDomainObject $product): bool
+    {
+        return $product->getIsHiddenWithoutAffiliateLink() && !$this->hasAffiliateCode;
     }
 
     private function shouldProductBeDiscounted(?PromoCodeDomainObject $promoCode, ProductDomainObject $product): bool
@@ -168,6 +176,11 @@ class ProductFilterService
 
         if ($this->isHiddenByPromoCode($product, $promoCode)) {
             $product->setOffSaleReason(__('Product is hidden without promo code'));
+            $hidden = true;
+        }
+
+        if ($this->isHiddenByAffiliateLink($product)) {
+            $product->setOffSaleReason(__('Product is hidden without affiliate link'));
             $hidden = true;
         }
 

@@ -1,4 +1,4 @@
-import {api} from "./client";
+import { api } from "./client";
 import {
     CheckInStats,
     Event,
@@ -11,8 +11,8 @@ import {
     ImageType,
     QueryFilters,
 } from "../types";
-import {publicApi} from "./public-client.ts";
-import {queryParamsHelper} from "../utilites/queryParamsHelper.ts";
+import { publicApi } from "./public-client.ts";
+import { queryParamsHelper } from "../utilites/queryParamsHelper.ts";
 
 export const eventsClient = {
     create: async (event: Partial<Event>) => {
@@ -98,8 +98,12 @@ export const eventsClientPublic = {
         return response.data;
     },
 
-    findByID: async (eventId: any, promoCode: null | string) => {
-        const response = await publicApi.get<GenericDataResponse<Event>>('events/' + eventId + (promoCode ? '?promo_code=' + promoCode : ''));
+    findByID: async (eventId: any, promoCode: null | string, affiliateCode: null | string = null) => {
+        const params = new URLSearchParams();
+        if (promoCode) params.set('promo_code', promoCode);
+        if (affiliateCode) params.set('aff', affiliateCode);
+        const queryString = params.toString();
+        const response = await publicApi.get<GenericDataResponse<Event>>('events/' + eventId + (queryString ? '?' + queryString : ''));
         return response.data;
     },
 }
