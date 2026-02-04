@@ -1,11 +1,11 @@
 import classes from "./EventHomepage.module.scss";
 import SelectProducts from "../../routes/product-widget/SelectProducts";
 import "../../../styles/widget/default.scss";
-import React, {useEffect, useRef, useState} from "react";
-import {EventDocumentHead} from "../../common/EventDocumentHead";
-import {eventCoverImage, eventHomepageUrl, imageUrl, organizerHomepageUrl} from "../../../utilites/urlHelper.ts";
-import {Event, OrganizerStatus} from "../../../types.ts";
-import {EventNotAvailable} from "./EventNotAvailable";
+import React, { useEffect, useRef, useState } from "react";
+import { EventDocumentHead } from "../../common/EventDocumentHead";
+import { eventCoverImage, eventHomepageUrl, imageUrl, organizerHomepageUrl } from "../../../utilites/urlHelper.ts";
+import { Event, OrganizerStatus } from "../../../types.ts";
+import { EventNotAvailable } from "./EventNotAvailable";
 import {
     IconArrowUpRight,
     IconCalendar,
@@ -19,25 +19,25 @@ import {
     IconTicket,
     IconWorld
 } from "@tabler/icons-react";
-import {Anchor} from "@mantine/core";
-import {t} from "@lingui/macro";
-import {PoweredByFooter} from "../../common/PoweredByFooter";
-import {ContactOrganizerModal} from "../../common/ContactOrganizerModal";
-import {socialMediaConfig} from "../../../constants/socialMediaConfig";
+import { Anchor } from "@mantine/core";
+import { t } from "@lingui/macro";
+import { PoweredByFooter } from "../../common/PoweredByFooter";
+import { ContactOrganizerModal } from "../../common/ContactOrganizerModal";
+import { socialMediaConfig } from "../../../constants/socialMediaConfig";
 import {
     formatAddress,
     getGoogleMapsUrl,
     getShortLocationDisplay,
     isAddressSet
 } from "../../../utilites/addressUtilities.ts";
-import {StatusToggle} from "../../common/StatusToggle";
-import {getConfig} from "../../../utilites/config.ts";
-import {computeThemeVariables, validateThemeSettings} from "../../../utilites/themeUtils.ts";
-import {removeTransparency} from "../../../utilites/colorHelper.ts";
-import {ShareComponent} from "../../common/ShareIcon";
-import {EventDateRange} from "../../common/EventDateRange";
-import {CalendarOptionsPopover} from "../../common/CalendarOptionsPopover";
-import {isDateInPast} from "../../../utilites/dates.ts";
+import { StatusToggle } from "../../common/StatusToggle";
+import { getConfig } from "../../../utilites/config.ts";
+import { computeThemeVariables, validateThemeSettings } from "../../../utilites/themeUtils.ts";
+import { removeTransparency } from "../../../utilites/colorHelper.ts";
+import { ShareComponent } from "../../common/ShareIcon";
+import { EventDateRange } from "../../common/EventDateRange";
+import { CalendarOptionsPopover } from "../../common/CalendarOptionsPopover";
+import { isDateInPast } from "../../../utilites/dates.ts";
 
 interface EventHomepageProps {
     event?: Event;
@@ -45,8 +45,8 @@ interface EventHomepageProps {
     promoCode?: string;
 }
 
-const EventHomepage = ({...loaderData}: EventHomepageProps) => {
-    const {event, promoCodeValid, promoCode} = loaderData;
+const EventHomepage = ({ ...loaderData }: EventHomepageProps) => {
+    const { event, promoCodeValid, promoCode } = loaderData;
     const [showScrollButton, setShowScrollButton] = useState(false);
     const [contactModalOpen, setContactModalOpen] = useState(false);
     const ticketsSectionRef = useRef<HTMLDivElement>(null);
@@ -87,11 +87,11 @@ const EventHomepage = ({...loaderData}: EventHomepageProps) => {
     }, []);
 
     const scrollToTickets = () => {
-        ticketsSectionRef.current?.scrollIntoView({behavior: 'smooth', block: 'start'});
+        ticketsSectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
     };
 
     if (!event) {
-        return <EventNotAvailable/>;
+        return <EventNotAvailable />;
     }
 
     const rawThemeSettings = event?.settings?.homepage_theme_settings;
@@ -118,6 +118,7 @@ const EventHomepage = ({...loaderData}: EventHomepageProps) => {
     const organizerSocials = organizer?.settings?.social_media_handles;
     const organizerLogo = imageUrl('ORGANIZER_LOGO', organizer?.images);
     const organizerLocation = organizer?.settings?.location_details;
+    const hideOrganizer = organizer?.settings?.hide_organizer_on_event_pages ?? false;
     const websiteUrl = organizer?.website;
     const locationDetails = event.settings?.location_details;
     const isOnlineEvent = event.settings?.is_online_event;
@@ -142,14 +143,14 @@ const EventHomepage = ({...loaderData}: EventHomepageProps) => {
         const allSoldOut = products.every(p => p.is_sold_out);
 
         if (allSoldOut) {
-            return {text: t`Sold Out`, variant: 'danger'};
+            return { text: t`Sold Out`, variant: 'danger' };
         }
 
         if (availableProducts.length === 0) {
             return null;
         }
 
-        return {text: t`Tickets Available`, variant: 'success'};
+        return { text: t`Tickets Available`, variant: 'success' };
     };
 
     const statusBadge = getStatusBadge();
@@ -184,18 +185,18 @@ const EventHomepage = ({...loaderData}: EventHomepageProps) => {
                     `}
                 </style>
 
-                {event && <EventDocumentHead event={event}/>}
+                {event && <EventDocumentHead event={event} />}
 
                 {/* Background */}
                 {(coverImage && backgroundType === 'MIRROR_COVER_IMAGE') ? (
                     <div
                         className={classes.background}
-                        style={{backgroundImage: `url(${coverImage})`}}
+                        style={{ backgroundImage: `url(${coverImage})` }}
                     />
                 ) : (
                     <div
                         className={classes.background}
-                        style={{backgroundColor: 'var(--event-bg-color)'}}
+                        style={{ backgroundColor: 'var(--event-bg-color)' }}
                     />
                 )}
                 <div
@@ -231,11 +232,11 @@ const EventHomepage = ({...loaderData}: EventHomepageProps) => {
                                             alt={event.title}
                                             className={classes.coverImage}
                                         />
-                                        <div className={classes.heroGradient}/>
+                                        <div className={classes.heroGradient} />
                                         {statusBadge && (
                                             <div className={classes.statusBadges}>
                                                 <span className={classes.statusBadge}>
-                                                    <IconTicket/>
+                                                    <IconTicket />
                                                     {statusBadge.text}
                                                 </span>
                                             </div>
@@ -246,7 +247,7 @@ const EventHomepage = ({...loaderData}: EventHomepageProps) => {
                                 {/* Event Header */}
                                 <div className={classes.eventHeader}>
                                     <div className={classes.headerTopRow}>
-                                        {organizer && organizer.status === OrganizerStatus.LIVE ? (
+                                        {!hideOrganizer && organizer && organizer.status === OrganizerStatus.LIVE ? (
                                             <a
                                                 href={organizerHomepageUrl(organizer)}
                                                 className={classes.organizerPill}
@@ -266,7 +267,7 @@ const EventHomepage = ({...loaderData}: EventHomepageProps) => {
                                                     {organizer.name}
                                                 </span>
                                             </a>
-                                        ) : (
+                                        ) : !hideOrganizer ? (
                                             <div className={classes.organizerPill}>
                                                 {organizerLogo ? (
                                                     <img
@@ -283,9 +284,9 @@ const EventHomepage = ({...loaderData}: EventHomepageProps) => {
                                                     {organizer?.name}
                                                 </span>
                                             </div>
-                                        )}
+                                        ) : null}
 
-                                        <div className={classes.actionButtons}>
+                                        <div className={classes.actionButtons} style={hideOrganizer ? { marginLeft: 'auto' } : undefined}>
                                             <ShareComponent
                                                 title={'Check out this event: ' + event.title}
                                                 text={'Check out this event: ' + event.title}
@@ -293,7 +294,7 @@ const EventHomepage = ({...loaderData}: EventHomepageProps) => {
                                                 imageUrl={coverImage || undefined}
                                             >
                                                 <button className={classes.actionButton} title={t`Share`}>
-                                                    <IconShare/>
+                                                    <IconShare />
                                                 </button>
                                             </ShareComponent>
                                             {/* Future enhancement: Favorite/Heart button */}
@@ -309,16 +310,16 @@ const EventHomepage = ({...loaderData}: EventHomepageProps) => {
                                         {/* Date/Time */}
                                         <div className={classes.metaItem}>
                                             <div className={classes.metaIconBox}>
-                                                <IconCalendar/>
+                                                <IconCalendar />
                                             </div>
                                             <div className={classes.metaContent}>
                                                 <div className={classes.metaPrimary}>
-                                                    <EventDateRange event={event}/>
+                                                    <EventDateRange event={event} />
                                                 </div>
                                             </div>
                                             <CalendarOptionsPopover event={event}>
                                                 <button className={classes.addToCalendarButton}>
-                                                    <IconCalendarPlus/>
+                                                    <IconCalendarPlus />
                                                     {t`Add to Calendar`}
                                                 </button>
                                             </CalendarOptionsPopover>
@@ -328,7 +329,7 @@ const EventHomepage = ({...loaderData}: EventHomepageProps) => {
                                         {event.end_date && isDateInPast(event.end_date) && (
                                             <div className={classes.metaItem}>
                                                 <div className={classes.metaIconBox}>
-                                                    <IconCalendarOff/>
+                                                    <IconCalendarOff />
                                                 </div>
                                                 <div className={classes.metaContent}>
                                                     <div className={classes.metaPrimary}>{t`This event has ended`}</div>
@@ -340,7 +341,7 @@ const EventHomepage = ({...loaderData}: EventHomepageProps) => {
                                         {isOnlineEvent && (
                                             <div className={classes.metaItem}>
                                                 <div className={classes.metaIconBox}>
-                                                    <IconWorld/>
+                                                    <IconWorld />
                                                 </div>
                                                 <div className={classes.metaContent}>
                                                     <div className={classes.metaPrimary}>{t`Online Event`}</div>
@@ -355,7 +356,7 @@ const EventHomepage = ({...loaderData}: EventHomepageProps) => {
                                         {hasLocation && locationDetails && (
                                             <div className={classes.metaItem}>
                                                 <div className={classes.metaIconBox}>
-                                                    <IconMapPin/>
+                                                    <IconMapPin />
                                                 </div>
                                                 <div className={classes.metaContent}>
                                                     <div className={classes.metaPrimary}>
@@ -372,7 +373,7 @@ const EventHomepage = ({...loaderData}: EventHomepageProps) => {
                                                             className={classes.metaLink}
                                                         >
                                                             {t`View on Google Maps`}
-                                                            <IconExternalLink/>
+                                                            <IconExternalLink />
                                                         </a>
                                                     )}
                                                 </div>
@@ -390,7 +391,7 @@ const EventHomepage = ({...loaderData}: EventHomepageProps) => {
                                     </div>
                                     <div
                                         className={classes.description}
-                                        dangerouslySetInnerHTML={{__html: event.description}}
+                                        dangerouslySetInnerHTML={{ __html: event.description }}
                                     />
                                 </div>
                             )}
@@ -416,7 +417,7 @@ const EventHomepage = ({...loaderData}: EventHomepageProps) => {
                                                     rel="noopener noreferrer"
                                                     className={classes.directionsLink}
                                                 >
-                                                    <IconArrowUpRight/>
+                                                    <IconArrowUpRight />
                                                     {t`Get Directions`}
                                                 </a>
                                             )}
@@ -438,26 +439,26 @@ const EventHomepage = ({...loaderData}: EventHomepageProps) => {
                                                         inset: 0,
                                                     }}
                                                 >
-                                                    <rect width="200" height="120" fill="var(--accent-soft)"/>
+                                                    <rect width="200" height="120" fill="var(--accent-soft)" />
                                                     {/* River */}
-                                                    <path d="M-5 95 Q30 85, 50 90 Q80 100, 110 88 Q140 75, 170 82 Q190 86, 205 80" stroke="var(--border-color)" strokeWidth="2" fill="none" opacity="0.3"/>
+                                                    <path d="M-5 95 Q30 85, 50 90 Q80 100, 110 88 Q140 75, 170 82 Q190 86, 205 80" stroke="var(--border-color)" strokeWidth="2" fill="none" opacity="0.3" />
                                                     {/* Main roads */}
-                                                    <line x1="0" y1="50" x2="200" y2="50" stroke="var(--border-color)" strokeWidth="2" opacity="0.2"/>
-                                                    <line x1="100" y1="0" x2="100" y2="120" stroke="var(--border-color)" strokeWidth="2" opacity="0.2"/>
+                                                    <line x1="0" y1="50" x2="200" y2="50" stroke="var(--border-color)" strokeWidth="2" opacity="0.2" />
+                                                    <line x1="100" y1="0" x2="100" y2="120" stroke="var(--border-color)" strokeWidth="2" opacity="0.2" />
                                                     {/* Secondary roads */}
-                                                    <line x1="0" y1="25" x2="200" y2="25" stroke="var(--border-color)" strokeWidth="1.5" opacity="0.2"/>
-                                                    <line x1="0" y1="70" x2="85" y2="70" stroke="var(--border-color)" strokeWidth="1.5" opacity="0.2"/>
-                                                    <line x1="115" y1="70" x2="200" y2="70" stroke="var(--border-color)" strokeWidth="1.5" opacity="0.2"/>
-                                                    <line x1="50" y1="0" x2="50" y2="120" stroke="var(--border-color)" strokeWidth="1.5" opacity="0.2"/>
-                                                    <line x1="150" y1="0" x2="150" y2="75" stroke="var(--border-color)" strokeWidth="1.5" opacity="0.2"/>
+                                                    <line x1="0" y1="25" x2="200" y2="25" stroke="var(--border-color)" strokeWidth="1.5" opacity="0.2" />
+                                                    <line x1="0" y1="70" x2="85" y2="70" stroke="var(--border-color)" strokeWidth="1.5" opacity="0.2" />
+                                                    <line x1="115" y1="70" x2="200" y2="70" stroke="var(--border-color)" strokeWidth="1.5" opacity="0.2" />
+                                                    <line x1="50" y1="0" x2="50" y2="120" stroke="var(--border-color)" strokeWidth="1.5" opacity="0.2" />
+                                                    <line x1="150" y1="0" x2="150" y2="75" stroke="var(--border-color)" strokeWidth="1.5" opacity="0.2" />
                                                     {/* Blocks/buildings */}
-                                                    <rect x="110" y="28" width="14" height="10" fill="var(--border-color)" opacity="0.25" rx="1"/>
-                                                    <rect x="20" y="55" width="12" height="10" fill="var(--border-color)" opacity="0.25" rx="1"/>
+                                                    <rect x="110" y="28" width="14" height="10" fill="var(--border-color)" opacity="0.25" rx="1" />
+                                                    <rect x="20" y="55" width="12" height="10" fill="var(--border-color)" opacity="0.25" rx="1" />
                                                 </svg>
-                                                <IconMapPin size={32} className={classes.mapPin}/>
+                                                <IconMapPin size={32} className={classes.mapPin} />
                                                 <div className={classes.mapOverlay}>
                                                     <span className={classes.mapOverlayLabel}>
-                                                        <IconMaximize/>
+                                                        <IconMaximize />
                                                         {t`View Map`}
                                                     </span>
                                                 </div>
@@ -469,7 +470,7 @@ const EventHomepage = ({...loaderData}: EventHomepageProps) => {
 
                             {/* Tickets Section */}
                             <div className={`${classes.section} ${classes.ticketsSection}`} ref={ticketsSectionRef}
-                                 id="tickets">
+                                id="tickets">
                                 <SelectProducts
                                     colors={{
                                         background: "transparent",
@@ -489,7 +490,7 @@ const EventHomepage = ({...loaderData}: EventHomepageProps) => {
                             </div>
 
                             {/* Organizer Section */}
-                            {organizer && organizer.status === OrganizerStatus.LIVE && (
+                            {organizer && organizer.status === OrganizerStatus.LIVE && !hideOrganizer && (
                                 <div className={classes.section} id="organizer">
                                     <div className={classes.sectionHeader}>
                                         <h2 className={classes.sectionTitle}>{t`Organizer`}</h2>
@@ -516,7 +517,7 @@ const EventHomepage = ({...loaderData}: EventHomepageProps) => {
                                                     </h3>
                                                     {getShortLocationDisplay(organizerLocation) && (
                                                         <div className={classes.organizerLocation}>
-                                                            <IconMapPin/>
+                                                            <IconMapPin />
                                                             <a
                                                                 href={getGoogleMapsUrl(organizerLocation!)}
                                                                 target="_blank"
@@ -532,14 +533,14 @@ const EventHomepage = ({...loaderData}: EventHomepageProps) => {
                                             {organizer.description && (
                                                 <div
                                                     className={classes.organizerBio}
-                                                    dangerouslySetInnerHTML={{__html: organizer.description}}
+                                                    dangerouslySetInnerHTML={{ __html: organizer.description }}
                                                 />
                                             )}
 
                                             <div className={classes.organizerActions}>
                                                 {socialLinks.length > 0 && (
                                                     <div className={classes.socialLinks}>
-                                                        {socialLinks.map(({platform, handle, config}) => {
+                                                        {socialLinks.map(({ platform, handle, config }) => {
                                                             const IconComponent = config.icon;
                                                             const url = config.baseUrl + handle;
                                                             return (
@@ -551,7 +552,7 @@ const EventHomepage = ({...loaderData}: EventHomepageProps) => {
                                                                     className={classes.socialLink}
                                                                     title={platform}
                                                                 >
-                                                                    <IconComponent size={18}/>
+                                                                    <IconComponent size={18} />
                                                                 </a>
                                                             );
                                                         })}
@@ -568,7 +569,7 @@ const EventHomepage = ({...loaderData}: EventHomepageProps) => {
                                                                 className={classes.socialLink}
                                                                 title={hostname}
                                                             >
-                                                                <IconWorld size={18}/>
+                                                                <IconWorld size={18} />
                                                             </a>
                                                         );
                                                     } catch {
@@ -579,7 +580,7 @@ const EventHomepage = ({...loaderData}: EventHomepageProps) => {
                                                     onClick={() => setContactModalOpen(true)}
                                                     className={classes.contactButton}
                                                 >
-                                                    <IconMail/>
+                                                    <IconMail />
                                                     {t`Contact`}
                                                 </button>
                                             </div>
@@ -605,7 +606,7 @@ const EventHomepage = ({...loaderData}: EventHomepageProps) => {
                                     {t`Terms of Service`}
                                 </Anchor>
                             </div>
-                            <PoweredByFooter className={classes.poweredByFooter}/>
+                            <PoweredByFooter className={classes.poweredByFooter} />
                         </div>
                     </div>
 
@@ -615,7 +616,7 @@ const EventHomepage = ({...loaderData}: EventHomepageProps) => {
                             className={classes.scrollToTicketsButton}
                             onClick={scrollToTickets}
                         >
-                            <IconTicket size={18}/>
+                            <IconTicket size={18} />
                             {t`Get Tickets`}
                         </button>
                     )}

@@ -429,6 +429,7 @@ export interface OrganizerSettings {
     seo_title?: string;
     allow_search_engine_indexing?: boolean;
     affiliate_term?: string;
+    hide_organizer_on_event_pages?: boolean;
 }
 
 export interface SortDirectionLabel {

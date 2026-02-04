@@ -30,6 +30,7 @@ class OrganizerSettingsResource extends BaseResource
             'allow_search_engine_indexing' => $this->getAllowSearchEngineIndexing(),
             'location_details' => $this->getLocationDetails(),
             'affiliate_term' => $this->getAffiliateTerm(),
+            'hide_organizer_on_event_pages' => $this->getHideOrganizerOnEventPages(),
         ];
     }
 }

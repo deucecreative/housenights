@@ -105,6 +105,8 @@ class PartialUpdateOrganizerSettingsHandler
             'allow_search_engine_indexing' => $dto->getProvided('allowSearchEngineIndexing', $organizerSettings->getAllowSearchEngineIndexing()),
 
             'homepage_password' => $dto->getProvided('homepagePassword', $organizerSettings->getHomepagePassword()),
+
+            'hide_organizer_on_event_pages' => $dto->getProvided('hideOrganizerOnEventPages', $organizerSettings->getHideOrganizerOnEventPages()),
         ], [
             'organizer_id' => $dto->organizerId,
             'id' => $organizerSettings->getId(),

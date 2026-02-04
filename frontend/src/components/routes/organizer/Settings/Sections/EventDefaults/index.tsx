@@ -24,6 +24,7 @@ export const EventDefaults = () => {
             default_show_marketing_opt_in: true,
             default_allow_attendee_self_edit: false,
             affiliate_term: '',
+            hide_organizer_on_event_pages: false,
         }
     });
 
@@ -51,11 +52,12 @@ export const EventDefaults = () => {
                 default_show_marketing_opt_in: organizerSettingsQuery.data.default_show_marketing_opt_in ?? true,
                 default_allow_attendee_self_edit: organizerSettingsQuery.data.default_allow_attendee_self_edit ?? false,
                 affiliate_term: organizerSettingsQuery.data.affiliate_term || '',
+                hide_organizer_on_event_pages: organizerSettingsQuery.data.hide_organizer_on_event_pages ?? false,
             });
         }
     }, [organizerSettingsQuery.isFetched]);
 
-    const handleSubmit = (values: { default_attendee_details_collection_method: 'PER_TICKET' | 'PER_ORDER'; default_show_marketing_opt_in: boolean; default_allow_attendee_self_edit: boolean; affiliate_term: string }) => {
+    const handleSubmit = (values: { default_attendee_details_collection_method: 'PER_TICKET' | 'PER_ORDER'; default_show_marketing_opt_in: boolean; default_allow_attendee_self_edit: boolean; affiliate_term: string; hide_organizer_on_event_pages: boolean }) => {
         updateMutation.mutate({
             organizerSettings: values,
             organizerId: organizerId,
@@ -104,6 +106,13 @@ export const EventDefaults = () => {
                         description={t`Customize what affiliates are called (e.g., "Ambassador", "DJ", "Partner"). Leave blank to use "Affiliate".`}
                         placeholder={t`Affiliate`}
                         {...form.getInputProps('affiliate_term')}
+                    />
+
+                    <Switch
+                        mt="md"
+                        label={t`Hide organizer on event pages`}
+                        description={t`When enabled, the organizer section and branding will be hidden from public event pages.`}
+                        {...form.getInputProps('hide_organizer_on_event_pages', { type: 'checkbox' })}
                     />
 
                     <Button

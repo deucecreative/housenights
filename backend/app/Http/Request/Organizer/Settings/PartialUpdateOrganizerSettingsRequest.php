@@ -74,6 +74,9 @@ class PartialUpdateOrganizerSettingsRequest extends BaseRequest
 
             // Password
             'homepage_password' => ['sometimes', 'nullable', 'string', 'max:100'],
+
+            // Display settings
+            'hide_organizer_on_event_pages' => ['sometimes', 'nullable', 'boolean'],
         ];
     }
 }
