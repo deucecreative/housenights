@@ -7,6 +7,19 @@ use UnitEnum;
 
 class OrganizerSettingDomainObject extends Generated\OrganizerSettingDomainObjectAbstract
 {
+    protected ?string $affiliate_term = null;
+
+    public function getAffiliateTerm(): ?string
+    {
+        return $this->affiliate_term;
+    }
+
+    public function setAffiliateTerm(?string $affiliate_term): self
+    {
+        $this->affiliate_term = $affiliate_term;
+        return $this;
+    }
+
     public function getSocialMediaHandle(string $platform): ?string
     {
         $handles = $this->getSocialMediaHandles();

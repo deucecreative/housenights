@@ -1,19 +1,19 @@
-import {Modal} from "../../common/Modal";
-import {t} from "@lingui/macro";
-import {Button} from "@mantine/core";
-import {useForm} from "@mantine/form";
-import {showError, showSuccess} from "../../../utilites/notifications.tsx";
-import {useParams} from "react-router";
-import {useCreateAffiliate} from "../../../mutations/useCreateAffiliate.ts";
-import {CreateAffiliateRequest} from "../../../api/affiliate.client.ts";
-import {AffiliateForm} from "../../forms/AffiliateForm";
+import { Modal } from "../../common/Modal";
+import { t } from "@lingui/macro";
+import { Button, Checkbox } from "@mantine/core";
+import { useForm } from "@mantine/form";
+import { showError, showSuccess } from "../../../utilites/notifications.tsx";
+import { useParams } from "react-router";
+import { useCreateAffiliate } from "../../../mutations/useCreateAffiliate.ts";
+import { CreateAffiliateRequest } from "../../../api/affiliate.client.ts";
+import { AffiliateForm } from "../../forms/AffiliateForm";
 
 interface CreateAffiliateModalProps {
     onClose: () => void;
 }
 
-export const CreateAffiliateModal = ({onClose}: CreateAffiliateModalProps) => {
-    const {eventId} = useParams();
+export const CreateAffiliateModal = ({ onClose }: CreateAffiliateModalProps) => {
+    const { eventId } = useParams();
     const createMutation = useCreateAffiliate();
 
     const form = useForm<CreateAffiliateRequest>({
@@ -21,7 +21,8 @@ export const CreateAffiliateModal = ({onClose}: CreateAffiliateModalProps) => {
             name: '',
             code: '',
             email: '',
-            status: 'ACTIVE'
+            status: 'ACTIVE',
+            auto_send_magic_link: false,
         },
         validateInputOnBlur: true,
         validate: {
@@ -83,6 +84,15 @@ export const CreateAffiliateModal = ({onClose}: CreateAffiliateModalProps) => {
                     isEditing={false}
                     onGenerateCode={generateRandomCode}
                 />
+
+                {form.values.email && (
+                    <Checkbox
+                        mt="md"
+                        label={t`Send welcome email to affiliate`}
+                        description={t`The affiliate will receive a welcome email with their code and portal access link`}
+                        {...form.getInputProps('auto_send_magic_link', { type: 'checkbox' })}
+                    />
+                )}
 
                 <Button
                     type="submit"

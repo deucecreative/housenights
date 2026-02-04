@@ -34,7 +34,7 @@ export const affiliatePortalClient = {
 
     sendMagicLink: async (eventId: number, affiliateId: number) => {
         const response = await api.post<GenericDataResponse<{ message: string }>>(
-            `events/${eventId}/affiliates/${affiliateId}/send-magic-link`
+            `events/${eventId}/affiliates/${affiliateId}/magic-link`
         );
         return response.data;
     },

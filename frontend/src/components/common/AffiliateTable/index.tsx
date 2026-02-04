@@ -1,40 +1,42 @@
-import {t} from "@lingui/macro";
-import {Badge, Button, Group, Table as MantineTable, Text} from '@mantine/core';
-import {IdParam} from "../../../types.ts";
-import {IconCopy, IconCurrencyDollar, IconPencil, IconPlus, IconShare, IconTrash, IconUsers} from "@tabler/icons-react";
-import {useClipboard, useDisclosure} from "@mantine/hooks";
-import {useState} from "react";
-import {NoResultsSplash} from "../NoResultsSplash";
-import {EditAffiliateModal} from "../../modals/EditAffiliateModal";
-import {ShareModal} from "../../modals/ShareModal";
-import {useDeleteAffiliate} from "../../../mutations/useDeleteAffiliate";
-import {showError, showSuccess} from "../../../utilites/notifications.tsx";
-import {confirmationDialog} from "../../../utilites/confirmationDialog.tsx";
-import {useParams} from "react-router";
-import {Affiliate} from "../../../api/affiliate.client.ts";
+import { t } from "@lingui/macro";
+import { Badge, Button, Group, Table as MantineTable, Text } from '@mantine/core';
+import { IdParam } from "../../../types.ts";
+import { IconCopy, IconCurrencyDollar, IconMail, IconPencil, IconPlus, IconShare, IconTrash, IconUsers } from "@tabler/icons-react";
+import { useClipboard, useDisclosure } from "@mantine/hooks";
+import { useState } from "react";
+import { NoResultsSplash } from "../NoResultsSplash";
+import { EditAffiliateModal } from "../../modals/EditAffiliateModal";
+import { ShareModal } from "../../modals/ShareModal";
+import { useDeleteAffiliate } from "../../../mutations/useDeleteAffiliate";
+import { useSendAffiliateMagicLink } from "../../../mutations/useSendAffiliateMagicLink";
+import { showError, showSuccess } from "../../../utilites/notifications.tsx";
+import { confirmationDialog } from "../../../utilites/confirmationDialog.tsx";
+import { useParams } from "react-router";
+import { Affiliate } from "../../../api/affiliate.client.ts";
 import classes from "./AffiliateTable.module.scss";
-import {Table, TableHead} from "../Table";
-import {ActionMenu} from "../ActionMenu";
-import {eventHomepageUrl} from "../../../utilites/urlHelper.ts";
-import {useGetEvent} from "../../../queries/useGetEvent.ts";
+import { Table, TableHead } from "../Table";
+import { ActionMenu } from "../ActionMenu";
+import { eventHomepageUrl } from "../../../utilites/urlHelper.ts";
+import { useGetEvent } from "../../../queries/useGetEvent.ts";
 
 interface AffiliateTableProps {
     affiliates: Affiliate[];
     openCreateModal: () => void;
 }
 
-export const AffiliateTable = ({affiliates, openCreateModal}: AffiliateTableProps) => {
-    const [editModalOpen, {open: openEditModal, close: closeEditModal}] = useDisclosure(false);
-    const [shareModalOpen, {open: openShareModal, close: closeShareModal}] = useDisclosure(false);
+export const AffiliateTable = ({ affiliates, openCreateModal }: AffiliateTableProps) => {
+    const [editModalOpen, { open: openEditModal, close: closeEditModal }] = useDisclosure(false);
+    const [shareModalOpen, { open: openShareModal, close: closeShareModal }] = useDisclosure(false);
     const [selectedAffiliateId, setSelectedAffiliateId] = useState<IdParam>();
     const [selectedAffiliate, setSelectedAffiliate] = useState<Affiliate>();
     const deleteMutation = useDeleteAffiliate();
-    const {eventId} = useParams();
+    const sendMagicLinkMutation = useSendAffiliateMagicLink();
+    const { eventId } = useParams();
     const copy = useClipboard()
-    const {data: event} = useGetEvent(eventId);
+    const { data: event } = useGetEvent(eventId);
 
     const handleDeleteAffiliate = (affiliateId: IdParam, eventId: IdParam) => {
-        deleteMutation.mutate({affiliateId, eventId}, {
+        deleteMutation.mutate({ affiliateId, eventId }, {
             onSuccess: () => {
                 showSuccess(t`Affiliate deleted successfully`);
             },
@@ -43,6 +45,21 @@ export const AffiliateTable = ({affiliates, openCreateModal}: AffiliateTableProp
             }
         });
     }
+
+    const handleSendWelcomeEmail = (affiliateId: IdParam, eventId: IdParam, affiliateEmail?: string) => {
+        if (!affiliateEmail) {
+            showError(t`This affiliate does not have an email address`);
+            return;
+        }
+        sendMagicLinkMutation.mutate({ affiliateId, eventId }, {
+            onSuccess: () => {
+                showSuccess(t`Welcome email sent to ${affiliateEmail}`);
+            },
+            onError: (error: any) => {
+                showError(error.message || t`Failed to send welcome email`);
+            }
+        });
+    };
 
     const copyToClipboard = (text: string) => {
         copy.copy(text)
@@ -61,7 +78,7 @@ export const AffiliateTable = ({affiliates, openCreateModal}: AffiliateTableProp
                         </p>
                         <Button
                             size={'xs'}
-                            leftSection={<IconPlus/>}
+                            leftSection={<IconPlus />}
                             color={'green'}
                             onClick={openCreateModal}
                         >
@@ -99,7 +116,7 @@ export const AffiliateTable = ({affiliates, openCreateModal}: AffiliateTableProp
                                             size="xs"
                                             variant="subtle"
                                             color="gray"
-                                            leftSection={<IconCopy size={12}/>}
+                                            leftSection={<IconCopy size={12} />}
                                             onClick={() => copyToClipboard(eventHomepageUrl(event!) + `?aff=${affiliate.code}`)}
                                             className={classes.copyButton}
                                         >
@@ -136,7 +153,7 @@ export const AffiliateTable = ({affiliates, openCreateModal}: AffiliateTableProp
                                 <div className={classes.statsCell}>
                                     <div className={classes.statItem}>
                                         <Group gap={4} align="center">
-                                            <IconUsers size={12} className={classes.statIcon}/>
+                                            <IconUsers size={12} className={classes.statIcon} />
                                             <Text className={classes.statValue}>
                                                 {affiliate.total_sales}
                                             </Text>
@@ -148,7 +165,7 @@ export const AffiliateTable = ({affiliates, openCreateModal}: AffiliateTableProp
 
                                     <div className={classes.statItem}>
                                         <Group gap={4} align="center">
-                                            <IconCurrencyDollar size={12} className={classes.statIcon}/>
+                                            <IconCurrencyDollar size={12} className={classes.statIcon} />
                                             <Text className={classes.statValue}>
                                                 ${affiliate.total_sales_gross.toFixed(2)}
                                             </Text>
@@ -168,7 +185,7 @@ export const AffiliateTable = ({affiliates, openCreateModal}: AffiliateTableProp
                                             items: [
                                                 {
                                                     label: t`Edit Affiliate`,
-                                                    icon: <IconPencil size={14}/>,
+                                                    icon: <IconPencil size={14} />,
                                                     onClick: () => {
                                                         setSelectedAffiliateId(affiliate.id);
                                                         openEditModal();
@@ -176,27 +193,32 @@ export const AffiliateTable = ({affiliates, openCreateModal}: AffiliateTableProp
                                                 },
                                                 {
                                                     label: t`Copy Code`,
-                                                    icon: <IconCopy size={14}/>,
+                                                    icon: <IconCopy size={14} />,
                                                     onClick: () => copyToClipboard(affiliate.code)
                                                 },
                                                 {
                                                     label: t`Copy Affiliate Link`,
-                                                    icon: <IconCopy size={14}/>,
+                                                    icon: <IconCopy size={14} />,
                                                     onClick: () => copyToClipboard(
                                                         eventHomepageUrl(event!) + `?aff=${affiliate.code}`
                                                     )
                                                 },
                                                 {
                                                     label: t`Share Affiliate Link`,
-                                                    icon: <IconShare size={14}/>,
+                                                    icon: <IconShare size={14} />,
                                                     onClick: () => {
                                                         setSelectedAffiliate(affiliate);
                                                         openShareModal();
                                                     }
                                                 },
                                                 {
+                                                    label: t`Send Welcome Email`,
+                                                    icon: <IconMail size={14} />,
+                                                    onClick: () => handleSendWelcomeEmail(affiliate.id, eventId!, affiliate.email)
+                                                },
+                                                {
                                                     label: t`Delete Affiliate`,
-                                                    icon: <IconTrash size={14}/>,
+                                                    icon: <IconTrash size={14} />,
                                                     color: "red",
                                                     onClick: () => confirmationDialog(
                                                         t`Are you sure you want to delete this affiliate? This action cannot be undone.`,

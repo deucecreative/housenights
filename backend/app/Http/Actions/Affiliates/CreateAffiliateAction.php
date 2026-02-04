@@ -40,6 +40,7 @@ class CreateAffiliateAction extends BaseAction
                     code: $request->input('code'),
                     email: $request->input('email'),
                     status: AffiliateStatus::from($request->input('status', 'ACTIVE')),
+                    autoSendMagicLink: (bool) $request->input('auto_send_magic_link', false),
                 )
             );
         } catch (ResourceConflictException $e) {

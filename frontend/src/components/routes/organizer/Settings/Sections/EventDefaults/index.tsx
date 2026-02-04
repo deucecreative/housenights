@@ -1,20 +1,20 @@
-import {useParams} from "react-router";
-import {useForm} from "@mantine/form";
-import {useFormErrorResponseHandler} from "../../../../../../hooks/useFormErrorResponseHandler.tsx";
-import {useEffect} from "react";
-import {showSuccess} from "../../../../../../utilites/notifications.tsx";
-import {t} from "@lingui/macro";
-import {Card} from "../../../../../common/Card";
-import {HeadingWithDescription} from "../../../../../common/Card/CardHeading";
-import {Button, Switch} from "@mantine/core";
-import {useGetOrganizerSettings} from "../../../../../../queries/useGetOrganizerSettings.ts";
-import {useUpdateOrganizerSettings} from "../../../../../../mutations/useUpdateOrganizerSettings.ts";
-import {CustomSelect, ItemProps} from "../../../../../common/CustomSelect";
-import {IconUser, IconUsers} from "@tabler/icons-react";
-import {SelfServiceSettings} from "../../../../../common/SelfServiceSettings";
+import { useParams } from "react-router";
+import { useForm } from "@mantine/form";
+import { useFormErrorResponseHandler } from "../../../../../../hooks/useFormErrorResponseHandler.tsx";
+import { useEffect } from "react";
+import { showSuccess } from "../../../../../../utilites/notifications.tsx";
+import { t } from "@lingui/macro";
+import { Card } from "../../../../../common/Card";
+import { HeadingWithDescription } from "../../../../../common/Card/CardHeading";
+import { Button, Switch, TextInput } from "@mantine/core";
+import { useGetOrganizerSettings } from "../../../../../../queries/useGetOrganizerSettings.ts";
+import { useUpdateOrganizerSettings } from "../../../../../../mutations/useUpdateOrganizerSettings.ts";
+import { CustomSelect, ItemProps } from "../../../../../common/CustomSelect";
+import { IconUser, IconUsers } from "@tabler/icons-react";
+import { SelfServiceSettings } from "../../../../../common/SelfServiceSettings";
 
 export const EventDefaults = () => {
-    const {organizerId} = useParams();
+    const { organizerId } = useParams();
     const organizerSettingsQuery = useGetOrganizerSettings(organizerId);
     const updateMutation = useUpdateOrganizerSettings();
 
@@ -23,18 +23,19 @@ export const EventDefaults = () => {
             default_attendee_details_collection_method: 'PER_TICKET' as 'PER_TICKET' | 'PER_ORDER',
             default_show_marketing_opt_in: true,
             default_allow_attendee_self_edit: false,
+            affiliate_term: '',
         }
     });
 
     const attendeeCollectionOptions: ItemProps[] = [
         {
-            icon: <IconUsers/>,
+            icon: <IconUsers />,
             label: t`Per ticket`,
             value: 'PER_TICKET',
             description: t`Collect attendee details for each ticket purchased.`,
         },
         {
-            icon: <IconUser/>,
+            icon: <IconUser />,
             label: t`Per order`,
             value: 'PER_ORDER',
             description: t`Use order details for all attendees. Attendee names and emails will match the buyer's information.`,
@@ -49,11 +50,12 @@ export const EventDefaults = () => {
                 default_attendee_details_collection_method: organizerSettingsQuery.data.default_attendee_details_collection_method || 'PER_TICKET',
                 default_show_marketing_opt_in: organizerSettingsQuery.data.default_show_marketing_opt_in ?? true,
                 default_allow_attendee_self_edit: organizerSettingsQuery.data.default_allow_attendee_self_edit ?? false,
+                affiliate_term: organizerSettingsQuery.data.affiliate_term || '',
             });
         }
     }, [organizerSettingsQuery.isFetched]);
 
-    const handleSubmit = (values: { default_attendee_details_collection_method: 'PER_TICKET' | 'PER_ORDER'; default_show_marketing_opt_in: boolean; default_allow_attendee_self_edit: boolean }) => {
+    const handleSubmit = (values: { default_attendee_details_collection_method: 'PER_TICKET' | 'PER_ORDER'; default_show_marketing_opt_in: boolean; default_allow_attendee_self_edit: boolean; affiliate_term: string }) => {
         updateMutation.mutate({
             organizerSettings: values,
             organizerId: organizerId,
@@ -61,7 +63,7 @@ export const EventDefaults = () => {
             onSuccess: () => {
                 showSuccess(t`Successfully Updated Event Defaults`);
             },
-            onError: (error) => {
+            onError: (error: Error) => {
                 formErrorHandle(form, error);
             }
         });
@@ -87,13 +89,21 @@ export const EventDefaults = () => {
                         mt="md"
                         label={t`Show marketing opt-in checkbox by default`}
                         description={t`When enabled, new events will display a marketing opt-in checkbox during checkout. This can be overridden per event.`}
-                        {...form.getInputProps('default_show_marketing_opt_in', {type: 'checkbox'})}
+                        {...form.getInputProps('default_show_marketing_opt_in', { type: 'checkbox' })}
                     />
 
                     <SelfServiceSettings
                         value={form.values.default_allow_attendee_self_edit}
                         onChange={(value) => form.setFieldValue('default_allow_attendee_self_edit', value)}
                         isDefault={true}
+                    />
+
+                    <TextInput
+                        mt="md"
+                        label={t`Custom Affiliate Term`}
+                        description={t`Customize what affiliates are called (e.g., "Ambassador", "DJ", "Partner"). Leave blank to use "Affiliate".`}
+                        placeholder={t`Affiliate`}
+                        {...form.getInputProps('affiliate_term')}
                     />
 
                     <Button

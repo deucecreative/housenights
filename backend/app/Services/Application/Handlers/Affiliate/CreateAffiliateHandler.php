@@ -7,12 +7,14 @@ namespace HiEvents\Services\Application\Handlers\Affiliate;
 use HiEvents\DomainObjects\AffiliateDomainObject;
 use HiEvents\Exceptions\ResourceConflictException;
 use HiEvents\Repository\Interfaces\AffiliateRepositoryInterface;
+use HiEvents\Services\Application\Handlers\Affiliate\DTO\SendAffiliateMagicLinkDTO;
 use HiEvents\Services\Application\Handlers\Affiliate\DTO\UpsertAffiliateDTO;
 
 class CreateAffiliateHandler
 {
     public function __construct(
         private readonly AffiliateRepositoryInterface $affiliateRepository,
+        private readonly SendAffiliateMagicLinkHandler $sendAffiliateMagicLinkHandler,
     )
     {
     }
@@ -33,7 +35,7 @@ class CreateAffiliateHandler
             throw new ResourceConflictException(__('An affiliate with this code already exists for this event'));
         }
 
-        return $this->affiliateRepository->create([
+        $affiliate = $this->affiliateRepository->create([
             'event_id' => $eventId,
             'account_id' => $accountId,
             'name' => $dto->name,
@@ -41,5 +43,15 @@ class CreateAffiliateHandler
             'email' => $dto->email,
             'status' => $dto->status->value,
         ]);
+
+        if ($dto->autoSendMagicLink && $dto->email) {
+            $this->sendAffiliateMagicLinkHandler->handle(
+                new SendAffiliateMagicLinkDTO(
+                    affiliateId: $affiliate->getId(),
+                )
+            );
+        }
+
+        return $affiliate;
     }
 }

@@ -1,9 +1,9 @@
 /**
  * @todo - This file needs to be organized better. Split into multiple files.
  */
-import {SupportedLocales} from "./locales.ts";
+import { SupportedLocales } from "./locales.ts";
 
-export type ConfigKeys = 
+export type ConfigKeys =
     | 'VITE_API_URL_SERVER'
     | 'VITE_API_URL_CLIENT'
     | 'VITE_FRONTEND_URL'
@@ -428,6 +428,7 @@ export interface OrganizerSettings {
     seo_description?: string;
     seo_title?: string;
     allow_search_engine_indexing?: boolean;
+    affiliate_term?: string;
 }
 
 export interface SortDirectionLabel {
@@ -724,8 +725,8 @@ export interface CheckInList {
 export type CheckInListRequest =
     Omit<CheckInList, 'event_id' | 'short_id' | 'id' | 'products' | 'total_attendees' | 'checked_in_attendees' | 'is_expired' | 'is_active'>
     & {
-    product_ids: IdParam[];
-};
+        product_ids: IdParam[];
+    };
 
 export interface QuestionRequestData {
     title: string;

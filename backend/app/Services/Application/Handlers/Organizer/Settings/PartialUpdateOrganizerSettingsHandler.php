@@ -57,6 +57,16 @@ class PartialUpdateOrganizerSettingsHandler
                 $organizerSettings->getDefaultPassPlatformFeeToBuyer()
             ),
 
+            'default_allow_attendee_self_edit' => $dto->getProvided(
+                'defaultAllowAttendeeSelfEdit',
+                $organizerSettings->getDefaultAllowAttendeeSelfEdit()
+            ),
+
+            'affiliate_term' => $dto->getProvided(
+                'affiliateTerm',
+                $organizerSettings->getAffiliateTerm()
+            ),
+
             'social_media_handles' => array_filter([
                 'facebook' => $dto->getProvided('facebookHandle', $organizerSettings->getSocialMediaHandle('facebook')),
                 'instagram' => $dto->getProvided('instagramHandle', $organizerSettings->getSocialMediaHandle('instagram')),

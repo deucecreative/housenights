@@ -38,8 +38,8 @@ class SendAffiliateMagicLinkAction extends BaseAction
             );
         }
 
-        return $this->successResponse(
-            message: __('Magic link sent successfully'),
-        );
+        return $this->jsonResponse([
+            'message' => __('Magic link sent successfully'),
+        ]);
     }
 }

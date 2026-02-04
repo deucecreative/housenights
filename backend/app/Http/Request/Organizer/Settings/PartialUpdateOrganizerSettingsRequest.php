@@ -19,6 +19,7 @@ class PartialUpdateOrganizerSettingsRequest extends BaseRequest
             'default_show_marketing_opt_in' => ['sometimes', 'nullable', 'boolean'],
             'default_pass_platform_fee_to_buyer' => ['sometimes', 'nullable', 'boolean'],
             'default_allow_attendee_self_edit' => ['sometimes', 'nullable', 'boolean'],
+            'affiliate_term' => ['sometimes', 'nullable', 'string', 'max:50'],
 
             // Social handles
             'facebook_handle' => ['sometimes', 'nullable', 'string', 'max:255'],

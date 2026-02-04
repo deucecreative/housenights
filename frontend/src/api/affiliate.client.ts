@@ -1,8 +1,8 @@
-import {api} from "./client";
+import { api } from "./client";
 import {
     GenericDataResponse, GenericPaginatedResponse, IdParam, QueryFilters,
 } from "../types";
-import {queryParamsHelper} from "../utilites/queryParamsHelper.ts";
+import { queryParamsHelper } from "../utilites/queryParamsHelper.ts";
 
 export interface Affiliate {
     id: number;
@@ -23,6 +23,7 @@ export interface CreateAffiliateRequest {
     code: string;
     email?: string;
     status?: 'ACTIVE' | 'INACTIVE';
+    auto_send_magic_link?: boolean;
 }
 
 export interface UpdateAffiliateRequest {
@@ -62,6 +63,12 @@ export const affiliateClient = {
         const response = await api.post(`events/${eventId}/affiliates/export`, {}, {
             responseType: 'blob'
         });
+        return response.data;
+    },
+    sendMagicLink: async (eventId: IdParam, affiliateId: IdParam) => {
+        const response = await api.post<GenericDataResponse<void>>(
+            `events/${eventId}/affiliates/${affiliateId}/magic-link`
+        );
         return response.data;
     },
 }

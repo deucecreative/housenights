@@ -8,12 +8,14 @@ use HiEvents\Exceptions\ResourceConflictException;
 use HiEvents\Repository\Interfaces\AffiliateRepositoryInterface;
 use HiEvents\Services\Application\Handlers\Affiliate\CreateAffiliateHandler;
 use HiEvents\Services\Application\Handlers\Affiliate\DTO\UpsertAffiliateDTO;
+use HiEvents\Services\Application\Handlers\Affiliate\SendAffiliateMagicLinkHandler;
 use Mockery as m;
 use Tests\TestCase;
 
 class CreateAffiliateHandlerTest extends TestCase
 {
     private AffiliateRepositoryInterface $affiliateRepository;
+    private SendAffiliateMagicLinkHandler $sendAffiliateMagicLinkHandler;
     private CreateAffiliateHandler $handler;
 
     protected function setUp(): void
@@ -21,7 +23,11 @@ class CreateAffiliateHandlerTest extends TestCase
         parent::setUp();
 
         $this->affiliateRepository = m::mock(AffiliateRepositoryInterface::class);
-        $this->handler = new CreateAffiliateHandler($this->affiliateRepository);
+        $this->sendAffiliateMagicLinkHandler = m::mock(SendAffiliateMagicLinkHandler::class);
+        $this->handler = new CreateAffiliateHandler(
+            $this->affiliateRepository,
+            $this->sendAffiliateMagicLinkHandler
+        );
     }
 
     public function testHandleSuccessfullyCreatesAffiliate(): void
@@ -177,6 +183,108 @@ class CreateAffiliateHandlerTest extends TestCase
         $this->expectExceptionMessage('An affiliate with this code already exists for this event');
 
         $this->handler->handle($eventId, $accountId, $dto);
+    }
+
+    public function testHandleSendsMagicLinkWhenAutoSendIsTrue(): void
+    {
+        $eventId = 1;
+        $accountId = 2;
+        $dto = new UpsertAffiliateDTO(
+            name: 'Test Affiliate',
+            code: 'test123',
+            email: 'test@example.com',
+            status: AffiliateStatus::ACTIVE,
+            autoSendMagicLink: true
+        );
+
+        $expectedCode = 'TEST123';
+        $expectedAffiliate = m::mock(AffiliateDomainObject::class);
+        $expectedAffiliate->shouldReceive('getId')->andReturn(99);
+        $expectedAffiliate->shouldReceive('getEmail')->andReturn('test@example.com');
+
+        $this->affiliateRepository
+            ->shouldReceive('findFirstWhere')
+            ->once()
+            ->andReturn(null);
+
+        $this->affiliateRepository
+            ->shouldReceive('create')
+            ->once()
+            ->andReturn($expectedAffiliate);
+
+        $this->sendAffiliateMagicLinkHandler
+            ->shouldReceive('handle')
+            ->once()
+            ->with(m::type(\HiEvents\Services\Application\Handlers\Affiliate\DTO\SendAffiliateMagicLinkDTO::class));
+
+        $result = $this->handler->handle($eventId, $accountId, $dto);
+
+        $this->assertSame($expectedAffiliate, $result);
+    }
+
+    public function testHandleDoesNotSendMagicLinkWhenAutoSendIsFalse(): void
+    {
+        $eventId = 1;
+        $accountId = 2;
+        $dto = new UpsertAffiliateDTO(
+            name: 'Test Affiliate',
+            code: 'test123',
+            email: 'test@example.com',
+            status: AffiliateStatus::ACTIVE,
+            autoSendMagicLink: false
+        );
+
+        $expectedAffiliate = m::mock(AffiliateDomainObject::class);
+
+        $this->affiliateRepository
+            ->shouldReceive('findFirstWhere')
+            ->once()
+            ->andReturn(null);
+
+        $this->affiliateRepository
+            ->shouldReceive('create')
+            ->once()
+            ->andReturn($expectedAffiliate);
+
+        $this->sendAffiliateMagicLinkHandler
+            ->shouldNotReceive('handle');
+
+        $result = $this->handler->handle($eventId, $accountId, $dto);
+
+        $this->assertSame($expectedAffiliate, $result);
+    }
+
+    public function testHandleDoesNotSendMagicLinkWhenNoEmail(): void
+    {
+        $eventId = 1;
+        $accountId = 2;
+        $dto = new UpsertAffiliateDTO(
+            name: 'Test Affiliate',
+            code: 'test123',
+            email: null,
+            status: AffiliateStatus::ACTIVE,
+            autoSendMagicLink: true
+        );
+
+        $expectedAffiliate = m::mock(AffiliateDomainObject::class);
+        $expectedAffiliate->shouldReceive('getEmail')->andReturn(null);
+
+        $this->affiliateRepository
+            ->shouldReceive('findFirstWhere')
+            ->once()
+            ->andReturn(null);
+
+        $this->affiliateRepository
+            ->shouldReceive('create')
+            ->once()
+            ->andReturn($expectedAffiliate);
+
+        $this->sendAffiliateMagicLinkHandler
+            ->shouldNotReceive('handle');
+
+        $result = $this->handler->handle($eventId, $accountId, $dto);
+
+        $this->assertSame($expectedAffiliate, $result);
     }
 
     protected function tearDown(): void
