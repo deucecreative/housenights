@@ -1,6 +1,6 @@
-import {useMutation} from "@tanstack/react-query";
-import {FinaliseOrderPayload, orderClientPublic} from "../../../../api/order.client.ts";
-import {useNavigate, useParams} from "react-router";
+import { useMutation } from "@tanstack/react-query";
+import { FinaliseOrderPayload, orderClientPublic } from "../../../../api/order.client.ts";
+import { useNavigate, useParams, useSearchParams } from "react-router";
 import {
     Button,
     Checkbox,
@@ -11,53 +11,77 @@ import {
     TextInput,
     Tooltip
 } from "@mantine/core";
-import {IconArrowRight, IconCheck, IconCircleCheck} from "@tabler/icons-react";
-import {t, Trans} from "@lingui/macro";
-import {useForm} from "@mantine/form";
-import {notifications} from "@mantine/notifications";
-import {useGetOrderPublic} from "../../../../queries/useGetOrderPublic.ts";
-import {useGetEventPublic} from "../../../../queries/useGetEventPublic.ts";
-import {useGetEventQuestionsPublic} from "../../../../queries/useGetEventQuestionsPublic.ts";
-import {CheckoutOrderQuestions, CheckoutProductQuestions} from "../../../common/CheckoutQuestion";
-import {Event, IdParam, Question} from "../../../../types.ts";
-import {useEffect, useState} from "react";
-import {InputGroup} from "../../../common/InputGroup";
-import {Card} from "../../../common/Card";
-import {CheckoutContent} from "../../../layouts/Checkout/CheckoutContent";
-import {getConfig} from "../../../../utilites/config.ts";
-import {HomepageInfoMessage} from "../../../common/HomepageInfoMessage";
-import {InlineOrderSummary} from "../../../common/InlineOrderSummary";
-import {eventCheckoutPath, eventHomepagePath} from "../../../../utilites/urlHelper.ts";
-import {showInfo} from "../../../../utilites/notifications.tsx";
+import { IconArrowRight, IconCheck, IconCircleCheck } from "@tabler/icons-react";
+import { t, Trans } from "@lingui/macro";
+import { useForm } from "@mantine/form";
+import { notifications } from "@mantine/notifications";
+import { useGetOrderPublic } from "../../../../queries/useGetOrderPublic.ts";
+import { useGetEventPublic } from "../../../../queries/useGetEventPublic.ts";
+import { useGetEventQuestionsPublic } from "../../../../queries/useGetEventQuestionsPublic.ts";
+import { CheckoutOrderQuestions, CheckoutProductQuestions } from "../../../common/CheckoutQuestion";
+import { Event, IdParam, Question } from "../../../../types.ts";
+import { useEffect, useState } from "react";
+import { InputGroup } from "../../../common/InputGroup";
+import { Card } from "../../../common/Card";
+import { CheckoutContent } from "../../../layouts/Checkout/CheckoutContent";
+import { getConfig } from "../../../../utilites/config.ts";
+import { HomepageInfoMessage } from "../../../common/HomepageInfoMessage";
+import { InlineOrderSummary } from "../../../common/InlineOrderSummary";
+import { eventCheckoutPath, eventHomepagePath } from "../../../../utilites/urlHelper.ts";
+import { showInfo } from "../../../../utilites/notifications.tsx";
 import countries from "../../../../../data/countries.json";
 import classes from "./CollectInformation.module.scss";
-import {trackEvent, AnalyticsEvents} from "../../../../utilites/analytics.ts";
+import { trackEvent, AnalyticsEvents } from "../../../../utilites/analytics.ts";
 
 const LoadingSkeleton = () =>
-    (
-        <CheckoutContent>
-            <Skeleton mb={20} height={200}/>
-            <Skeleton mb={20} height={200}/>
-            <Skeleton mb={20} height={200}/>
-        </CheckoutContent>
-    );
+(
+    <CheckoutContent>
+        <Skeleton mb={20} height={200} />
+        <Skeleton mb={20} height={200} />
+        <Skeleton mb={20} height={200} />
+    </CheckoutContent>
+);
 
 export const CollectInformation = () => {
-    const {eventId, orderShortId} = useParams();
+    const { eventId, orderShortId } = useParams();
     const navigate = useNavigate();
+    const [searchParams] = useSearchParams();
+
+    // Get affiliate code from URL or localStorage (same storage pattern as SelectProducts)
+    const getAffiliateCode = (): string | null => {
+        const AFFILIATE_EXPIRY_DAYS = 30;
+        const affiliateCodeFromUrl = searchParams.get('aff');
+        if (affiliateCodeFromUrl) return affiliateCodeFromUrl;
+
+        const storageKey = 'affiliate_code_' + eventId;
+        const storedData = localStorage.getItem(storageKey);
+        if (storedData) {
+            try {
+                const parsed = JSON.parse(storedData);
+                const ageInDays = (Date.now() - parsed.timestamp) / (1000 * 60 * 60 * 24);
+                if (ageInDays <= AFFILIATE_EXPIRY_DAYS) {
+                    return parsed.code;
+                }
+            } catch {
+                // Invalid stored data, ignore
+            }
+        }
+        return null;
+    };
+    const affiliateCode = getAffiliateCode();
     const {
         isFetched: isOrderFetched,
         data: order,
-        data: {order_items: orderItems} = {},
+        data: { order_items: orderItems } = {},
         isError: isOrderError,
         error: orderError,
     } = useGetOrderPublic(eventId, orderShortId, ['event']);
     const {
         data: event,
-        data: {product_categories: productCategories} = {},
+        data: { product_categories: productCategories } = {},
         isFetched: isEventFetched,
         isError: isEventError,
-    } = useGetEventPublic(eventId, isOrderFetched, !!order?.promo_code, order?.promo_code ?? null);
+    } = useGetEventPublic(eventId, isOrderFetched, !!order?.promo_code, order?.promo_code ?? null, affiliateCode);
     const {
         data: questions,
         isFetched: isQuestionsFetched,
@@ -76,7 +100,7 @@ export const CollectInformation = () => {
     };
 
     const EmailCheckIcon = () => (
-        <IconCircleCheck size={18} style={{color: 'var(--primary-color, #10B981)'}}/>
+        <IconCircleCheck size={18} style={{ color: 'var(--primary-color, #10B981)' }} />
     );
 
     let productIndex = 0;
@@ -143,7 +167,7 @@ export const CollectInformation = () => {
     const totalTicketAttendees = getTicketAttendeeIndices().length;
 
     const areOrderDetailsComplete = () => {
-        const {first_name, last_name, email} = form.values.order;
+        const { first_name, last_name, email } = form.values.order;
         return first_name.trim() !== '' && last_name.trim() !== '' && isEmailValid(email);
     };
 
@@ -315,7 +339,7 @@ export const CollectInformation = () => {
     }, [order, event]);
 
     if (!isEventFetched || !isOrderFetched) {
-        return <LoadingSkeleton/>
+        return <LoadingSkeleton />
     }
 
     if (order?.status === 'ABANDONED') {
@@ -391,7 +415,7 @@ export const CollectInformation = () => {
         <form onSubmit={form.onSubmit(handleSubmit)}>
             <CheckoutContent>
                 {(event && order) && (
-                    <InlineOrderSummary event={event} order={order} defaultExpanded={true}/>
+                    <InlineOrderSummary event={event} order={order} defaultExpanded={true} />
                 )}
 
                 <h2 className={classes.sectionHeading}>
@@ -423,7 +447,7 @@ export const CollectInformation = () => {
                             type={"email"}
                             label={t`Email Address`}
                             placeholder={t`Email Address`}
-                            rightSection={isEmailValid(form.values.order.email) ? <EmailCheckIcon/> : null}
+                            rightSection={isEmailValid(form.values.order.email) ? <EmailCheckIcon /> : null}
                             {...form.getInputProps("order.email")}
                         />
                         <TextInput
@@ -431,7 +455,7 @@ export const CollectInformation = () => {
                             type={"email"}
                             label={t`Confirm Email Address`}
                             placeholder={t`Confirm Email Address`}
-                            rightSection={isEmailValid(form.values.order.email_confirmation) ? <EmailCheckIcon/> : null}
+                            rightSection={isEmailValid(form.values.order.email_confirmation) ? <EmailCheckIcon /> : null}
                             {...form.getInputProps("order.email_confirmation")}
                         />
                     </InputGroup>
@@ -445,7 +469,7 @@ export const CollectInformation = () => {
                                     position="right"
                                     withArrow
                                 >
-                                    <div style={{display: 'inline-block'}}>
+                                    <div style={{ display: 'inline-block' }}>
                                         <Checkbox
                                             size="sm"
                                             label={t`Copy details to first attendee`}
@@ -458,7 +482,7 @@ export const CollectInformation = () => {
                             ) : (
                                 <div className={classes.copyDetailsMultiple}>
                                     <Text size="sm" c="dimmed"
-                                          className={classes.copyLabel}>{t`Copy my details to:`}</Text>
+                                        className={classes.copyLabel}>{t`Copy my details to:`}</Text>
                                     <Tooltip
                                         label={t`Fill in your details above first`}
                                         disabled={areOrderDetailsComplete()}
@@ -470,9 +494,9 @@ export const CollectInformation = () => {
                                             onChange={handleCopyOptionChange}
                                             disabled={!areOrderDetailsComplete()}
                                             data={[
-                                                {label: t`None`, value: 'none'},
-                                                {label: t`First attendee`, value: 'first'},
-                                                {label: t`All attendees`, value: 'all'},
+                                                { label: t`None`, value: 'none' },
+                                                { label: t`First attendee`, value: 'first' },
+                                                { label: t`All attendees`, value: 'all' },
                                             ]}
                                         />
                                     </Tooltip>
@@ -483,7 +507,7 @@ export const CollectInformation = () => {
 
                     {requireBillingAddress && (
                         <>
-                            <h3 style={{marginBottom: 5}}>
+                            <h3 style={{ marginBottom: 5 }}>
                                 {t`Billing Address`}
                             </h3>
 
@@ -533,13 +557,13 @@ export const CollectInformation = () => {
                         </>
                     )}
 
-                    {orderQuestions && <CheckoutOrderQuestions form={form} questions={orderQuestions}/>}
+                    {orderQuestions && <CheckoutOrderQuestions form={form} questions={orderQuestions} />}
 
                     {event?.settings?.show_marketing_opt_in && (
                         <Checkbox
                             mt="md"
                             label={t`Keep me updated on news and events from ${event?.organizer?.name || t`this organizer`}`}
-                            {...form.getInputProps('order.opted_into_marketing', {type: 'checkbox'})}
+                            {...form.getInputProps('order.opted_into_marketing', { type: 'checkbox' })}
                         />
                     )}
                 </Card>
@@ -636,7 +660,7 @@ export const CollectInformation = () => {
                                                         label={t`Email Address`}
                                                         placeholder={t`Email Address`}
                                                         rightSection={isEmailValid(form.values.products[currentProductIndex]?.email || '') ?
-                                                            <EmailCheckIcon/> : null}
+                                                            <EmailCheckIcon /> : null}
                                                         {...form.getInputProps(`products.${currentProductIndex}.email`)}
                                                     />
                                                     <TextInput
@@ -645,7 +669,7 @@ export const CollectInformation = () => {
                                                         label={t`Confirm Email Address`}
                                                         placeholder={t`Confirm Email Address`}
                                                         rightSection={isEmailValid(form.values.products[currentProductIndex]?.email_confirmation || '') ?
-                                                            <EmailCheckIcon/> : null}
+                                                            <EmailCheckIcon /> : null}
                                                         {...form.getInputProps(`products.${currentProductIndex}.email_confirmation`)}
                                                     />
                                                 </InputGroup>
@@ -657,7 +681,7 @@ export const CollectInformation = () => {
                                                 index={currentProductIndex}
                                                 product={product}
                                                 form={form}
-                                                questions={productQuestions}/>}
+                                                questions={productQuestions} />}
                                     </Card>
                                 );
 
@@ -671,7 +695,7 @@ export const CollectInformation = () => {
 
                 {!!event?.settings?.pre_checkout_message && (
                     <Card>
-                        <div dangerouslySetInnerHTML={{__html: event?.settings?.pre_checkout_message}}/>
+                        <div dangerouslySetInnerHTML={{ __html: event?.settings?.pre_checkout_message }} />
                     </Card>
                 )}
 
@@ -680,8 +704,8 @@ export const CollectInformation = () => {
                         className={classes.continueButton}
                         loading={mutation.isPending}
                         type="submit"
-                        rightSection={order?.is_payment_required ? <IconArrowRight size={18}/> : undefined}
-                        leftSection={!order?.is_payment_required ? <IconCheck size={18}/> : undefined}
+                        rightSection={order?.is_payment_required ? <IconArrowRight size={18} /> : undefined}
+                        leftSection={!order?.is_payment_required ? <IconCheck size={18} /> : undefined}
                     >
                         {order?.is_payment_required ? t`Continue to Payment` : t`Complete Order`}
                     </Button>
