@@ -11,7 +11,7 @@
 {{ __('Share this link and click the button below to view your stats.') }}
 
 @component('mail::button', ['url' => $loginUrl])
-{{ __('Access :term Portal', ['term' => $affiliateTerm]) }}
+{{ __('Access :term Dashboard', ['term' => $affiliateTerm]) }}
 @endcomponent
 
 {{ __('Thanks for being part of our :term program!', ['term' => strtolower($affiliateTerm)]) }}

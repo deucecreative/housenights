@@ -49,7 +49,7 @@ const AffiliateLogin = () => {
                 <Card className={classes.card}>
                     <div className={classes.header}>
                         <IconMail size={48} className={classes.icon} />
-                        <h1 className={classes.title}>{t`Affiliate Portal`}</h1>
+                        <h1 className={classes.title}>{t`Affiliate Dashboard`}</h1>
                         <Text c="dimmed" size="sm" className={classes.subtitle}>
                             {t`View your referral stats and earnings`}
                         </Text>
@@ -58,7 +58,7 @@ const AffiliateLogin = () => {
                     {!emailSent ? (
                         <form onSubmit={handleSubmit}>
                             <Text size="sm" mb="md">
-                                {t`Enter your email address and we'll send you a magic link to access your affiliate portal.`}
+                                {t`Enter your email address and we'll send you a magic link to access your affiliate dashboard.`}
                             </Text>
 
                             <TextInput
@@ -86,7 +86,7 @@ const AffiliateLogin = () => {
                                 {t`Check your inbox!`}
                             </Text>
                             <Text size="sm" c="dimmed" mt="xs">
-                                {t`If you have an affiliate account with this email, we've sent you a magic link. Click the link in the email to access your portal.`}
+                                {t`If you have an affiliate account with this email, we've sent you a magic link. Click the link in the email to access your dashboard.`}
                             </Text>
                             <Button
                                 variant="subtle"

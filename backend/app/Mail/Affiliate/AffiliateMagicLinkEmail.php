@@ -24,7 +24,7 @@ class AffiliateMagicLinkEmail extends BaseMail
     public function envelope(): Envelope
     {
         return new Envelope(
-            subject: __('Your :term Portal Access - :event', ['term' => $this->affiliateTerm, 'event' => $this->eventTitle]),
+            subject: __('Your :term Dashboard Access - :event', ['term' => $this->affiliateTerm, 'event' => $this->eventTitle]),
         );
     }
 

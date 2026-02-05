@@ -89,7 +89,7 @@ export const CreateAffiliateModal = ({ onClose }: CreateAffiliateModalProps) => 
                     <Checkbox
                         mt="md"
                         label={t`Send welcome email to affiliate`}
-                        description={t`The affiliate will receive a welcome email with their code and portal access link`}
+                        description={t`The affiliate will receive a welcome email with their code and dashboard access link`}
                         {...form.getInputProps('auto_send_magic_link', { type: 'checkbox' })}
                     />
                 )}

@@ -32,12 +32,7 @@ const useGetAffiliateByToken = (token: string | undefined) => {
     });
 };
 
-const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('en-US', {
-        style: 'currency',
-        currency: 'USD',
-    }).format(amount);
-};
+
 
 const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('en-US', {
@@ -115,7 +110,7 @@ export const AffiliatePortal = () => {
             <div className={classes.container}>
                 <div className={classes.header}>
                     <IconChartBar size={48} className={classes.headerIcon} />
-                    <h1>{formatAffiliateTerm(event.affiliate_term, { capitalize: true })} Portal</h1>
+                    <h1>{formatAffiliateTerm(event.affiliate_term, { capitalize: true })} Dashboard</h1>
                     <Text className={classes.eventTitle}>{event.title}</Text>
                     <p className={classes.subtitle}>
                         {t`Welcome back, ${affiliate.name}! Here's your performance overview.`}
@@ -158,7 +153,6 @@ export const AffiliatePortal = () => {
                                     <span className={classes.buyerName}>{order.buyer_name}</span>
                                     <div className={classes.orderMeta}>
                                         <span>{formatDate(order.created_at)}</span>
-                                        <span className={classes.orderAmount}>{formatCurrency(order.total_gross)}</span>
                                     </div>
                                 </div>
                             ))}
