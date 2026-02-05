@@ -1,9 +1,9 @@
-import {Navigate, Outlet} from "react-router";
+import { Navigate, Outlet } from "react-router";
 import classes from "./Auth.module.scss";
-import {t} from "@lingui/macro";
-import {useGetMe} from "../../../queries/useGetMe.ts";
-import {PoweredByFooter} from "../../common/PoweredByFooter";
-import {LanguageSwitcher} from "../../common/LanguageSwitcher";
+import { t } from "@lingui/macro";
+import { useGetMe } from "../../../queries/useGetMe.ts";
+import { PoweredByFooter } from "../../common/PoweredByFooter";
+import { LanguageSwitcher } from "../../common/LanguageSwitcher";
 import {
     IconChartBar,
     IconCreditCard,
@@ -15,9 +15,9 @@ import {
     IconTicket,
     IconUsers,
 } from '@tabler/icons-react';
-import {useMemo} from "react";
-import {getConfig} from "../../../utilites/config.ts";
-import {isHiEvents} from "../../../utilites/helpers.ts";
+import { useMemo } from "react";
+import { getConfig } from "../../../utilites/config.ts";
+import { isHiEvents } from "../../../utilites/helpers.ts";
 
 const allFeatures = [
     {
@@ -146,7 +146,7 @@ const AuthLayout = () => {
                     </main>
                 </div>
 
-                <FeaturePanel />
+                {getConfig("VITE_SHOW_AUTH_FEATURES_PANEL", "true") === "true" && <FeaturePanel />}
             </div>
         </div>
     );

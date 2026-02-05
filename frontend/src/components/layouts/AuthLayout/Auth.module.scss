@@ -62,15 +62,16 @@
   }
 
   img {
-    height: 110px;
-    width: auto;
+    max-width: 280px;
+    width: 100%;
+    height: auto;
 
     @include mixins.respond-below(md) {
-      height: 100px;
+      max-width: 240px;
     }
 
     @include mixins.respond-below(sm) {
-      height: 90px;
+      max-width: 200px;
     }
   }
 }
@@ -141,13 +142,11 @@
 .backgroundOverlay {
   position: absolute;
   inset: 0;
-  background: linear-gradient(
-    135deg,
-    var(--mantine-color-primary-9) 0%,
-    var(--mantine-color-primary-8) 30%,
-    var(--mantine-color-primary-6) 60%,
-    var(--mantine-color-secondary-5) 100%
-  );
+  background: linear-gradient(135deg,
+      var(--mantine-color-primary-9) 0%,
+      var(--mantine-color-primary-8) 30%,
+      var(--mantine-color-primary-6) 60%,
+      var(--mantine-color-secondary-5) 100%);
   opacity: 0.92;
 }
 

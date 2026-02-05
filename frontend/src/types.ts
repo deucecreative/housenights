@@ -21,7 +21,8 @@ export type ConfigKeys =
     | 'VITE_PLATFORM_SUPPORT_EMAIL'
     | 'VITE_STRIPE_PUBLISHABLE_KEY'
     | 'VITE_I_HAVE_PURCHASED_A_LICENCE'
-    | 'VITE_DEFAULT_IMAGE_URL';
+    | 'VITE_DEFAULT_IMAGE_URL'
+    | 'VITE_SHOW_AUTH_FEATURES_PANEL';
 
 export enum StripePlatform {
     Canada = 'ca',
