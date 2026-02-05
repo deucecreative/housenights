@@ -1,6 +1,6 @@
 import axios from "axios";
-import {isSsr} from "../utilites/helpers.ts";
-import {getConfig} from "../utilites/config.ts";
+import { isSsr } from "../utilites/helpers.ts";
+import { getConfig } from "../utilites/config.ts";
 
 const BASE_URL = isSsr()
     ? getConfig('VITE_API_URL_SERVER')
@@ -25,6 +25,7 @@ const ALLOWED_UNAUTHENTICATED_PATHS = [
     'check-in',
     '/events/',
     'my-tickets',
+    '/affiliate',
 ];
 
 export const api = axios.create({
