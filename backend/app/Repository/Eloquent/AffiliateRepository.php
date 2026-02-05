@@ -7,6 +7,7 @@ namespace HiEvents\Repository\Eloquent;
 use HiEvents\DomainObjects\AffiliateDomainObject;
 use HiEvents\DomainObjects\Generated\AffiliateDomainObjectAbstract;
 use HiEvents\DomainObjects\Status\AffiliateStatus;
+use HiEvents\DomainObjects\Status\OrderStatus;
 use HiEvents\Http\DTO\QueryParamsDTO;
 use HiEvents\Models\Affiliate;
 use HiEvents\Repository\Interfaces\AffiliateRepositoryInterface;
@@ -41,16 +42,17 @@ class AffiliateRepository extends BaseRepository implements AffiliateRepositoryI
             };
         }
 
-        // Add subquery to count tickets from attendees via orders
+        // Add subquery to count attendees from completed orders
         $this->model = $this->model->select('affiliates.*')
             ->selectRaw('(
                 SELECT COUNT(*)
                 FROM attendees
                 INNER JOIN orders ON orders.id = attendees.order_id
                 WHERE orders.affiliate_id = affiliates.id
+                AND orders.status = ?
                 AND orders.deleted_at IS NULL
                 AND attendees.deleted_at IS NULL
-            ) as total_tickets');
+            ) as total_tickets', [OrderStatus::COMPLETED->name]);
 
         $this->model = $this->model->orderBy(
             column: $params->sort_by ?? AffiliateDomainObject::getDefaultSort(),
@@ -86,6 +88,7 @@ class AffiliateRepository extends BaseRepository implements AffiliateRepositoryI
         return (int) DB::table('attendees')
             ->join('orders', 'orders.id', '=', 'attendees.order_id')
             ->where('orders.affiliate_id', $affiliateId)
+            ->where('orders.status', OrderStatus::COMPLETED->name)
             ->whereNull('orders.deleted_at')
             ->whereNull('attendees.deleted_at')
             ->count();
