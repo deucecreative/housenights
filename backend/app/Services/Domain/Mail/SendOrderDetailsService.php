@@ -38,7 +38,7 @@ class SendOrderDetailsService
             ->loadRelation(OrderItemDomainObject::class)
             ->loadRelation(AttendeeDomainObject::class)
             ->loadRelation(InvoiceDomainObject::class)
-            ->loadRelation(AffiliateDomainObject::class)
+            ->loadRelation(new Relationship(AffiliateDomainObject::class, name: 'affiliate'))
             ->findById($order->getId());
 
         $event = $this->eventRepository

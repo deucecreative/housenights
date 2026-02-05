@@ -9,6 +9,7 @@ use HiEvents\DomainObjects\InvoiceDomainObject;
 use HiEvents\DomainObjects\OrderDomainObject;
 use HiEvents\DomainObjects\OrderItemDomainObject;
 use HiEvents\Http\Actions\BaseAction;
+use HiEvents\Repository\Eloquent\Value\Relationship;
 use HiEvents\Repository\Interfaces\OrderRepositoryInterface;
 use HiEvents\Resources\Order\OrderResource;
 use Illuminate\Http\JsonResponse;
@@ -31,7 +32,7 @@ class GetOrdersAction extends BaseAction
             ->loadRelation(OrderItemDomainObject::class)
             ->loadRelation(AttendeeDomainObject::class)
             ->loadRelation(InvoiceDomainObject::class)
-            ->loadRelation(AffiliateDomainObject::class)
+            ->loadRelation(new Relationship(AffiliateDomainObject::class, name: 'affiliate'))
             ->findByEventId($eventId, $this->getPaginationQueryParams($request));
 
         return $this->filterableResourceResponse(
