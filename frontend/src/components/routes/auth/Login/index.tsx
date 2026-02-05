@@ -1,18 +1,19 @@
-import {Button, PasswordInput, TextInput, Collapse, UnstyledButton} from "@mantine/core";
-import {NavLink, useLocation} from "react-router";
-import {useMutation} from "@tanstack/react-query";
-import {notifications} from '@mantine/notifications';
-import {authClient} from "../../../../api/auth.client.ts";
-import {LoginData, LoginResponse} from "../../../../types.ts";
-import {useForm} from "@mantine/form";
-import {redirectToPreviousUrl} from "../../../../api/client.ts";
+import { Button, PasswordInput, TextInput, Collapse, UnstyledButton } from "@mantine/core";
+import { NavLink, useLocation } from "react-router";
+import { useMutation } from "@tanstack/react-query";
+import { notifications } from '@mantine/notifications';
+import { authClient } from "../../../../api/auth.client.ts";
+import { LoginData, LoginResponse } from "../../../../types.ts";
+import { useForm } from "@mantine/form";
+import { redirectToPreviousUrl } from "../../../../api/client.ts";
 import classes from "./Login.module.scss";
-import {t, Trans} from "@lingui/macro";
-import {useEffect, useState} from "react";
-import {ChooseAccountModal} from "../../../modals/ChooseAccountModal";
-import {useSendTicketLookupEmail} from "../../../../mutations/useSendTicketLookupEmail.ts";
-import {showError} from "../../../../utilites/notifications.tsx";
-import {IconTicket, IconChevronDown} from "@tabler/icons-react";
+import { t, Trans } from "@lingui/macro";
+import { useEffect, useState } from "react";
+import { ChooseAccountModal } from "../../../modals/ChooseAccountModal";
+import { useSendTicketLookupEmail } from "../../../../mutations/useSendTicketLookupEmail.ts";
+import { showError } from "../../../../utilites/notifications.tsx";
+import { IconTicket, IconChevronDown } from "@tabler/icons-react";
+import { getConfig } from "../../../../utilites/config.ts";
 
 const Login = () => {
     const location = useLocation();
@@ -33,7 +34,7 @@ const Login = () => {
     });
     const [ticketLookupSuccess, setTicketLookupSuccess] = useState(false);
 
-    const {mutate: loginUser, isPending, data} = useMutation({
+    const { mutate: loginUser, isPending, data } = useMutation({
         mutationFn: (userData: LoginData) => authClient.login(userData),
 
         onSuccess: (response: LoginResponse) => {
@@ -78,27 +79,29 @@ const Login = () => {
         <>
             <header className={classes.header}>
                 <h2>{t`Welcome back`}</h2>
-                <p>
-                    <Trans>
-                        Don't have an account?{' '}
-                        <NavLink to={`/auth/register${location.search}`}>
-                            Sign up
-                        </NavLink>
-                    </Trans>
-                </p>
+                {getConfig("VITE_DISABLE_REGISTRATION", "false") !== "true" && (
+                    <p>
+                        <Trans>
+                            Don't have an account?{' '}
+                            <NavLink to={`/auth/register${location.search}`}>
+                                Sign up
+                            </NavLink>
+                        </Trans>
+                    </p>
+                )}
             </header>
             <div className={classes.loginCard}>
                 <form onSubmit={form.onSubmit((values) => loginUser(values))}>
                     <TextInput {...form.getInputProps('email')}
-                               label={t`Email`}
-                               placeholder="hello@example.com"
-                               required
+                        label={t`Email`}
+                        placeholder="hello@example.com"
+                        required
                     />
                     <PasswordInput {...form.getInputProps('password')}
-                                   label={t`Password`}
-                                   placeholder={t`Your password`}
-                                   required
-                                   mt="md"
+                        label={t`Password`}
+                        placeholder={t`Your password`}
+                        required
+                        mt="md"
                     />
                     <Button color="secondary.5" type="submit" fullWidth loading={isPending} disabled={isPending} mt="lg">
                         {isPending ? t`Logging in` : t`Log in`}
@@ -169,7 +172,7 @@ const Login = () => {
             {(showChooseAccount && data) && <ChooseAccountModal onAccountChosen={(accountId) => {
                 form.setFieldValue('account_id', accountId as string);
             }
-            } accounts={data.accounts}/>}
+            } accounts={data.accounts} />}
         </>
     )
 }

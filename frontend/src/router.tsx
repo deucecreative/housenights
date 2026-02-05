@@ -47,6 +47,13 @@ export const router: RouteObject[] = [
             {
                 path: "register",
                 async lazy() {
+                    const { getConfig } = await import("./utilites/config.ts");
+                    if (getConfig("VITE_DISABLE_REGISTRATION", "false") === "true") {
+                        // Redirect to login when registration is disabled
+                        return {
+                            Component: () => <Navigate to="/auth/login" replace />
+                        };
+                    }
                     const Register = await import("./components/routes/auth/Register");
                     return { Component: Register.default };
                 }
