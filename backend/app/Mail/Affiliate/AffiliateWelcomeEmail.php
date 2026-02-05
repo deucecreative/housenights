@@ -24,7 +24,7 @@ class AffiliateWelcomeEmail extends BaseMail
     public function envelope(): Envelope
     {
         return new Envelope(
-            subject: __('Welcome to the :term program for :event', ['term' => $this->affiliateTerm, 'event' => $this->eventTitle]),
+            subject: __('Welcome to the :term Program for :event', ['term' => $this->affiliateTerm, 'event' => $this->eventTitle]),
         );
     }
 
