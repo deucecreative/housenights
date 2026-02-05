@@ -14,6 +14,7 @@ export interface AffiliatePortalData {
         id: number;
         title: string;
         slug: string;
+        currency: string;
         affiliate_term?: string;
     };
     orders: AffiliateOrder[];

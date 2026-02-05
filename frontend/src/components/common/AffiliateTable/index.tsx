@@ -1,4 +1,5 @@
 import { t } from "@lingui/macro";
+import { formatCurrency } from "../../../utilites/currency.ts";
 import { Badge, Button, Group, Table as MantineTable, Text } from '@mantine/core';
 import { IdParam } from "../../../types.ts";
 import { IconCopy, IconCurrencyDollar, IconMail, IconPencil, IconPlus, IconShare, IconTrash, IconUsers } from "@tabler/icons-react";
@@ -167,7 +168,7 @@ export const AffiliateTable = ({ affiliates, openCreateModal }: AffiliateTablePr
                                         <Group gap={4} align="center">
                                             <IconCurrencyDollar size={12} className={classes.statIcon} />
                                             <Text className={classes.statValue}>
-                                                ${affiliate.total_sales_gross.toFixed(2)}
+                                                {formatCurrency(affiliate.total_sales_gross, event?.currency)}
                                             </Text>
                                         </Group>
                                         <Text className={classes.statLabel}>

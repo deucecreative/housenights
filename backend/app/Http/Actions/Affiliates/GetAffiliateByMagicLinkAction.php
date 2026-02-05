@@ -48,6 +48,7 @@ class GetAffiliateByMagicLinkAction extends BaseAction
                 'id' => $data['event']->getId(),
                 'title' => $data['event']->getTitle(),
                 'slug' => $data['event']->getSlug(),
+                'currency' => $data['event']->getCurrency(),
                 'affiliate_term' => $data['organizer']->getOrganizerSettings()?->getAffiliateTerm(),
             ],
             'orders' => $data['orders']->toArray(),
