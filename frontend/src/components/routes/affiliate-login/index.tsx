@@ -49,16 +49,16 @@ const AffiliateLogin = () => {
                 <Card className={classes.card}>
                     <div className={classes.header}>
                         <IconMail size={48} className={classes.icon} />
-                        <h1 className={classes.title}>{t`Affiliate Dashboard`}</h1>
+                        <h1 className={classes.title}>{t`Dashboard Login`}</h1>
                         <Text c="dimmed" size="sm" className={classes.subtitle}>
-                            {t`View your referral stats and earnings`}
+                            {t`View your referral stats`}
                         </Text>
                     </div>
 
                     {!emailSent ? (
                         <form onSubmit={handleSubmit}>
                             <Text size="sm" mb="md">
-                                {t`Enter your email address and we'll send you a magic link to access your affiliate dashboard.`}
+                                {t`Enter your email address and we'll send you a magic link to access your dashboard.`}
                             </Text>
 
                             <TextInput
