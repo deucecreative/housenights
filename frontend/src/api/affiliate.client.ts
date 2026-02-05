@@ -11,7 +11,8 @@ export interface Affiliate {
     name: string;
     code: string;
     email?: string;
-    total_sales: number;
+    total_orders: number;
+    total_tickets: number;
     total_sales_gross: number;
     status: 'ACTIVE' | 'INACTIVE';
     created_at: string;

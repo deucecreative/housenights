@@ -6,6 +6,7 @@ namespace HiEvents\Http\Actions\Affiliates;
 
 use HiEvents\Exceptions\InvalidAffiliateMagicLinkException;
 use HiEvents\Http\Actions\BaseAction;
+use HiEvents\Repository\Interfaces\AffiliateRepositoryInterface;
 use HiEvents\Services\Application\Handlers\Affiliate\DTO\GetAffiliateByMagicLinkDTO;
 use HiEvents\Services\Application\Handlers\Affiliate\GetAffiliateByMagicLinkHandler;
 use Illuminate\Http\JsonResponse;
@@ -13,7 +14,8 @@ use Illuminate\Http\JsonResponse;
 class GetAffiliateByMagicLinkAction extends BaseAction
 {
     public function __construct(
-        private readonly GetAffiliateByMagicLinkHandler $getAffiliateByMagicLinkHandler
+        private readonly GetAffiliateByMagicLinkHandler $getAffiliateByMagicLinkHandler,
+        private readonly AffiliateRepositoryInterface $affiliateRepository,
     ) {
     }
 
@@ -31,12 +33,15 @@ class GetAffiliateByMagicLinkAction extends BaseAction
             );
         }
 
+        $totalTickets = $this->affiliateRepository->getTicketCount($data['affiliate']->getId());
+
         return $this->jsonResponse([
             'affiliate' => [
                 'id' => $data['affiliate']->getId(),
                 'name' => $data['affiliate']->getName(),
                 'code' => $data['affiliate']->getCode(),
-                'total_sales' => $data['affiliate']->getTotalSales(),
+                'total_orders' => $data['affiliate']->getTotalSales(),
+                'total_tickets' => $totalTickets,
                 'total_sales_gross' => $data['affiliate']->getTotalSalesGross(),
             ],
             'event' => [

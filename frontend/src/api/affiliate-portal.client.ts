@@ -6,7 +6,8 @@ export interface AffiliatePortalData {
         id: number;
         name: string;
         code: string;
-        total_sales: number;
+        total_orders: number;
+        total_tickets: number;
         total_sales_gross: number;
     };
     event: {

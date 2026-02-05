@@ -155,11 +155,11 @@ export const AffiliateTable = ({ affiliates, openCreateModal }: AffiliateTablePr
                                         <Group gap={4} align="center">
                                             <IconUsers size={12} className={classes.statIcon} />
                                             <Text className={classes.statValue}>
-                                                {affiliate.total_sales}
+                                                {affiliate.total_tickets}
                                             </Text>
                                         </Group>
                                         <Text className={classes.statLabel}>
-                                            {t`Sales`}
+                                            {affiliate.total_tickets === 1 ? t`Ticket` : t`Tickets`}
                                         </Text>
                                     </div>
 

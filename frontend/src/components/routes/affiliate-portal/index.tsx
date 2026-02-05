@@ -120,8 +120,8 @@ export const AffiliatePortal = () => {
                 <div className={classes.statsGrid}>
                     <Card className={classes.statCard}>
                         <IconUsers size={24} style={{ color: 'var(--mantine-color-secondary-5)', marginBottom: 8 }} />
-                        <div className={classes.statValue}>{affiliate.total_sales}</div>
-                        <div className={classes.statLabel}>{t`Total Sales`}</div>
+                        <div className={classes.statValue}>{affiliate.total_tickets}</div>
+                        <div className={classes.statLabel}>{affiliate.total_tickets === 1 ? t`Ticket Sold` : t`Tickets Sold`}</div>
                     </Card>
                 </div>
 

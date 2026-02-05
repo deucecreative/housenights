@@ -9,6 +9,10 @@ use HiEvents\DomainObjects\SortingAndFiltering\AllowedSorts;
 
 class AffiliateDomainObject extends Generated\AffiliateDomainObjectAbstract implements IsSortable
 {
+    final public const TOTAL_TICKETS = 'total_tickets';
+
+    protected int $total_tickets = 0;
+
     public static function getAllowedSorts(): AllowedSorts
     {
         return new AllowedSorts(
@@ -22,8 +26,12 @@ class AffiliateDomainObject extends Generated\AffiliateDomainObjectAbstract impl
                     'desc' => __('Name Z-A'),
                 ],
                 self::TOTAL_SALES => [
-                    'asc' => __('Sales Ascending'),
-                    'desc' => __('Sales Descending'),
+                    'asc' => __('Orders Ascending'),
+                    'desc' => __('Orders Descending'),
+                ],
+                self::TOTAL_TICKETS => [
+                    'asc' => __('Tickets Ascending'),
+                    'desc' => __('Tickets Descending'),
                 ],
                 self::TOTAL_SALES_GROSS => [
                     'asc' => __('Revenue Ascending'),
@@ -35,11 +43,22 @@ class AffiliateDomainObject extends Generated\AffiliateDomainObjectAbstract impl
 
     public static function getDefaultSort(): string
     {
-        return self::CREATED_AT;
+        return self::TOTAL_TICKETS;
     }
 
     public static function getDefaultSortDirection(): string
     {
         return 'desc';
+    }
+
+    public function setTotalTickets(int $total_tickets): self
+    {
+        $this->total_tickets = $total_tickets;
+        return $this;
+    }
+
+    public function getTotalTickets(): int
+    {
+        return $this->total_tickets;
     }
 }
