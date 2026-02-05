@@ -59,6 +59,13 @@ class OrderResource extends BaseResource
                 !is_null($this->getLatestInvoice()),
                 fn() => (new InvoiceResource($this->getLatestInvoice()))->toArray($request),
             ),
+            'affiliate' => $this->when(
+                !is_null($this->getAffiliate()),
+                fn() => [
+                    'id' => $this->getAffiliate()->getId(),
+                    'name' => $this->getAffiliate()->getName(),
+                ],
+            ),
         ];
     }
 }

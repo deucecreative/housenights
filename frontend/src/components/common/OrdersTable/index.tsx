@@ -1,6 +1,6 @@
-import {t} from "@lingui/macro";
-import {Anchor, Button, Group, Menu, Popover, Text, Tooltip} from '@mantine/core';
-import {Event, IdParam, Invoice, MessageType, Order} from "../../../types.ts";
+import { t } from "@lingui/macro";
+import { Anchor, Button, Group, Menu, Popover, Text, Tooltip } from '@mantine/core';
+import { Event, IdParam, Invoice, MessageType, Order } from "../../../types.ts";
 import {
     IconAlertCircle,
     IconBasketCog,
@@ -23,34 +23,34 @@ import {
     IconTrash,
     IconX
 } from "@tabler/icons-react";
-import {relativeDate} from "../../../utilites/dates.ts";
-import {ManageOrderModal} from "../../modals/ManageOrderModal";
-import {useClipboard, useDisclosure} from "@mantine/hooks";
-import {useMemo, useState} from "react";
-import {CancelOrderModal} from "../../modals/CancelOrderModal";
-import {SendMessageModal} from "../../modals/SendMessageModal";
-import {NoResultsSplash} from "../NoResultsSplash";
-import {RefundOrderModal} from "../../modals/RefundOrderModal";
+import { relativeDate } from "../../../utilites/dates.ts";
+import { ManageOrderModal } from "../../modals/ManageOrderModal";
+import { useClipboard, useDisclosure } from "@mantine/hooks";
+import { useMemo, useState } from "react";
+import { CancelOrderModal } from "../../modals/CancelOrderModal";
+import { SendMessageModal } from "../../modals/SendMessageModal";
+import { NoResultsSplash } from "../NoResultsSplash";
+import { RefundOrderModal } from "../../modals/RefundOrderModal";
 import classes from "./OrdersTable.module.scss";
-import {useResendOrderConfirmation} from "../../../mutations/useResendOrderConfirmation.ts";
-import {formatNumber} from "../../../utilites/helpers.ts";
-import {useUrlHash} from "../../../hooks/useUrlHash.ts";
-import {useMarkOrderAsPaid} from "../../../mutations/useMarkOrderAsPaid.ts";
-import {orderClient} from "../../../api/order.client.ts";
-import {downloadBinary} from "../../../utilites/download.ts";
-import {withLoadingNotification} from "../../../utilites/withLoadingNotification.tsx";
-import {showError, showSuccess} from "../../../utilites/notifications.tsx";
-import {TanStackTable, TanStackTableColumn} from "../TanStackTable";
-import {ColumnVisibilityToggle} from "../ColumnVisibilityToggle";
-import {CellContext} from "@tanstack/react-table";
-import {formatCurrency} from "../../../utilites/currency.ts";
+import { useResendOrderConfirmation } from "../../../mutations/useResendOrderConfirmation.ts";
+import { formatNumber } from "../../../utilites/helpers.ts";
+import { useUrlHash } from "../../../hooks/useUrlHash.ts";
+import { useMarkOrderAsPaid } from "../../../mutations/useMarkOrderAsPaid.ts";
+import { orderClient } from "../../../api/order.client.ts";
+import { downloadBinary } from "../../../utilites/download.ts";
+import { withLoadingNotification } from "../../../utilites/withLoadingNotification.tsx";
+import { showError, showSuccess } from "../../../utilites/notifications.tsx";
+import { TanStackTable, TanStackTableColumn } from "../TanStackTable";
+import { ColumnVisibilityToggle } from "../ColumnVisibilityToggle";
+import { CellContext } from "@tanstack/react-table";
+import { formatCurrency } from "../../../utilites/currency.ts";
 
 interface OrdersTableProps {
     event: Event,
     orders: Order[];
 }
 
-export const OrdersTable = ({orders, event}: OrdersTableProps) => {
+export const OrdersTable = ({ orders, event }: OrdersTableProps) => {
     const [isViewModalOpen, viewModal] = useDisclosure(false);
     const [isCancelModalOpen, cancelModal] = useDisclosure(false);
     const [isMessageModalOpen, messageModal] = useDisclosure(false);
@@ -59,7 +59,7 @@ export const OrdersTable = ({orders, event}: OrdersTableProps) => {
     const [emailPopoverId, setEmailPopoverId] = useState<IdParam | null>(null);
     const resendConfirmationMutation = useResendOrderConfirmation();
     const markAsPaidMutation = useMarkOrderAsPaid();
-    const clipboard = useClipboard({timeout: 2000});
+    const clipboard = useClipboard({ timeout: 2000 });
 
     useUrlHash(/^#order-(\d+)$/, (matches => {
         const orderId = matches![1];
@@ -73,14 +73,14 @@ export const OrdersTable = ({orders, event}: OrdersTableProps) => {
     }
 
     const handleMarkAsPaid = (eventId: IdParam, orderId: IdParam) => {
-        markAsPaidMutation.mutate({eventId, orderId}, {
+        markAsPaidMutation.mutate({ eventId, orderId }, {
             onSuccess: () => showSuccess(t`Order marked as paid`),
             onError: () => showError(t`There was an error marking the order as paid`)
         });
     }
 
     const handleResendConfirmation = (eventId: IdParam, orderId: IdParam) => {
-        resendConfirmationMutation.mutate({eventId, orderId}, {
+        resendConfirmationMutation.mutate({ eventId, orderId }, {
             onSuccess: () => showSuccess(t`Your message has been sent`),
             onError: () => showError(t`There was an error sending your message`)
         });
@@ -129,7 +129,7 @@ export const OrdersTable = ({orders, event}: OrdersTableProps) => {
         });
     };
 
-    const ActionMenu = ({order}: { order: Order }) => {
+    const ActionMenu = ({ order }: { order: Order }) => {
         const isRefundable = !order.is_free_order
             && order.status !== 'AWAITING_OFFLINE_PAYMENT'
             && order.payment_provider === 'STRIPE'
@@ -141,7 +141,7 @@ export const OrdersTable = ({orders, event}: OrdersTableProps) => {
                     <Menu.Target>
                         <div className={classes.action}>
                             <Button size={"xs"} variant={"transparent"}>
-                                <IconDotsVertical/>
+                                <IconDotsVertical />
                             </Button>
                         </div>
                     </Menu.Target>
@@ -149,40 +149,40 @@ export const OrdersTable = ({orders, event}: OrdersTableProps) => {
                     <Menu.Dropdown>
                         <Menu.Label>{t`Manage`}</Menu.Label>
                         <Menu.Item onClick={() => handleModalClick(order.id, viewModal)}
-                                   leftSection={<IconBasketCog size={14}/>}>{t`Manage order`}</Menu.Item>
+                            leftSection={<IconBasketCog size={14} />}>{t`Manage order`}</Menu.Item>
                         <Menu.Item onClick={() => handleModalClick(order.id, messageModal)}
-                                   leftSection={<IconSend size={14}/>}>{t`Message buyer`}</Menu.Item>
+                            leftSection={<IconSend size={14} />}>{t`Message buyer`}</Menu.Item>
 
                         {order.latest_invoice && (
                             <Menu.Item onClick={() => handleInvoiceDownload(order.latest_invoice as Invoice)}
-                                       leftSection={<IconReceipt2 size={14}/>}>{t`Download invoice`}</Menu.Item>
+                                leftSection={<IconReceipt2 size={14} />}>{t`Download invoice`}</Menu.Item>
                         )}
 
                         {order.status === 'AWAITING_OFFLINE_PAYMENT' && (
                             <Menu.Item onClick={() => handleMarkAsPaid(event.id, order.id)}
-                                       leftSection={<IconReceiptDollar size={14}/>}>{t`Mark as paid`}</Menu.Item>
+                                leftSection={<IconReceiptDollar size={14} />}>{t`Mark as paid`}</Menu.Item>
                         )}
 
                         {isRefundable && (
                             <Menu.Item onClick={() => handleModalClick(order.id, refundModal)}
-                                       leftSection={<IconReceiptRefund size={14}/>}>{t`Refund order`}</Menu.Item>
+                                leftSection={<IconReceiptRefund size={14} />}>{t`Refund order`}</Menu.Item>
                         )}
 
                         {order.status === 'COMPLETED' && (
                             <Menu.Item
                                 onClick={() => handleResendConfirmation(event.id, order.id)}
-                                leftSection={<IconRepeat size={14}/>}>
+                                leftSection={<IconRepeat size={14} />}>
                                 {t`Resend order email`}
                             </Menu.Item>
                         )}
 
                         {order.status !== 'CANCELLED' && (
                             <>
-                                <Menu.Divider/>
+                                <Menu.Divider />
                                 <Menu.Label>{t`Danger zone`}</Menu.Label>
                                 <Menu.Item color="red"
-                                           onClick={() => handleModalClick(order.id, cancelModal)}
-                                           leftSection={<IconTrash size={14}/>}>
+                                    onClick={() => handleModalClick(order.id, cancelModal)}
+                                    leftSection={<IconTrash size={14} />}>
                                     {t`Cancel order`}
                                 </Menu.Item>
                             </>
@@ -207,7 +207,7 @@ export const OrdersTable = ({orders, event}: OrdersTableProps) => {
                                 <Anchor
                                     onClick={() => handleModalClick(order.id, viewModal)}
                                     className={classes.customerName}
-                                    style={{cursor: 'pointer'}}
+                                    style={{ cursor: 'pointer' }}
                                 >
                                     {order.first_name} {order.last_name}
                                 </Anchor>
@@ -231,17 +231,17 @@ export const OrdersTable = ({orders, event}: OrdersTableProps) => {
                                     <Anchor
                                         onClick={() => setEmailPopoverId(order.id)}
                                         className={classes.customerEmail}
-                                        style={{cursor: 'pointer'}}
+                                        style={{ cursor: 'pointer' }}
                                     >
                                         {order.email}
                                     </Anchor>
                                 </Popover.Target>
                                 <Popover.Dropdown>
-                                    <Group gap="xs" style={{flexDirection: 'column', width: '100%'}}>
+                                    <Group gap="xs" style={{ flexDirection: 'column', width: '100%' }}>
                                         <Button
                                             fullWidth
                                             variant="light"
-                                            leftSection={<IconSend size={16}/>}
+                                            leftSection={<IconSend size={16} />}
                                             onClick={() => handleMessageFromEmail(order)}
                                         >
                                             {t`Message`}
@@ -250,7 +250,7 @@ export const OrdersTable = ({orders, event}: OrdersTableProps) => {
                                             fullWidth
                                             variant="light"
                                             color="gray"
-                                            leftSection={<IconCopy size={16}/>}
+                                            leftSection={<IconCopy size={16} />}
                                             onClick={() => handleCopyEmail(order.email)}
                                         >
                                             {t`Copy Email`}
@@ -262,7 +262,7 @@ export const OrdersTable = ({orders, event}: OrdersTableProps) => {
                     );
                 },
                 meta: {
-                    headerStyle: {minWidth: 280},
+                    headerStyle: { minWidth: 280 },
                 },
             },
             {
@@ -276,7 +276,7 @@ export const OrdersTable = ({orders, event}: OrdersTableProps) => {
                             <Anchor
                                 onClick={() => handleModalClick(order.id, viewModal)}
                                 className={classes.orderId}
-                                style={{cursor: 'pointer'}}
+                                style={{ cursor: 'pointer' }}
                             >
                                 {order.public_id}
                             </Anchor>
@@ -288,20 +288,20 @@ export const OrdersTable = ({orders, event}: OrdersTableProps) => {
                                     <Anchor
                                         onClick={() => handleInvoiceDownload(order.latest_invoice as Invoice)}
                                         className={classes.invoiceLink}
-                                        style={{cursor: 'pointer'}}
+                                        style={{ cursor: 'pointer' }}
                                     >
-                                        <IconFileInvoice size={14}/>
+                                        <IconFileInvoice size={14} />
                                         {t`Invoice`} #{order.latest_invoice.invoice_number}
                                     </Anchor>
                                 ) : (
                                     <Text className={classes.noInvoice}>
-                                        <IconFileOff size={14}/>
+                                        <IconFileOff size={14} />
                                         {t`No invoice`}
                                     </Text>
                                 )}
                                 {order.status === 'RESERVED' && order.reserved_until && (
                                     <Text className={classes.reservedUntil}>
-                                        <IconClock size={14}/>
+                                        <IconClock size={14} />
                                         {t`Reserved until`} {formatTime(order.reserved_until)}
                                     </Text>
                                 )}
@@ -329,7 +329,7 @@ export const OrdersTable = ({orders, event}: OrdersTableProps) => {
                             disabled={!itemBreakdown}
                         >
                             <div className={classes.itemsBadge}>
-                                <IconTicket size={14}/>
+                                <IconTicket size={14} />
                                 {formatNumber(totalQuantity)} {t`item(s)`}
                             </div>
                         </Tooltip>
@@ -373,21 +373,34 @@ export const OrdersTable = ({orders, event}: OrdersTableProps) => {
                         <div className={classes.paymentStatus}>
                             {order.payment_provider === 'STRIPE' ? (
                                 <>
-                                    <IconCreditCard size={16}/>
+                                    <IconCreditCard size={16} />
                                     <Text>{t`Stripe`}</Text>
                                 </>
                             ) : order.payment_provider === 'OFFLINE' ? (
                                 <>
-                                    <IconCash size={16}/>
+                                    <IconCash size={16} />
                                     <Text>{t`Offline`}</Text>
                                 </>
                             ) : (
                                 <>
-                                    <IconHelp size={16}/>
+                                    <IconHelp size={16} />
                                     <Text>{t`Other`}</Text>
                                 </>
                             )}
                         </div>
+                    );
+                },
+            },
+            {
+                id: 'affiliate',
+                header: t`Affiliate`,
+                enableHiding: true,
+                cell: (info: CellContext<Order, unknown>) => {
+                    const order = info.row.original;
+                    return order.affiliate ? (
+                        <Text size="sm">{order.affiliate.name}</Text>
+                    ) : (
+                        <Text size="sm" c="dimmed">—</Text>
                     );
                 },
             },
@@ -401,31 +414,31 @@ export const OrdersTable = ({orders, event}: OrdersTableProps) => {
                         <div className={classes.statusBadge} data-status={order.status}>
                             {order.status === 'COMPLETED' && (
                                 <>
-                                    <IconCheck size={14}/>
+                                    <IconCheck size={14} />
                                     {t`Completed`}
                                 </>
                             )}
                             {order.status === 'RESERVED' && (
                                 <>
-                                    <IconClock size={14}/>
+                                    <IconClock size={14} />
                                     {t`Reserved`}
                                 </>
                             )}
                             {order.status === 'AWAITING_OFFLINE_PAYMENT' && (
                                 <>
-                                    <IconClockPause size={14}/>
+                                    <IconClockPause size={14} />
                                     {t`Awaiting Payment`}
                                 </>
                             )}
                             {order.status === 'CANCELLED' && (
                                 <>
-                                    <IconX size={14}/>
+                                    <IconX size={14} />
                                     {t`Cancelled`}
                                 </>
                             )}
                             {order.status === 'ABANDONED' && (
                                 <>
-                                    <IconAlertCircle size={14}/>
+                                    <IconAlertCircle size={14} />
                                     {t`Abandoned`}
                                 </>
                             )}
@@ -441,7 +454,7 @@ export const OrdersTable = ({orders, event}: OrdersTableProps) => {
                     const order = info.row.original;
                     return (
                         <div className={classes.actionsMenu}>
-                            <ActionMenu order={order}/>
+                            <ActionMenu order={order} />
                         </div>
                     );
                 },
@@ -472,13 +485,13 @@ export const OrdersTable = ({orders, event}: OrdersTableProps) => {
                 columns={columns}
                 storageKey="orders-table"
                 enableColumnVisibility={true}
-                renderColumnVisibilityToggle={(table) => <ColumnVisibilityToggle table={table}/>}
+                renderColumnVisibilityToggle={(table) => <ColumnVisibilityToggle table={table} />}
             />
             {orderId && (
                 <>
-                    {isRefundModalOpen && <RefundOrderModal onClose={refundModal.close} orderId={orderId}/>}
-                    {isViewModalOpen && <ManageOrderModal onClose={viewModal.close} orderId={orderId}/>}
-                    {isCancelModalOpen && <CancelOrderModal onClose={cancelModal.close} orderId={orderId}/>}
+                    {isRefundModalOpen && <RefundOrderModal onClose={refundModal.close} orderId={orderId} />}
+                    {isViewModalOpen && <ManageOrderModal onClose={viewModal.close} orderId={orderId} />}
+                    {isCancelModalOpen && <CancelOrderModal onClose={cancelModal.close} orderId={orderId} />}
                     {isMessageModalOpen && <SendMessageModal
                         onClose={messageModal.close}
                         orderId={orderId}

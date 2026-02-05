@@ -648,6 +648,10 @@ export interface Order {
     event?: Event;
     latest_invoice?: Invoice;
     session_identifier?: string;
+    affiliate?: {
+        id: IdParam;
+        name: string;
+    };
 }
 
 export interface Invoice {

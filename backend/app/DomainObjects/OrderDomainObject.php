@@ -36,6 +36,8 @@ class OrderDomainObject extends Generated\OrderDomainObjectAbstract implements I
 
     public ?string $sessionIdentifier = null;
 
+    public ?AffiliateDomainObject $affiliate = null;
+
     public static function getAllowedFilterFields(): array
     {
         return [
@@ -279,6 +281,17 @@ class OrderDomainObject extends Generated\OrderDomainObjectAbstract implements I
     public function getSessionIdentifier(): ?string
     {
         return $this->sessionIdentifier;
+    }
+
+    public function setAffiliate(?AffiliateDomainObject $affiliate): OrderDomainObject
+    {
+        $this->affiliate = $affiliate;
+        return $this;
+    }
+
+    public function getAffiliate(): ?AffiliateDomainObject
+    {
+        return $this->affiliate;
     }
 
     public function isRefundable(): bool

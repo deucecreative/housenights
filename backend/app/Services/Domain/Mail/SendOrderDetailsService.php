@@ -2,6 +2,7 @@
 
 namespace HiEvents\Services\Domain\Mail;
 
+use HiEvents\DomainObjects\AffiliateDomainObject;
 use HiEvents\DomainObjects\AttendeeDomainObject;
 use HiEvents\DomainObjects\EventDomainObject;
 use HiEvents\DomainObjects\EventSettingDomainObject;
@@ -37,6 +38,7 @@ class SendOrderDetailsService
             ->loadRelation(OrderItemDomainObject::class)
             ->loadRelation(AttendeeDomainObject::class)
             ->loadRelation(InvoiceDomainObject::class)
+            ->loadRelation(AffiliateDomainObject::class)
             ->findById($order->getId());
 
         $event = $this->eventRepository
@@ -120,6 +122,6 @@ class SendOrderDetailsService
 
         $this->mailer
             ->to($event->getOrganizer()->getEmail())
-            ->send(new OrderSummaryForOrganizer($order, $event));
+            ->send(new OrderSummaryForOrganizer($order, $event, $order->getAffiliate()?->getName()));
     }
 }

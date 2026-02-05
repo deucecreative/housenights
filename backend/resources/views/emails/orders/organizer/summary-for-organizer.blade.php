@@ -25,6 +25,9 @@
 {{ __('Order Amount:') }} <b>{{ Currency::format($order->getTotalGross(), $event->getCurrency()) }}</b><br>
 {{ __('Order ID:') }} <b>{{ $order->getPublicId() }}</b><br>
 {{ __('Order Status:') }} <b>{{ $order->getHumanReadableStatus() }}</b>
+@if($order->getAffiliateId())
+<br>{{ __('Affiliate:') }} <b>{{ $affiliateName ?? 'N/A' }}</b>
+@endif
 <br>
 
 <x-mail::button :url="$orderUrl">

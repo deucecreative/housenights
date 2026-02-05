@@ -2,6 +2,7 @@
 
 namespace HiEvents\Http\Actions\Orders;
 
+use HiEvents\DomainObjects\AffiliateDomainObject;
 use HiEvents\DomainObjects\AttendeeDomainObject;
 use HiEvents\DomainObjects\EventDomainObject;
 use HiEvents\DomainObjects\InvoiceDomainObject;
@@ -30,6 +31,7 @@ class GetOrdersAction extends BaseAction
             ->loadRelation(OrderItemDomainObject::class)
             ->loadRelation(AttendeeDomainObject::class)
             ->loadRelation(InvoiceDomainObject::class)
+            ->loadRelation(AffiliateDomainObject::class)
             ->findByEventId($eventId, $this->getPaginationQueryParams($request));
 
         return $this->filterableResourceResponse(

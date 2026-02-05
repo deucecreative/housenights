@@ -20,12 +20,15 @@ class OrderSummaryForOrganizer extends BaseMail
 
     private EventDomainObject $event;
 
-    public function __construct(OrderDomainObject $order, EventDomainObject $event)
+    private ?string $affiliateName;
+
+    public function __construct(OrderDomainObject $order, EventDomainObject $event, ?string $affiliateName = null)
     {
         parent::__construct();
 
         $this->order = $order;
         $this->event = $event;
+        $this->affiliateName = $affiliateName;
     }
 
     public function envelope(): Envelope
@@ -49,6 +52,7 @@ class OrderSummaryForOrganizer extends BaseMail
             with: [
                 'event' => $this->event,
                 'order' => $this->order,
+                'affiliateName' => $this->affiliateName,
                 'orderUrl' => sprintf(
                     Url::getFrontEndUrlFromConfig(Url::ORGANIZER_ORDER_SUMMARY),
                     $this->event->getId(),
