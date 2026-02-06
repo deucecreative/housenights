@@ -2,6 +2,7 @@
 
 namespace HiEvents\Services\Infrastructure\Webhook;
 
+use HiEvents\DomainObjects\AffiliateDomainObject;
 use HiEvents\DomainObjects\AttendeeDomainObject;
 use HiEvents\DomainObjects\OrderItemDomainObject;
 use HiEvents\DomainObjects\ProductPriceDomainObject;
@@ -101,6 +102,7 @@ class WebhookDispatchService
                     name: 'attendees')
             )
             ->loadRelation(QuestionAndAnswerViewDomainObject::class)
+            ->loadRelation(new Relationship(AffiliateDomainObject::class, name: 'affiliate'))
             ->findById($orderId);
 
         if ($eventType === DomainEventType::ORDER_CREATED) {
