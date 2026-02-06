@@ -62,16 +62,15 @@
   }
 
   img {
-    max-width: 280px;
-    width: 100%;
-    height: auto;
+    height: 110px;
+    width: auto;
 
     @include mixins.respond-below(md) {
-      max-width: 240px;
+      height: 100px;
     }
 
     @include mixins.respond-below(sm) {
-      max-width: 200px;
+      height: 90px;
     }
   }
 }
