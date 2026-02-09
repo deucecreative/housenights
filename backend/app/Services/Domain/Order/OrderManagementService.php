@@ -40,6 +40,7 @@ class OrderManagementService
         string                 $locale,
         ?PromoCodeDomainObject $promoCode,
         ?AffiliateDomainObject $affiliate = null,
+        ?string                $affiliateCode = null,
         string                 $sessionId = null,
     ): OrderDomainObject
     {
@@ -56,9 +57,11 @@ class OrderManagementService
             'promo_code_id' => $promoCode?->getId(),
             'promo_code' => $promoCode?->getCode(),
             'affiliate_id' => $affiliate?->getId(),
+            'affiliate_code' => $affiliateCode,
             'locale' => $locale,
         ]);
     }
+
 
     /**
      * Update order totals by summing up all order items.

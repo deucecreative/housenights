@@ -66,6 +66,7 @@ class CreateOrderHandler
                 locale: $createOrderPublicDTO->order_locale,
                 promoCode: $promoCode,
                 affiliate: $affiliate,
+                affiliateCode: $createOrderPublicDTO->affiliate_code,
                 sessionId: $createOrderPublicDTO->session_identifier,
             );
 

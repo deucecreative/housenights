@@ -66,6 +66,7 @@ class OrderResource extends BaseResource
                     'name' => $this->getAffiliate()->getName(),
                 ],
             ),
+            'affiliate_code' => $this->getAffiliateCode(),
         ];
     }
 }
