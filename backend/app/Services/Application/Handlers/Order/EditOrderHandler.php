@@ -32,7 +32,9 @@ class EditOrderHandler
             firstName: $dto->firstName,
             lastName: $dto->lastName,
             email: $dto->email,
-            notes: $dto->notes
+            notes: $dto->notes,
+            affiliateId: $dto->affiliateId,
+            clearAffiliate: $dto->clearAffiliate,
         );
     }
 }

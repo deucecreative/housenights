@@ -29,6 +29,8 @@ class EditOrderAction extends BaseAction
             lastName: $request->validated('last_name'),
             email: $request->validated('email'),
             notes: $request->validated('notes'),
+            affiliateId: $request->validated('affiliate_id'),
+            clearAffiliate: $request->has('affiliate_id') && $request->validated('affiliate_id') === null,
         ));
 
         return $this->resourceResponse(OrderResource::class, $order);

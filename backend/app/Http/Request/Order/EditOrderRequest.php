@@ -14,6 +14,7 @@ class EditOrderRequest extends BaseRequest
             'first_name' => RulesHelper::REQUIRED_STRING,
             'last_name' => RulesHelper::REQUIRED_STRING,
             'notes' => RulesHelper::OPTIONAL_TEXT_MEDIUM_LENGTH,
+            'affiliate_id' => ['nullable', 'integer'],
         ];
     }
 }

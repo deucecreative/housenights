@@ -652,6 +652,7 @@ export interface Order {
         id: IdParam;
         name: string;
     };
+    affiliate_code?: string;
 }
 
 export interface Invoice {
