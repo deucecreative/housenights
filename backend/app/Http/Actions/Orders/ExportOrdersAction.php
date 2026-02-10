@@ -9,6 +9,7 @@ use HiEvents\DomainObjects\QuestionAndAnswerViewDomainObject;
 use HiEvents\Exports\OrdersExport;
 use HiEvents\Http\Actions\BaseAction;
 use HiEvents\Http\DTO\QueryParamsDTO;
+use HiEvents\Repository\Eloquent\Value\Relationship;
 use HiEvents\Repository\Interfaces\OrderRepositoryInterface;
 use HiEvents\Repository\Interfaces\QuestionRepositoryInterface;
 use Maatwebsite\Excel\Facades\Excel;
@@ -31,7 +32,7 @@ class ExportOrdersAction extends BaseAction
         $orders = $this->orderRepository
             ->setMaxPerPage(10000)
             ->loadRelation(QuestionAndAnswerViewDomainObject::class)
-            ->loadRelation(AffiliateDomainObject::class)
+            ->loadRelation(new Relationship(AffiliateDomainObject::class, name: 'affiliate'))
             ->findByEventId($eventId, new QueryParamsDTO(
                 page: 1,
                 per_page: 10000,
