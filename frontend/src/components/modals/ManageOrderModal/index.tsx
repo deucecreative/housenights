@@ -32,7 +32,7 @@ export const ManageOrderModal = ({ onClose, orderId }: GenericModalProps & Manag
     const { eventId } = useParams();
     const { data: order, refetch: refetchOrder } = useGetOrder(eventId, orderId);
     const { data: event, data: { product_categories: productCategories } = {} } = useGetEvent(eventId);
-    const { data: affiliatesData } = useGetAffiliates(eventId);
+    const { data: affiliatesData } = useGetAffiliates(eventId, { perPage: 100 });
     const affiliates = affiliatesData?.data || [];
     const products = productCategories?.flatMap(category => category.products);
     const orderHasQuestions = order?.question_answers && order.question_answers.length > 0;
