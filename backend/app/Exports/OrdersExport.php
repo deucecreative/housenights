@@ -114,7 +114,7 @@ class OrdersExport implements FromCollection, WithHeadings, WithMapping, WithSty
             $order->getPromoCode(),
             $order->getOptedIntoMarketingAt() ? 'Yes' : 'No',
             $order->getAffiliate()?->getName() ?? '',
-            $order->getAffiliateCode() ?? '',
+            $order->getAffiliateCode() ?? $order->getAffiliate()?->getCode() ?? '',
         ], $answers->toArray());
     }
 
