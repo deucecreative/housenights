@@ -67,6 +67,8 @@ class OrdersExport implements FromCollection, WithHeadings, WithMapping, WithSty
             __('Notes'),
             __('Promo Code'),
             __('Opted In To Marketing'),
+            __('Affiliate Name'),
+            __('Affiliate Code'),
         ], $questionTitles);
     }
 
@@ -111,6 +113,8 @@ class OrdersExport implements FromCollection, WithHeadings, WithMapping, WithSty
             $order->getNotes(),
             $order->getPromoCode(),
             $order->getOptedIntoMarketingAt() ? 'Yes' : 'No',
+            $order->getAffiliate()?->getName() ?? '',
+            $order->getAffiliateCode() ?? '',
         ], $answers->toArray());
     }
 
