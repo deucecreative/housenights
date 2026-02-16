@@ -17,3 +17,5 @@ prompts/
 
 /playground/**
 /playground/
+/.agents
+/.agent
