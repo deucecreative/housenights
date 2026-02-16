@@ -2,6 +2,7 @@
 
 namespace HiEvents\Http\Actions\Orders;
 
+use HiEvents\DomainObjects\AffiliateDomainObject;
 use HiEvents\DomainObjects\AttendeeDomainObject;
 use HiEvents\DomainObjects\EventDomainObject;
 use HiEvents\DomainObjects\Generated\OrderDomainObjectAbstract;
@@ -34,6 +35,7 @@ class GetOrderAction extends BaseAction
         $order = $this->orderRepository
             ->loadRelation(OrderItemDomainObject::class)
             ->loadRelation(AttendeeDomainObject::class)
+            ->loadRelation(new Relationship(domainObject: AffiliateDomainObject::class, name: 'affiliate'))
             ->loadRelation(new Relationship(domainObject: QuestionAndAnswerViewDomainObject::class, orderAndDirections: [
                 new OrderAndDirection(order: 'question_id'),
             ]))
