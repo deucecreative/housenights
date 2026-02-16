@@ -6,6 +6,7 @@ use HiEvents\DomainObjects\AttendeeDomainObject;
 use HiEvents\DomainObjects\CheckInListDomainObject;
 use HiEvents\DomainObjects\EventDomainObject;
 use HiEvents\DomainObjects\Generated\CheckInListDomainObjectAbstract;
+use HiEvents\DomainObjects\OrderDomainObject;
 use HiEvents\DomainObjects\ProductDomainObject;
 use HiEvents\Exceptions\CannotCheckInException;
 use HiEvents\Helper\DateHelper;
@@ -43,7 +44,10 @@ class GetCheckInListAttendeesPublicHandler
 
         $this->validateCheckInListIsActive($checkInList);
 
-        $attendees = $this->attendeeRepository->getAttendeesByCheckInShortId($shortId, $queryParams);
+        $attendees = $this->attendeeRepository
+            ->loadRelation(new Relationship(ProductDomainObject::class, name: 'product'))
+            ->loadRelation(new Relationship(OrderDomainObject::class, name: 'order'))
+            ->getAttendeesByCheckInShortId($shortId, $queryParams);
 
         // Set the check-in for each attendee
         $attendees->getCollection()->transform(function (AttendeeDomainObject $attendee) use ($checkInList) {
