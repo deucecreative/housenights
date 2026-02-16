@@ -53,6 +53,8 @@ export const CollectInformation = () => {
         const affiliateCodeFromUrl = searchParams.get('aff');
         if (affiliateCodeFromUrl) return affiliateCodeFromUrl;
 
+        if (typeof window === 'undefined') return null;
+
         const storageKey = 'affiliate_code_' + eventId;
         const storedData = localStorage.getItem(storageKey);
         if (storedData) {
