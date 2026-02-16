@@ -274,11 +274,15 @@ export const CollectInformation = () => {
     }
 
     const createProductsAndQuestions = (productIdToQuestionMap: Map<number, Question[]>) => {
-        const products: any = [];
+        const productsResult: any = [];
 
         orderItems?.forEach(orderItem => {
-            Array.from(Array(orderItem?.quantity)).map(() => {
-                products.push({
+            const matchingProduct = products?.find(p => p!.id === orderItem?.product_id);
+            const ticketsPerUnit = matchingProduct?.tickets_per_group ?? 1;
+            const totalAttendees = (orderItem?.quantity ?? 0) * ticketsPerUnit;
+
+            Array.from(Array(totalAttendees)).map(() => {
+                productsResult.push({
                     product_price_id: orderItem?.product_price_id,
                     product_id: orderItem?.product_id,
                     first_name: "",
@@ -295,7 +299,7 @@ export const CollectInformation = () => {
             });
         });
 
-        return products;
+        return productsResult;
     }
 
     const createFormOrderQuestions = () => {
@@ -572,6 +576,8 @@ export const CollectInformation = () => {
                     const product = products?.find(product => product!.id === orderItem.product_id);
                     const productRequiresDetails = product?.product_type === 'TICKET' && !isPerOrderCollection;
                     const productHasQuestions = productQuestions?.some(question => question.product_ids?.includes(orderItem.product_id));
+                    const ticketsPerUnit = product?.tickets_per_group ?? 1;
+                    const totalAttendees = (orderItem.quantity ?? 0) * ticketsPerUnit;
 
                     if (!product) {
                         return null;
@@ -580,7 +586,7 @@ export const CollectInformation = () => {
                     if (!productRequiresDetails && !productHasQuestions) {
                         // Still increment productIndex for each item in the quantity
                         // to maintain correct form field indices
-                        productIndex += orderItem.quantity ?? 0;
+                        productIndex += totalAttendees;
                         return null;
                     }
 
@@ -589,12 +595,12 @@ export const CollectInformation = () => {
                             <div className={classes.ticketTypeHeader}>
                                 <h3>{orderItem?.item_name}</h3>
                                 <span className={classes.ticketCountBadge}>
-                                    {orderItem.quantity === 1
+                                    {totalAttendees === 1
                                         ? t`1 ticket`
-                                        : t`${orderItem.quantity} tickets`}
+                                        : t`${totalAttendees} tickets`}
                                 </span>
                             </div>
-                            {Array.from(Array(orderItem?.quantity)).map((_, index) => {
+                            {Array.from(Array(totalAttendees)).map((_, index) => {
                                 const currentProductIndex = productIndex;
                                 const ticketIndices = getTicketAttendeeIndices();
                                 const isTicketAttendee = ticketIndices.includes(currentProductIndex);

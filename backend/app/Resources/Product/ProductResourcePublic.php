@@ -53,6 +53,7 @@ class ProductResourcePublic extends JsonResource
             'product_category_id' => $this->getProductCategoryId(),
             'is_highlighted' => $this->getIsHighlighted(),
             'highlight_message' => $this->getHighlightMessage(),
+            'tickets_per_group' => $this->getTicketsPerGroup(),
         ];
     }
 }

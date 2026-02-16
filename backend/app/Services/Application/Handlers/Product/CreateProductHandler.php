@@ -62,6 +62,7 @@ class CreateProductHandler
                 ->setIsHiddenWithoutAffiliateLink($productsData->is_hidden_without_affiliate_link)
                 ->setIsHighlighted($productsData->is_highlighted ?? false)
                 ->setHighlightMessage($productsData->highlight_message)
+                ->setTicketsPerGroup($productsData->tickets_per_group)
                 ->setProductPrices($productPrices)
                 ->setEventId($productsData->event_id)
                 ->setProductType($productsData->product_type->name)

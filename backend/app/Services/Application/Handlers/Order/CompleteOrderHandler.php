@@ -352,7 +352,10 @@ class CompleteOrderHandler
     {
         $orderAttendeeCount = $order->getOrderItems()
             ?->filter(fn(OrderItemDomainObject $orderItem) => $orderItem->getProductType() === ProductType::TICKET->name)
-            ?->sum(fn(OrderItemDomainObject $orderItem) => $orderItem->getQuantity());
+            ?->sum(function (OrderItemDomainObject $orderItem) {
+                $ticketsPerUnit = $orderItem->getProduct()?->getEffectiveTicketsPerUnit() ?? 1;
+                return $orderItem->getQuantity() * $ticketsPerUnit;
+            });
 
         $ticketAttendeeCount = $attendees
             ->filter(

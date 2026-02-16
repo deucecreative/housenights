@@ -44,6 +44,7 @@ class UpsertProductRequest extends BaseRequest
             'product_category_id' => ['required', 'integer'],
             'is_highlighted' => 'boolean',
             'highlight_message' => 'string|nullable|max:255',
+            'tickets_per_group' => 'integer|nullable|min:2|max:100',
         ];
     }
 

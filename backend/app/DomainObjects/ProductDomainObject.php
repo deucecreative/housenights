@@ -222,4 +222,14 @@ class ProductDomainObject extends Generated\ProductDomainObjectAbstract implemen
     {
         return $this->offSaleReason;
     }
+
+    public function isGroupProduct(): bool
+    {
+        return $this->getTicketsPerGroup() !== null && $this->getTicketsPerGroup() > 1;
+    }
+
+    public function getEffectiveTicketsPerUnit(): int
+    {
+        return $this->getTicketsPerGroup() ?? 1;
+    }
 }

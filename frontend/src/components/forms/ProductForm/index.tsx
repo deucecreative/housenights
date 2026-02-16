@@ -517,6 +517,37 @@ export const ProductForm = ({ form, product }: ProductFormProps) => {
                             />
                         )}
                     </Fieldset>
+
+                    {form.values.product_type === 'TICKET' && (
+                        <Fieldset legend={
+                            <span className={classes.fieldsetLegend}>
+                                <IconTicket size={16} />
+                                {t`Group Tickets`}
+                            </span>
+                        }>
+                            <NumberInput
+                                {...form.getInputProps('tickets_per_group')}
+                                label={<InputLabelWithHelp
+                                    label={t`Tickets Per Group`}
+                                    helpText={(
+                                        <Trans>
+                                            <p>
+                                                When set, each unit of this product represents a group of tickets.
+                                            </p>
+                                            <p>
+                                                For example, if set to 5, buying 1 unit will generate 5 individual tickets.
+                                                The price of the product is the total price for the entire group.
+                                            </p>
+                                        </Trans>
+                                    )}
+                                />}
+                                placeholder={t`Leave empty for single tickets`}
+                                min={2}
+                                max={100}
+                                allowDecimal={false}
+                            />
+                        </Fieldset>
+                    )}
                 </div>
             </Collapse>
 

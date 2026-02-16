@@ -37,6 +37,7 @@ abstract class ProductDomainObjectAbstract extends \HiEvents\DomainObjects\Abstr
     final public const START_COLLAPSED = 'start_collapsed';
     final public const IS_HIGHLIGHTED = 'is_highlighted';
     final public const HIGHLIGHT_MESSAGE = 'highlight_message';
+    final public const TICKETS_PER_GROUP = 'tickets_per_group';
 
     protected int $id;
     protected int $event_id;
@@ -65,6 +66,7 @@ abstract class ProductDomainObjectAbstract extends \HiEvents\DomainObjects\Abstr
     protected bool $start_collapsed = false;
     protected bool $is_highlighted = false;
     protected ?string $highlight_message = null;
+    protected ?int $tickets_per_group = null;
 
     public function toArray(): array
     {
@@ -96,6 +98,7 @@ abstract class ProductDomainObjectAbstract extends \HiEvents\DomainObjects\Abstr
                     'start_collapsed' => $this->start_collapsed ?? null,
                     'is_highlighted' => $this->is_highlighted ?? null,
                     'highlight_message' => $this->highlight_message ?? null,
+                    'tickets_per_group' => $this->tickets_per_group ?? null,
                 ];
     }
 
@@ -394,5 +397,16 @@ abstract class ProductDomainObjectAbstract extends \HiEvents\DomainObjects\Abstr
     public function getHighlightMessage(): ?string
     {
         return $this->highlight_message;
+    }
+
+    public function setTicketsPerGroup(?int $tickets_per_group): self
+    {
+        $this->tickets_per_group = $tickets_per_group;
+        return $this;
+    }
+
+    public function getTicketsPerGroup(): ?int
+    {
+        return $this->tickets_per_group;
     }
 }

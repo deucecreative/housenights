@@ -41,6 +41,7 @@ class UpsertProductDTO extends BaseDTO
         public readonly ?int             $product_id = null,
         public readonly ?bool            $is_highlighted = false,
         public readonly ?string          $highlight_message = null,
+        public readonly ?int             $tickets_per_group = null,
     )
     {
     }

@@ -116,6 +116,7 @@ class EditProductHandler
                 'product_category_id' => $productCategory->getId(),
                 'is_highlighted' => $productsData->is_highlighted ?? false,
                 'highlight_message' => $productsData->highlight_message,
+                'tickets_per_group' => $productsData->tickets_per_group,
             ],
             where: $where
         );

@@ -543,6 +543,7 @@ export interface Product {
     product_category_id?: IdParam;
     is_highlighted?: boolean;
     highlight_message?: string;
+    tickets_per_group?: number | null;
 }
 
 export interface ProductCategory {

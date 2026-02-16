@@ -81,7 +81,14 @@ class ProductQuantityUpdateService
     {
         /** @var OrderItemDomainObject $orderItem */
         foreach ($order->getOrderItems() as $orderItem) {
-            $this->increaseQuantitySold($orderItem->getProductPriceId(), $orderItem->getQuantity());
+            $product = $orderItem->getProduct()
+                ?? $this->productRepository->findById($orderItem->getProductId());
+            $ticketsPerUnit = $product?->getEffectiveTicketsPerUnit() ?? 1;
+
+            $this->increaseQuantitySold(
+                $orderItem->getProductPriceId(),
+                $orderItem->getQuantity() * $ticketsPerUnit
+            );
         }
     }
 
