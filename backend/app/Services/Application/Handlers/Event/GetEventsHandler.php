@@ -23,6 +23,16 @@ class GetEventsHandler
 
     public function handle(GetEventsDTO $dto): LengthAwarePaginator
     {
+        $where = [
+            'account_id' => $dto->accountId,
+        ];
+
+        if ($dto->organizerIds !== null) {
+            $where[] = static function (\Illuminate\Database\Eloquent\Builder $builder) use ($dto) {
+                $builder->whereIn('organizer_id', $dto->organizerIds);
+            };
+        }
+
         return $this->eventRepository
             ->loadRelation(new Relationship(ImageDomainObject::class))
             ->loadRelation(new Relationship(EventSettingDomainObject::class))
@@ -38,9 +48,7 @@ class GetEventsHandler
                 name: 'organizer',
             ))
             ->findEvents(
-                where: [
-                    'account_id' => $dto->accountId,
-                ],
+                where: $where,
                 params: $dto->queryParams
             );
     }

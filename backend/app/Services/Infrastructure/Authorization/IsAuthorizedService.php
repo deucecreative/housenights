@@ -16,6 +16,7 @@ use HiEvents\Repository\Interfaces\AccountUserRepositoryInterface;
 use HiEvents\Repository\Interfaces\EventRepositoryInterface;
 use HiEvents\Repository\Interfaces\ImageRepositoryInterface;
 use HiEvents\Repository\Interfaces\OrganizerRepositoryInterface;
+use HiEvents\Repository\Interfaces\OrganizerUserRepositoryInterface;
 use HiEvents\Repository\Interfaces\TaxAndFeeRepositoryInterface;
 use HiEvents\Repository\Interfaces\UserRepositoryInterface;
 use Illuminate\Auth\AuthManager;
@@ -24,9 +25,10 @@ use Illuminate\Foundation\Application;
 readonly class IsAuthorizedService
 {
     public function __construct(
-        private Application                    $app,
-        private AccountUserRepositoryInterface $accountUserRepository,
-        private AuthManager                    $auth,
+        private Application                       $app,
+        private AccountUserRepositoryInterface    $accountUserRepository,
+        private OrganizerUserRepositoryInterface  $organizerUserRepository,
+        private AuthManager                       $auth,
     )
     {
     }
@@ -82,6 +84,12 @@ readonly class IsAuthorizedService
         if (!$result) {
             throw new UnauthorizedException();
         }
+
+        // Additional per-organizer check for ORGANIZER-role users
+        $userRole = $authUser->getCurrentAccountUser()?->getRole();
+        if ($userRole === Role::ORGANIZER->name) {
+            $this->validateOrganizerAccess($entityId, $entityType, $authUser, $entity);
+        }
     }
 
     private function validateUserUpdate(?UserDomainObject $user, int $authAccountId): bool
@@ -118,6 +126,25 @@ readonly class IsAuthorizedService
             // deactivated while they are logged in.
             $this->auth->logout();
             throw new UnauthorizedException(__('Your account is not active.'));
+        }
+    }
+
+    private function validateOrganizerAccess(int $entityId, string $entityType, UserDomainObject $authUser, $entity): void
+    {
+        $assignedOrganizerIds = $this->organizerUserRepository->getOrganizerIdsByUserId($authUser->getId());
+
+        if (empty($assignedOrganizerIds)) {
+            return; // No assignments = unrestricted access
+        }
+
+        $organizerIdToCheck = match ($entityType) {
+            OrganizerDomainObject::class => $entityId,
+            EventDomainObject::class => $entity?->getOrganizerId(),
+            default => null,
+        };
+
+        if ($organizerIdToCheck !== null && !in_array($organizerIdToCheck, $assignedOrganizerIds, true)) {
+            throw new UnauthorizedException();
         }
     }
 }

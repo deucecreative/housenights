@@ -4,6 +4,7 @@ namespace HiEvents\Resources\User;
 
 use Exception;
 use HiEvents\DomainObjects\UserDomainObject;
+use HiEvents\Repository\Interfaces\OrganizerUserRepositoryInterface;
 use HiEvents\Resources\BaseResource;
 use Illuminate\Http\Request;
 
@@ -23,7 +24,7 @@ class UserResource extends BaseResource
             // Not authenticated or no JWT token
         }
 
-        return [
+        $result = [
             'id' => $this->getId(),
             'timezone' => $this->getTimezone(),
             'first_name' => $this->getFirstName(),
@@ -52,5 +53,17 @@ class UserResource extends BaseResource
                 'pending_email' => $this->getPendingEmail(),
             ]),
         ];
+
+        // Add organizer_ids if the user has account context
+        if ($this->getCurrentAccountUser() !== null) {
+            try {
+                $organizerUserRepository = app(OrganizerUserRepositoryInterface::class);
+                $result['organizer_ids'] = $organizerUserRepository->getOrganizerIdsByUserId($this->getId());
+            } catch (Exception) {
+                $result['organizer_ids'] = [];
+            }
+        }
+
+        return $result;
     }
 }

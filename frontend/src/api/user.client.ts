@@ -1,5 +1,5 @@
-import {api} from "./client";
-import {GenericDataResponse, IdParam, InviteUserRequest, User} from "../types";
+import { api } from "./client";
+import { GenericDataResponse, IdParam, InviteUserRequest, User } from "../types";
 
 export interface UserMeRequest {
     first_name: string;
@@ -18,6 +18,7 @@ export interface UpdateUserRequest {
     last_name: string;
     role: string;
     status: string;
+    organizer_ids?: number[];
 }
 
 export const userClient = {
@@ -70,7 +71,7 @@ export const userClient = {
         return response.data;
     },
     confirmEmailAddressWithCode: async (userId: IdParam, code: IdParam) => {
-        const response = await api.post(`users/${userId}/confirm-email-with-code`, {code});
+        const response = await api.post(`users/${userId}/confirm-email-with-code`, { code });
         return response.data;
     },
 };

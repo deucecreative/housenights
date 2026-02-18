@@ -8,6 +8,7 @@ use HiEvents\DomainObjects\Status\UserStatus;
 use HiEvents\DomainObjects\UserDomainObject;
 use HiEvents\Exceptions\CannotUpdateResourceException;
 use HiEvents\Repository\Interfaces\AccountUserRepositoryInterface;
+use HiEvents\Repository\Interfaces\OrganizerUserRepositoryInterface;
 use HiEvents\Repository\Interfaces\UserRepositoryInterface;
 use HiEvents\Services\Application\Handlers\User\DTO\UpdateUserDTO;
 use Illuminate\Database\DatabaseManager;
@@ -17,10 +18,11 @@ use Throwable;
 class UpdateUserHandler
 {
     public function __construct(
-        private readonly UserRepositoryInterface        $userRepository,
-        private readonly LoggerInterface                $logger,
-        private readonly AccountUserRepositoryInterface $accountUserRepository,
-        private readonly DatabaseManager                $databaseManager,
+        private readonly UserRepositoryInterface          $userRepository,
+        private readonly LoggerInterface                  $logger,
+        private readonly AccountUserRepositoryInterface   $accountUserRepository,
+        private readonly OrganizerUserRepositoryInterface $organizerUserRepository,
+        private readonly DatabaseManager                  $databaseManager,
     )
     {
     }
@@ -91,6 +93,27 @@ class UpdateUserHandler
             'id' => $updateUserData->id,
             'updated_by_user_id' => $updateUserData->updated_by_user_id,
         ]);
+
+        // Sync organizer assignments if provided, or clean up if role changed away from ORGANIZER
+        if ($updateUserData->role !== Role::ORGANIZER) {
+            // Clean up any existing assignments when role is not ORGANIZER
+            $this->organizerUserRepository->deleteWhere([
+                'user_id' => $updateUserData->id,
+            ]);
+        } elseif ($updateUserData->organizer_ids !== null) {
+            // Delete existing assignments and recreate
+            $this->organizerUserRepository->deleteWhere([
+                'user_id' => $updateUserData->id,
+            ]);
+
+            // Create new assignments
+            foreach ($updateUserData->organizer_ids as $organizerId) {
+                $this->organizerUserRepository->create([
+                    'organizer_id' => $organizerId,
+                    'user_id' => $updateUserData->id,
+                ]);
+            }
+        }
 
         return $this->userRepository->findByIdAndAccountId(
             userId: $updateUserData->id,

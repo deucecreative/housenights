@@ -106,6 +106,7 @@ export interface User {
     is_account_owner?: boolean;
     locale?: SupportedLocales;
     marketing_opted_in_at?: string | null;
+    organizer_ids?: number[];
 }
 
 export interface Account {
@@ -889,6 +890,7 @@ export interface InviteUserRequest {
     first_name: string;
     last_name: string;
     role: string;
+    organizer_ids?: number[];
 }
 
 export interface SortableItem {

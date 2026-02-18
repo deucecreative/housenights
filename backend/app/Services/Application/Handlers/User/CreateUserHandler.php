@@ -9,6 +9,7 @@ use HiEvents\DomainObjects\UserDomainObject;
 use HiEvents\Exceptions\ResourceConflictException;
 use HiEvents\Exceptions\UnauthorizedException;
 use HiEvents\Repository\Interfaces\AccountRepositoryInterface;
+use HiEvents\Repository\Interfaces\OrganizerUserRepositoryInterface;
 use HiEvents\Repository\Interfaces\UserRepositoryInterface;
 use HiEvents\Services\Application\Handlers\User\DTO\CreateUserDTO;
 use HiEvents\Services\Domain\Account\AccountUserAssociationService;
@@ -19,11 +20,12 @@ use Throwable;
 readonly class CreateUserHandler
 {
     public function __construct(
-        private UserRepositoryInterface       $userRepository,
-        private AccountRepositoryInterface    $accountRepository,
-        private SendUserInvitationService     $sendUserInvitationService,
-        private AccountUserAssociationService $accountUserAssociationService,
-        private DatabaseManager               $databaseManager,
+        private UserRepositoryInterface          $userRepository,
+        private AccountRepositoryInterface       $accountRepository,
+        private SendUserInvitationService        $sendUserInvitationService,
+        private AccountUserAssociationService    $accountUserAssociationService,
+        private OrganizerUserRepositoryInterface $organizerUserRepository,
+        private DatabaseManager                  $databaseManager,
     )
     {
     }
@@ -57,6 +59,15 @@ readonly class CreateUserHandler
             ));
 
             $this->sendUserInvitationService->sendInvitation($invitedUser, $authenticatedAccount->getId());
+
+            if ($userData->role === Role::ORGANIZER && !empty($userData->organizer_ids)) {
+                foreach ($userData->organizer_ids as $organizerId) {
+                    $this->organizerUserRepository->create([
+                        'organizer_id' => $organizerId,
+                        'user_id' => $invitedUser->getId(),
+                    ]);
+                }
+            }
 
             return $invitedUser;
         });

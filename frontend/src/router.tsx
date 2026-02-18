@@ -90,6 +90,10 @@ export const router: RouteObject[] = [
         },
         children: [
             {
+                index: true,
+                element: <Navigate to="/manage/events" replace />,
+            },
+            {
                 path: "events/:eventsState?",
                 async lazy() {
                     const Dashboard = await import("./components/routes/events/Dashboard");
