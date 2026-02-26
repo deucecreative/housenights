@@ -294,22 +294,24 @@ export const SortableProduct = ({ product, currencyCode, category, categories }:
                                         {t`Donation`}
                                     </Badge>
                                 )}
-                                {(product.is_hidden_without_promo_code || product.is_hidden_without_affiliate_link || product.is_hidden) && (
+                                {(product.is_hidden_without_promo_code || (product.affiliate_link_visibility && product.affiliate_link_visibility !== 'SHOW_ALWAYS') || product.is_hidden) && (
                                     <Tooltip
                                         label={product.is_hidden
                                             ? t`Hidden from public view`
-                                            : product.is_hidden_without_affiliate_link
+                                            : product.affiliate_link_visibility === 'AFFILIATE_ONLY'
                                                 ? t`Only visible via affiliate link`
-                                                : t`Only visible with promo code`}
+                                                : product.affiliate_link_visibility === 'NORMAL_ONLY'
+                                                    ? t`Only visible via normal links`
+                                                    : t`Only visible with promo code`}
                                         withArrow
                                     >
                                         <Badge
                                             variant="light"
                                             color="gray"
                                             size="sm"
-                                            leftSection={product.is_hidden_without_promo_code || product.is_hidden_without_affiliate_link ? <IconLock size={12} /> : <IconEyeOff size={12} />}
+                                            leftSection={product.is_hidden_without_promo_code || (product.affiliate_link_visibility && product.affiliate_link_visibility !== 'SHOW_ALWAYS') ? <IconLock size={12} /> : <IconEyeOff size={12} />}
                                         >
-                                            {product.is_hidden_without_affiliate_link ? t`Affiliate Only` : product.is_hidden_without_promo_code ? t`Promo Only` : t`Hidden`}
+                                            {product.affiliate_link_visibility === 'AFFILIATE_ONLY' ? t`Affiliate Only` : product.affiliate_link_visibility === 'NORMAL_ONLY' ? t`Normal Only` : product.is_hidden_without_promo_code ? t`Promo Only` : t`Hidden`}
                                         </Badge>
                                     </Tooltip>
                                 )}

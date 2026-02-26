@@ -37,7 +37,7 @@ class UpsertProductRequest extends BaseRequest
             'start_collapsed' => 'boolean',
             'show_quantity_remaining' => 'boolean',
             'is_hidden_without_promo_code' => 'boolean',
-            'is_hidden_without_affiliate_link' => 'boolean',
+            'affiliate_link_visibility' => 'in:SHOW_ALWAYS,AFFILIATE_ONLY,NORMAL_ONLY',
             'type' => ['required', Rule::in(ProductPriceType::valuesArray())],
             'product_type' => ['required', Rule::in(ProductType::valuesArray())],
             'tax_and_fee_ids' => 'array',

@@ -482,10 +482,15 @@ export const ProductForm = ({ form, product }: ProductFormProps) => {
                                 {...form.getInputProps('is_hidden_without_promo_code', { type: 'checkbox' })}
                                 label={t`Hide product unless user has applicable promo code`}
                             />
-                            <Switch
-                                description={t`Products with this enabled will only be visible to users who arrived via an affiliate link`}
-                                {...form.getInputProps('is_hidden_without_affiliate_link', { type: 'checkbox' })}
-                                label={t`Hide product unless user arrived via affiliate link`}
+                            <Select
+                                label={t`Affiliate link visibility`}
+                                description={t`Control whether this product is visible based on the presence of an affiliate link`}
+                                {...form.getInputProps('affiliate_link_visibility')}
+                                data={[
+                                    { value: 'SHOW_ALWAYS', label: t`Always shown` },
+                                    { value: 'AFFILIATE_ONLY', label: t`Only shown via affiliate links` },
+                                    { value: 'NORMAL_ONLY', label: t`Only shown via normal links` },
+                                ]}
                             />
                             <Switch
                                 description={t`This overrides all visibility settings and will hide the product from all customers.`}

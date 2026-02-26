@@ -35,7 +35,7 @@ export const DuplicateProductModal = ({ onClose, originalProductId }: DuplicateP
             show_quantity_remaining: false,
             hide_when_sold_out: false,
             is_hidden_without_promo_code: false,
-            is_hidden_without_affiliate_link: false,
+            affiliate_link_visibility: 'SHOW_ALWAYS',
             is_highlighted: false,
             highlight_message: undefined,
             type: ProductPriceType.Paid,

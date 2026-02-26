@@ -531,7 +531,7 @@ export interface Product {
     is_sold_out?: boolean;
     is_available?: boolean;
     is_hidden_without_promo_code?: boolean;
-    is_hidden_without_affiliate_link?: boolean;
+    affiliate_link_visibility?: 'SHOW_ALWAYS' | 'AFFILIATE_ONLY' | 'NORMAL_ONLY';
     is_before_sale_start_date?: boolean;
     is_after_sale_end_date?: boolean;
     taxes?: TaxAndFee[];

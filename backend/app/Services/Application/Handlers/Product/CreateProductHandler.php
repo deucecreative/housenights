@@ -59,7 +59,7 @@ class CreateProductHandler
                 ->setHideWhenSoldOut($productsData->hide_when_sold_out)
                 ->setShowQuantityRemaining($productsData->show_quantity_remaining)
                 ->setIsHiddenWithoutPromoCode($productsData->is_hidden_without_promo_code)
-                ->setIsHiddenWithoutAffiliateLink($productsData->is_hidden_without_affiliate_link)
+                ->setAffiliateLinkVisibility($productsData->affiliate_link_visibility)
                 ->setIsHighlighted($productsData->is_highlighted ?? false)
                 ->setHighlightMessage($productsData->highlight_message)
                 ->setTicketsPerGroup($productsData->tickets_per_group)

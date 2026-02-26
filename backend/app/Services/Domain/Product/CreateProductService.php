@@ -89,7 +89,7 @@ class CreateProductService
             'hide_when_sold_out' => $productsData->getHideWhenSoldOut(),
             'show_quantity_remaining' => $productsData->getShowQuantityRemaining(),
             'is_hidden_without_promo_code' => $productsData->getIsHiddenWithoutPromoCode(),
-            'is_hidden_without_affiliate_link' => $productsData->getIsHiddenWithoutAffiliateLink(),
+            'affiliate_link_visibility' => $productsData->getAffiliateLinkVisibility(),
             'event_id' => $productsData->getEventId(),
             'product_category_id' => $productsData->getProductCategoryId(),
             'is_highlighted' => $productsData->getIsHighlighted(),

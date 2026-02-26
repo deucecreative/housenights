@@ -112,9 +112,13 @@ class ProductFilterService
             );
     }
 
-    private function isHiddenByAffiliateLink(ProductDomainObject $product): bool
+    private function isHiddenByAffiliateLinkVisibility(ProductDomainObject $product): bool
     {
-        return $product->getIsHiddenWithoutAffiliateLink() && !$this->hasAffiliateCode;
+        return match ($product->getAffiliateLinkVisibility()) {
+            'AFFILIATE_ONLY' => !$this->hasAffiliateCode,
+            'NORMAL_ONLY'    => $this->hasAffiliateCode,
+            default          => false,
+        };
     }
 
     private function shouldProductBeDiscounted(?PromoCodeDomainObject $promoCode, ProductDomainObject $product): bool
@@ -179,8 +183,8 @@ class ProductFilterService
             $hidden = true;
         }
 
-        if ($this->isHiddenByAffiliateLink($product)) {
-            $product->setOffSaleReason(__('Product is hidden without affiliate link'));
+        if ($this->isHiddenByAffiliateLinkVisibility($product)) {
+            $product->setOffSaleReason(__('Product is hidden due to affiliate link visibility setting'));
             $hidden = true;
         }
 

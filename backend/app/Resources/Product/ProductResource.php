@@ -45,7 +45,7 @@ class ProductResource extends JsonResource
             'show_quantity_remaining' => $this->getShowQuantityRemaining(),
             'hide_when_sold_out' => $this->getHideWhenSoldOut(),
             'is_hidden_without_promo_code' => $this->getIsHiddenWithoutPromoCode(),
-            'is_hidden_without_affiliate_link' => $this->getIsHiddenWithoutAffiliateLink(),
+            'affiliate_link_visibility' => $this->getAffiliateLinkVisibility(),
             'is_hidden' => $this->getIsHidden(),
             'is_before_sale_start_date' => $this->isBeforeSaleStartDate(),
             'is_after_sale_end_date' => $this->isAfterSaleEndDate(),

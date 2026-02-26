@@ -1,23 +1,23 @@
-import {Button} from "@mantine/core";
-import {GenericModalProps, IdParam, Product, ProductPriceType, ProductType} from "../../../types.ts";
-import {useForm} from "@mantine/form";
-import {useParams} from "react-router";
-import {useEffect} from "react";
-import {ProductForm} from "../../forms/ProductForm";
-import {Modal} from "../../common/Modal";
-import {useUpdateProduct} from "../../../mutations/useUpdateProduct.ts";
-import {showSuccess} from "../../../utilites/notifications.tsx";
-import {useFormErrorResponseHandler} from "../../../hooks/useFormErrorResponseHandler.tsx";
-import {t} from "@lingui/macro";
-import {useGetProduct} from "../../../queries/useGetProduct.ts";
-import {LoadingMask} from "../../common/LoadingMask";
-import {utcToTz} from "../../../utilites/dates.ts";
-import {useGetEvent} from "../../../queries/useGetEvent.ts";
+import { Button } from "@mantine/core";
+import { GenericModalProps, IdParam, Product, ProductPriceType, ProductType } from "../../../types.ts";
+import { useForm } from "@mantine/form";
+import { useParams } from "react-router";
+import { useEffect } from "react";
+import { ProductForm } from "../../forms/ProductForm";
+import { Modal } from "../../common/Modal";
+import { useUpdateProduct } from "../../../mutations/useUpdateProduct.ts";
+import { showSuccess } from "../../../utilites/notifications.tsx";
+import { useFormErrorResponseHandler } from "../../../hooks/useFormErrorResponseHandler.tsx";
+import { t } from "@lingui/macro";
+import { useGetProduct } from "../../../queries/useGetProduct.ts";
+import { LoadingMask } from "../../common/LoadingMask";
+import { utcToTz } from "../../../utilites/dates.ts";
+import { useGetEvent } from "../../../queries/useGetEvent.ts";
 
-export const EditProductModal = ({onClose, productId}: GenericModalProps & { productId: IdParam }) => {
-    const {eventId} = useParams();
-    const {data: product} = useGetProduct(eventId, productId);
-    const {data: event} = useGetEvent(eventId);
+export const EditProductModal = ({ onClose, productId }: GenericModalProps & { productId: IdParam }) => {
+    const { eventId } = useParams();
+    const { data: product } = useGetProduct(eventId, productId);
+    const { data: event } = useGetEvent(eventId);
     const errorHandler = useFormErrorResponseHandler();
     const form = useForm<Product>({
         initialValues: {
@@ -33,6 +33,7 @@ export const EditProductModal = ({onClose, productId}: GenericModalProps & { pro
             show_quantity_remaining: undefined,
             hide_when_sold_out: undefined,
             is_hidden_without_promo_code: undefined,
+            affiliate_link_visibility: 'SHOW_ALWAYS',
             is_highlighted: false,
             highlight_message: undefined,
             type: ProductPriceType.Paid,
@@ -64,6 +65,7 @@ export const EditProductModal = ({onClose, productId}: GenericModalProps & { pro
             start_collapsed: product.start_collapsed,
             hide_when_sold_out: product.hide_when_sold_out,
             is_hidden_without_promo_code: product.is_hidden_without_promo_code,
+            affiliate_link_visibility: product.affiliate_link_visibility || 'SHOW_ALWAYS',
             type: product.type,
             tax_and_fee_ids: product.taxes_and_fees?.map(t => String(t.id)) ?? [],
             is_hidden: product.is_hidden,
@@ -105,8 +107,8 @@ export const EditProductModal = ({onClose, productId}: GenericModalProps & { pro
             opened
         >
             <form onSubmit={form.onSubmit(handleEditProduct)}>
-                <ProductForm product={product} form={form}/>
-                <LoadingMask/>
+                <ProductForm product={product} form={form} />
+                <LoadingMask />
 
                 <Button type="submit" fullWidth mt="xl" disabled={mutation.isPending}>
                     {mutation.isPending ? t`Working...` : t`Edit Product`}
