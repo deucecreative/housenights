@@ -11,6 +11,7 @@ use HiEvents\DomainObjects\AttendeeCheckInDomainObject;
 use HiEvents\DomainObjects\OrderDomainObject;
 use HiEvents\DomainObjects\OrderItemDomainObject;
 use HiEvents\DomainObjects\ProductDomainObject;
+use HiEvents\DomainObjects\QuestionAndAnswerViewDomainObject;
 use HiEvents\Repository\Interfaces\WebhookRepositoryInterface;
 use HiEvents\Resources\Attendee\AttendeeResource;
 use HiEvents\Resources\CheckInList\AttendeeCheckInResource;
@@ -156,7 +157,7 @@ class SendTestWebhookHandler
             ->setNotes(null)
             ->setCreatedAt($now)
             ->setUpdatedAt($now)
-            ->setQuestionAndAnswerViews(new Collection())
+            ->setQuestionAndAnswerViews(new Collection([$this->makeStubQuestionAnswer($eventId, 'PRODUCT')]))
             ->setCheckIns(new Collection());
 
         // The real attendee.* dispatch does not eager-load product; the real
@@ -215,7 +216,7 @@ class SendTestWebhookHandler
             ->setOrderItems(new Collection([$orderItem]))
             // Real dispatch loads attendees with nested question_and_answer_views
             ->setAttendees(new Collection([$this->makeStubAttendee($eventId)]))
-            ->setQuestionAndAnswerViews(new Collection());
+            ->setQuestionAndAnswerViews(new Collection([$this->makeStubQuestionAnswer($eventId, 'ORDER')]));
     }
 
     private function makeStubProduct(int $eventId): ProductDomainObject
@@ -270,5 +271,35 @@ class SendTestWebhookHandler
         $checkIn->setAttendee($this->makeStubAttendee($eventId));
 
         return $checkIn;
+    }
+
+    /**
+     * Build one representative question answer using the real domain object so the
+     * field list stays in sync with QuestionAnswerViewResource automatically.
+     *
+     * @param string $belongsTo 'ORDER' or 'PRODUCT'
+     */
+    private function makeStubQuestionAnswer(int $eventId, string $belongsTo = 'ORDER'): QuestionAndAnswerViewDomainObject
+    {
+        $isProduct = $belongsTo === 'PRODUCT';
+
+        return (new QuestionAndAnswerViewDomainObject())
+            ->setQuestionAnswerId(0)
+            ->setQuestionId(0)
+            ->setEventId($eventId)
+            ->setOrderId(0)
+            ->setProductId($isProduct ? 0 : null)
+            ->setProductTitle($isProduct ? 'General Admission' : null)
+            ->setTitle('Dietary requirements')
+            ->setQuestionType('SHORT_TEXT')
+            ->setQuestionRequired(false)
+            ->setQuestionDescription(null)
+            ->setQuestionOptions(null)
+            ->setBelongsTo($belongsTo)
+            ->setAnswer('No allergies')
+            ->setAttendeeId($isProduct ? 0 : null)
+            ->setAttendeePublicId($isProduct ? '00000000-0000-0000-0000-000000000000' : null)
+            ->setFirstName($isProduct ? 'Jane' : null)
+            ->setLastName($isProduct ? 'Smith' : null);
     }
 }
