@@ -8,10 +8,13 @@ use GuzzleHttp\Exception\RequestException;
 use GuzzleHttp\Psr7\Response;
 use HiEvents\DomainObjects\AttendeeDomainObject;
 use HiEvents\DomainObjects\AttendeeCheckInDomainObject;
+use HiEvents\DomainObjects\Enums\QuestionTypeEnum;
 use HiEvents\DomainObjects\OrderDomainObject;
 use HiEvents\DomainObjects\OrderItemDomainObject;
 use HiEvents\DomainObjects\ProductDomainObject;
 use HiEvents\DomainObjects\QuestionAndAnswerViewDomainObject;
+use HiEvents\DomainObjects\QuestionDomainObject;
+use HiEvents\Repository\Interfaces\QuestionRepositoryInterface;
 use HiEvents\Repository\Interfaces\WebhookRepositoryInterface;
 use HiEvents\Resources\Attendee\AttendeeResource;
 use HiEvents\Resources\CheckInList\AttendeeCheckInResource;
@@ -28,6 +31,7 @@ class SendTestWebhookHandler
     public function __construct(
         private readonly WebhookRepositoryInterface    $webhookRepository,
         private readonly WebhookResponseHandlerService $webhookResponseHandlerService,
+        private readonly QuestionRepositoryInterface   $questionRepository,
         private readonly LoggerInterface               $logger,
         private readonly Client                        $httpClient,
     )
@@ -137,11 +141,11 @@ class SendTestWebhookHandler
         };
     }
 
-    private function makeStubAttendee(int $eventId, bool $withProduct = false): AttendeeDomainObject
+    private function makeStubAttendee(int $eventId): AttendeeDomainObject
     {
         $now = now()->toIso8601String();
 
-        $attendee = (new AttendeeDomainObject())
+        return (new AttendeeDomainObject())
             ->setId(0)
             ->setOrderId(0)
             ->setProductId(0)
@@ -157,17 +161,10 @@ class SendTestWebhookHandler
             ->setNotes(null)
             ->setCreatedAt($now)
             ->setUpdatedAt($now)
-            ->setQuestionAndAnswerViews(new Collection([$this->makeStubQuestionAnswer($eventId, 'PRODUCT')]))
+            // Real attendee.* dispatch loads question_and_answer_views for this attendee.
+            // We build one QAV per PRODUCT-scoped question configured for the event.
+            ->setQuestionAndAnswerViews($this->buildStubQavCollection($eventId, 'PRODUCT'))
             ->setCheckIns(new Collection());
-
-        // The real attendee.* dispatch does not eager-load product; the real
-        // order.* dispatch embeds attendees without product relation either.
-        // Pass $withProduct = true only if you specifically need it.
-        if ($withProduct) {
-            $attendee->setProduct($this->makeStubProduct($eventId));
-        }
-
-        return $attendee;
     }
 
     private function makeStubOrder(int $eventId): OrderDomainObject
@@ -216,7 +213,8 @@ class SendTestWebhookHandler
             ->setOrderItems(new Collection([$orderItem]))
             // Real dispatch loads attendees with nested question_and_answer_views
             ->setAttendees(new Collection([$this->makeStubAttendee($eventId)]))
-            ->setQuestionAndAnswerViews(new Collection([$this->makeStubQuestionAnswer($eventId, 'ORDER')]));
+            // ORDER-scoped questions belong to the order itself
+            ->setQuestionAndAnswerViews($this->buildStubQavCollection($eventId, 'ORDER'));
     }
 
     private function makeStubProduct(int $eventId): ProductDomainObject
@@ -274,32 +272,78 @@ class SendTestWebhookHandler
     }
 
     /**
-     * Build one representative question answer using the real domain object so the
-     * field list stays in sync with QuestionAnswerViewResource automatically.
+     * Load the real questions configured for this event and build a QAV collection
+     * with type-appropriate dummy answers. This ensures the field names and question
+     * titles match exactly what a live payload would carry, without needing real answers.
      *
      * @param string $belongsTo 'ORDER' or 'PRODUCT'
      */
-    private function makeStubQuestionAnswer(int $eventId, string $belongsTo = 'ORDER'): QuestionAndAnswerViewDomainObject
+    private function buildStubQavCollection(int $eventId, string $belongsTo): Collection
     {
+        /** @var Collection<QuestionDomainObject> $questions */
+        $questions = $this->questionRepository->findByEventId($eventId);
+
+        $relevant = $questions->filter(
+            fn(QuestionDomainObject $q) => $q->getBelongsTo() === $belongsTo && !$q->getIsHidden()
+        );
+
+        if ($relevant->isEmpty()) {
+            return new Collection();
+        }
+
         $isProduct = $belongsTo === 'PRODUCT';
 
-        return (new QuestionAndAnswerViewDomainObject())
-            ->setQuestionAnswerId(0)
-            ->setQuestionId(0)
-            ->setEventId($eventId)
-            ->setOrderId(0)
-            ->setProductId($isProduct ? 0 : null)
-            ->setProductTitle($isProduct ? 'General Admission' : null)
-            ->setTitle('Dietary requirements')
-            ->setQuestionType('SHORT_TEXT')
-            ->setQuestionRequired(false)
-            ->setQuestionDescription(null)
-            ->setQuestionOptions(null)
-            ->setBelongsTo($belongsTo)
-            ->setAnswer('No allergies')
-            ->setAttendeeId($isProduct ? 0 : null)
-            ->setAttendeePublicId($isProduct ? '00000000-0000-0000-0000-000000000000' : null)
-            ->setFirstName($isProduct ? 'Jane' : null)
-            ->setLastName($isProduct ? 'Smith' : null);
+        return $relevant->map(function (QuestionDomainObject $question) use ($eventId, $isProduct) {
+            $answer = $this->dummyAnswerForType($question->getType(), $question->getOptions());
+
+            return (new QuestionAndAnswerViewDomainObject())
+                ->setQuestionAnswerId(0)
+                ->setQuestionId($question->getId())
+                ->setEventId($eventId)
+                ->setOrderId(0)
+                ->setProductId($isProduct ? 0 : null)
+                ->setProductTitle($isProduct ? 'General Admission' : null)
+                ->setTitle($question->getTitle())
+                ->setQuestionType($question->getType())
+                ->setQuestionRequired($question->getRequired())
+                ->setQuestionDescription($question->getDescription())
+                ->setQuestionOptions(is_array($question->getOptions()) ? $question->getOptions() : null)
+                ->setBelongsTo($question->getBelongsTo())
+                ->setAnswer($answer)
+                ->setAttendeeId($isProduct ? 0 : null)
+                ->setAttendeePublicId($isProduct ? '00000000-0000-0000-0000-000000000000' : null)
+                ->setFirstName($isProduct ? 'Jane' : null)
+                ->setLastName($isProduct ? 'Smith' : null);
+        });
+    }
+
+    /**
+     * Return a plausible dummy answer for a given question type.
+     * For choice-based types, the first available option is used.
+     */
+    private function dummyAnswerForType(?string $type, array|string|null $options): string|array
+    {
+        $options = is_array($options) ? $options : [];
+
+        return match ($type) {
+            QuestionTypeEnum::CHECKBOX->name,
+            QuestionTypeEnum::MULTI_SELECT_DROPDOWN->name => $options ? [$options[0]] : ['Example option'],
+
+            QuestionTypeEnum::RADIO->name,
+            QuestionTypeEnum::DROPDOWN->name              => $options ? $options[0] : 'Example option',
+
+            QuestionTypeEnum::ADDRESS->name               => [
+                'address_line_1'  => '123 Example St',
+                'address_line_2'  => '',
+                'city'            => 'Springfield',
+                'state_or_region' => 'IL',
+                'zip_or_postal_code' => '62701',
+                'country'         => 'US',
+            ],
+
+            QuestionTypeEnum::DATE->name                  => '2025-01-01',
+
+            default                                       => 'Example answer',
+        };
     }
 }
