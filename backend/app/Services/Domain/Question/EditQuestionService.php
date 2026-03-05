@@ -41,6 +41,7 @@ class EditQuestionService
                     QuestionDomainObjectAbstract::OPTIONS => $question->getOptions(),
                     QuestionDomainObjectAbstract::IS_HIDDEN => $question->getIsHidden(),
                     QuestionDomainObjectAbstract::DESCRIPTION => $this->purifier->purify($question->getDescription()),
+                    QuestionDomainObjectAbstract::SHOW_DESCRIPTION_AS_PLACEHOLDER => $question->getShowDescriptionAsPlaceholder(),
                 ],
                 productIds: $productIds
             );
