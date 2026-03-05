@@ -18,44 +18,47 @@ import {
     IconDotsVertical,
     IconPencil,
     IconPlus,
+    IconSend,
     IconTrash
 } from '@tabler/icons-react';
-import {Table, TableHead} from '../Table';
+import { Table, TableHead } from '../Table';
 import classes from './WebhookTable.module.scss';
-import {IdParam, Webhook} from '../../../types';
-import {confirmationDialog} from '../../../utilites/confirmationDialog';
+import { IdParam, Webhook } from '../../../types';
+import { confirmationDialog } from '../../../utilites/confirmationDialog';
 import Truncate from '../Truncate';
-import {relativeDate} from "../../../utilites/dates.ts";
-import {useDisclosure} from "@mantine/hooks";
-import {useState} from "react";
-import {t, Trans} from "@lingui/macro";
-import {EditWebhookModal} from "../../modals/EditWebhookModal";
-import {useDeleteWebhook} from "../../../mutations/useDeleteWebhook.ts";
-import {useParams} from "react-router";
-import {showError, showSuccess} from "../../../utilites/notifications.tsx";
-import {NoResultsSplash} from "../NoResultsSplash";
-import {WebhookLogsModal} from "../../modals/WebhookLogsModal";
+import { relativeDate } from "../../../utilites/dates.ts";
+import { useDisclosure } from "@mantine/hooks";
+import { useState } from "react";
+import { t, Trans } from "@lingui/macro";
+import { EditWebhookModal } from "../../modals/EditWebhookModal";
+import { useDeleteWebhook } from "../../../mutations/useDeleteWebhook.ts";
+import { useSendTestWebhook } from "../../../mutations/useSendTestWebhook.ts";
+import { useParams } from "react-router";
+import { showError, showSuccess } from "../../../utilites/notifications.tsx";
+import { NoResultsSplash } from "../NoResultsSplash";
+import { WebhookLogsModal } from "../../modals/WebhookLogsModal";
 
 interface WebhookTableProps {
     webhooks: Webhook[];
     openCreateModal: () => void;
 }
 
-export const WebhookTable = ({webhooks, openCreateModal}: WebhookTableProps) => {
-    const {eventId} = useParams();
-    const [editModalOpen, {open: openEditModal, close: closeEditModal}] = useDisclosure(false);
-    const [logsModalOpen, {open: openLogsModal, close: closeLogsModal}] = useDisclosure(false);
+export const WebhookTable = ({ webhooks, openCreateModal }: WebhookTableProps) => {
+    const { eventId } = useParams();
+    const [editModalOpen, { open: openEditModal, close: closeEditModal }] = useDisclosure(false);
+    const [logsModalOpen, { open: openLogsModal, close: closeLogsModal }] = useDisclosure(false);
     const [selectedWebhookId, setSelectedWebhookId] = useState<IdParam>();
     const deleteMutation = useDeleteWebhook();
+    const testMutation = useSendTestWebhook();
 
     const handleDelete = (webhookId: IdParam) => {
-        deleteMutation.mutate({eventId, webhookId}, {
+        deleteMutation.mutate({ eventId, webhookId }, {
             onSuccess: () => showSuccess(t`Webhook deleted successfully`),
             onError: (error) => showError(error.message)
         });
     }
 
-    const EventTypeDisplay = ({webhook}: { webhook: Webhook }) => {
+    const EventTypeDisplay = ({ webhook }: { webhook: Webhook }) => {
         const eventTypes = webhook.event_types;
 
         if (!eventTypes || eventTypes.length === 0) {
@@ -65,7 +68,7 @@ export const WebhookTable = ({webhooks, openCreateModal}: WebhookTableProps) => 
         const eventCount = eventTypes.length;
 
         return (
-            <div style={{cursor: 'pointer'}}>
+            <div style={{ cursor: 'pointer' }}>
                 <Tooltip
                     label={
                         <div className={classes.tooltipContent}>
@@ -83,19 +86,19 @@ export const WebhookTable = ({webhooks, openCreateModal}: WebhookTableProps) => 
         );
     };
 
-    const ActionMenu = ({webhook}: { webhook: Webhook }) => (
+    const ActionMenu = ({ webhook }: { webhook: Webhook }) => (
         <Group wrap="nowrap" gap={0} justify="flex-end">
             <Menu shadow="md" width={200}>
                 <Menu.Target>
                     <Button size="xs" variant="transparent">
-                        <IconDotsVertical/>
+                        <IconDotsVertical />
                     </Button>
                 </Menu.Target>
 
                 <Menu.Dropdown>
                     <Menu.Label>Manage</Menu.Label>
                     <Menu.Item
-                        leftSection={<IconPencil size={14}/>}
+                        leftSection={<IconPencil size={14} />}
                         onClick={() => {
                             setSelectedWebhookId(webhook.id as IdParam);
                             openEditModal();
@@ -104,7 +107,7 @@ export const WebhookTable = ({webhooks, openCreateModal}: WebhookTableProps) => 
                         {t`Edit webhook`}
                     </Menu.Item>
                     <Menu.Item
-                        leftSection={<IconClipboardList size={14}/>}
+                        leftSection={<IconClipboardList size={14} />}
                         onClick={() => {
                             setSelectedWebhookId(webhook.id as IdParam);
                             openLogsModal();
@@ -112,11 +115,39 @@ export const WebhookTable = ({webhooks, openCreateModal}: WebhookTableProps) => 
                     >
                         {t`View logs`}
                     </Menu.Item>
-                    <Menu.Divider/>
+                    <Menu.Item
+                        leftSection={<IconSend size={14} />}
+                        disabled={testMutation.isPending}
+                        onClick={() => {
+                            testMutation.mutate(
+                                { eventId, webhookId: webhook.id as IdParam },
+                                {
+                                    onSuccess: (res) => {
+                                        const result = res.data.data;
+                                        if (result.success) {
+                                            showSuccess(
+                                                t`Test payload sent successfully (HTTP ${result.response_code})`
+                                            );
+                                        } else {
+                                            showError(
+                                                result.response_body
+                                                    ? t`Test failed (HTTP ${result.response_code}): ${result.response_body}`
+                                                    : t`Test failed — no response received`
+                                            );
+                                        }
+                                    },
+                                    onError: (error) => showError(error.message),
+                                }
+                            );
+                        }}
+                    >
+                        {t`Send test payload`}
+                    </Menu.Item>
+                    <Menu.Divider />
                     <Menu.Label>{t`Danger zone`}</Menu.Label>
                     <Menu.Item
                         color="red"
-                        leftSection={<IconTrash size={14}/>}
+                        leftSection={<IconTrash size={14} />}
                         onClick={() => {
                             confirmationDialog(
                                 t`Are you sure you want to delete this webhook?`,
@@ -132,12 +163,12 @@ export const WebhookTable = ({webhooks, openCreateModal}: WebhookTableProps) => 
     );
 
 
-    const ResponseDisplay = ({webhook}: { webhook: Webhook }) => {
+    const ResponseDisplay = ({ webhook }: { webhook: Webhook }) => {
         if (webhook.last_response_code === null || webhook.last_response_code === undefined) {
             return (
                 <Text c="dimmed" size="sm">
                     <Group gap={6} wrap="nowrap">
-                        <IconClockHour4 size={14}/>
+                        <IconClockHour4 size={14} />
                         <span>{t`No responses yet`}</span>
                     </Group>
                 </Text>
@@ -155,7 +186,7 @@ export const WebhookTable = ({webhooks, openCreateModal}: WebhookTableProps) => 
                         <Badge
                             variant="light"
                             color={statusColor}
-                            leftSection={<IconBolt size={12}/>}
+                            leftSection={<IconBolt size={12} />}
                         >
                             {statusText} {webhook.last_response_code > 0 ? `- ${webhook.last_response_code}` : ''}
                         </Badge>
@@ -209,16 +240,16 @@ export const WebhookTable = ({webhooks, openCreateModal}: WebhookTableProps) => 
                             </p>
                             <p>
                                 Use third-party services like <Anchor underline={'always'} target={'_blank'}
-                                                                      href="https://zapier.com/features/webhooks">Zapier</Anchor>,{' '}
+                                    href="https://zapier.com/features/webhooks">Zapier</Anchor>,{' '}
                                 <Anchor underline={'always'} target={'_blank'} href="https://ifttt.com/maker_webhooks">IFTTT</Anchor> or <Anchor underline={'always'}
-                                target={'_blank'} href="https://www.make.com/en/help/tools/webhooks">Make</Anchor> to
+                                    target={'_blank'} href="https://www.make.com/en/help/tools/webhooks">Make</Anchor> to
                                 create custom workflows and automate tasks.
                             </p>
                         </Trans>
                         <Button
                             loading={deleteMutation.isPending}
                             size={'xs'}
-                            leftSection={<IconPlus/>}
+                            leftSection={<IconPlus />}
                             color={'green'}
                             onClick={() => openCreateModal()}>{t`Add Webhook`}
                         </Button>
@@ -245,10 +276,10 @@ export const WebhookTable = ({webhooks, openCreateModal}: WebhookTableProps) => 
                     {webhooks.map((webhook) => (
                         <MantineTable.Tr key={webhook.id}>
                             <MantineTable.Td>
-                                <Truncate text={webhook.url} length={35}/>
+                                <Truncate text={webhook.url} length={35} />
                             </MantineTable.Td>
                             <MantineTable.Td>
-                                <EventTypeDisplay webhook={webhook}/>
+                                <EventTypeDisplay webhook={webhook} />
                             </MantineTable.Td>
                             <MantineTable.Td>
                                 <Badge
@@ -259,7 +290,7 @@ export const WebhookTable = ({webhooks, openCreateModal}: WebhookTableProps) => 
                                 </Badge>
                             </MantineTable.Td>
                             <MantineTable.Td>
-                                <ResponseDisplay webhook={webhook}/>
+                                <ResponseDisplay webhook={webhook} />
                             </MantineTable.Td>
                             <MantineTable.Td>
                                 <Text size="sm" c="dimmed" title={webhook.last_triggered_at as string}>
@@ -267,7 +298,7 @@ export const WebhookTable = ({webhooks, openCreateModal}: WebhookTableProps) => 
                                 </Text>
                             </MantineTable.Td>
                             <MantineTable.Td>
-                                <ActionMenu webhook={webhook}/>
+                                <ActionMenu webhook={webhook} />
                             </MantineTable.Td>
                         </MantineTable.Tr>
                     ))}

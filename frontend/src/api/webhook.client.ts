@@ -1,5 +1,5 @@
-import {GenericDataResponse, IdParam, Webhook, WebhookLog} from "../types";
-import {api} from "./client";
+import { GenericDataResponse, IdParam, Webhook, WebhookLog } from "../types";
+import { api } from "./client";
 
 export interface WebhookRequest {
     url: string;
@@ -30,5 +30,11 @@ export const webhookClient = {
 
     update: async (eventId: IdParam, webhookId: IdParam, webhook: WebhookRequest) => {
         return await api.put<GenericDataResponse<Webhook>>(`events/${eventId}/webhooks/${webhookId}`, webhook);
+    },
+
+    sendTest: async (eventId: IdParam, webhookId: IdParam) => {
+        return await api.post<{ data: { response_code: number; response_body: string | null; success: boolean } }>(
+            `events/${eventId}/webhooks/${webhookId}/test`
+        );
     },
 }

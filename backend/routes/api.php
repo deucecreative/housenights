@@ -200,6 +200,7 @@ use HiEvents\Http\Actions\Webhooks\EditWebhookAction;
 use HiEvents\Http\Actions\Webhooks\GetWebhookAction;
 use HiEvents\Http\Actions\Webhooks\GetWebhookLogsAction;
 use HiEvents\Http\Actions\Webhooks\GetWebhooksAction;
+use HiEvents\Http\Actions\Webhooks\SendTestWebhookAction;
 use Illuminate\Routing\Router;
 
 /** @var Router|Router $router */
@@ -406,6 +407,7 @@ $router->middleware(['auth:api'])->group(
         $router->get('/events/{event_id}/webhooks/{webhook_id}', GetWebhookAction::class);
         $router->delete('/events/{event_id}/webhooks/{webhook_id}', DeleteWebhookAction::class);
         $router->get('/events/{event_id}/webhooks/{webhook_id}/logs', GetWebhookLogsAction::class);
+        $router->post('/events/{event_id}/webhooks/{webhook_id}/test', SendTestWebhookAction::class);
 
         // Reports
         $router->get('/events/{event_id}/reports/{report_type}', GetReportAction::class);
