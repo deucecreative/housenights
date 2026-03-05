@@ -695,6 +695,7 @@ export interface Question {
     product_ids?: number[];
     belongs_to: string;
     is_hidden: boolean;
+    show_description_as_placeholder?: boolean;
 }
 
 export interface CapacityAssignment {
@@ -748,6 +749,7 @@ export interface QuestionRequestData {
     options: string[];
     product_ids?: string[];
     belongs_to: string;
+    show_description_as_placeholder?: boolean;
 }
 
 export interface Message {

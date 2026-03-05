@@ -1,24 +1,24 @@
-import {Button, LoadingOverlay} from "@mantine/core";
-import {GenericModalProps, IdParam, Question, QuestionRequestData, QuestionType} from "../../../types.ts";
-import {useForm} from "@mantine/form";
-import {useMutation, useQueryClient} from "@tanstack/react-query";
-import {notifications} from "@mantine/notifications";
-import {useParams} from "react-router";
-import {questionClient} from "../../../api/question.client.ts";
-import {useGetEvent} from "../../../queries/useGetEvent.ts";
-import {GET_EVENT_QUESTIONS_QUERY_KEY} from "../../../queries/useGetEventQuestions.ts";
-import {Modal} from "../../common/Modal";
-import {t} from "@lingui/macro";
-import {QuestionForm} from "../../forms/QuestionForm";
-import {GET_QUESTION_QUERY_KEY, useGetQuestion} from "../../../queries/useGetQuestion.ts";
-import {useEffect} from "react";
+import { Button, LoadingOverlay } from "@mantine/core";
+import { GenericModalProps, IdParam, Question, QuestionRequestData, QuestionType } from "../../../types.ts";
+import { useForm } from "@mantine/form";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { notifications } from "@mantine/notifications";
+import { useParams } from "react-router";
+import { questionClient } from "../../../api/question.client.ts";
+import { useGetEvent } from "../../../queries/useGetEvent.ts";
+import { GET_EVENT_QUESTIONS_QUERY_KEY } from "../../../queries/useGetEventQuestions.ts";
+import { Modal } from "../../common/Modal";
+import { t } from "@lingui/macro";
+import { QuestionForm } from "../../forms/QuestionForm";
+import { GET_QUESTION_QUERY_KEY, useGetQuestion } from "../../../queries/useGetQuestion.ts";
+import { useEffect } from "react";
 
 interface EditQuestionModalProps extends GenericModalProps {
     questionId: IdParam;
 }
 
-export const EditQuestionModal = ({onClose, questionId}: EditQuestionModalProps) => {
-    const {eventId} = useParams();
+export const EditQuestionModal = ({ onClose, questionId }: EditQuestionModalProps) => {
+    const { eventId } = useParams();
     const queryClient = useQueryClient();
 
     const eventQuery = useGetEvent(eventId);
@@ -35,27 +35,29 @@ export const EditQuestionModal = ({onClose, questionId}: EditQuestionModalProps)
             product_ids: [],
             belongs_to: "ORDER",
             is_hidden: false,
+            show_description_as_placeholder: false,
         },
     });
 
     useEffect(() => {
-            const {data} = questionQuery;
+        const { data } = questionQuery;
 
-            if (!data) {
-                return;
-            }
-
-            form.setValues({
-                title: data.title,
-                description: data.description,
-                type: data.type,
-                required: data.required,
-                options: data.options,
-                product_ids: data.product_ids?.map(id => String(id)),
-                belongs_to: data.belongs_to,
-                is_hidden: data.is_hidden,
-            });
+        if (!data) {
+            return;
         }
+
+        form.setValues({
+            title: data.title,
+            description: data.description,
+            type: data.type,
+            required: data.required,
+            options: data.options,
+            product_ids: data.product_ids?.map(id => String(id)),
+            belongs_to: data.belongs_to,
+            is_hidden: data.is_hidden,
+            show_description_as_placeholder: data.show_description_as_placeholder ?? false,
+        });
+    }
         , [questionQuery.isFetched]);
 
     const mutation = useMutation({
@@ -67,12 +69,12 @@ export const EditQuestionModal = ({onClose, questionId}: EditQuestionModalProps)
                 color: 'green',
                 position: 'top-center',
             });
-            queryClient.invalidateQueries({queryKey: [GET_EVENT_QUESTIONS_QUERY_KEY, eventId]}).then(() => {
+            queryClient.invalidateQueries({ queryKey: [GET_EVENT_QUESTIONS_QUERY_KEY, eventId] }).then(() => {
                 form.reset();
                 onClose();
             }).then(() => {
-                    queryClient.invalidateQueries({queryKey: [GET_QUESTION_QUERY_KEY, eventId, questionId]});
-                }
+                queryClient.invalidateQueries({ queryKey: [GET_QUESTION_QUERY_KEY, eventId, questionId] });
+            }
             )
         },
 
@@ -95,8 +97,8 @@ export const EditQuestionModal = ({onClose, questionId}: EditQuestionModalProps)
             heading={t`Edit Question`}
         >
             <form onSubmit={form.onSubmit((values) => mutation.mutate(values as any as Question))}>
-                <QuestionForm form={form} productCategories={productsCategories}/>
-                {!questionQuery.isFetched && <LoadingOverlay visible/>}
+                <QuestionForm form={form} productCategories={productsCategories} />
+                {!questionQuery.isFetched && <LoadingOverlay visible />}
                 <Button loading={mutation.isPending} type="submit" fullWidth mt="xl">
                     {mutation.isPending ? t`Working...` : t`Edit Question`}
                 </Button>

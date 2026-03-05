@@ -34,6 +34,7 @@ class CreateQuestionAction extends BaseAction
             'belongs_to' => $request->input('belongs_to'),
             'is_hidden' => $request->boolean('is_hidden'),
             'description' => $request->input('description'),
+            'show_description_as_placeholder' => $request->boolean('show_description_as_placeholder'),
         ]));
 
         return $this->resourceResponse(

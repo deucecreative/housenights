@@ -23,6 +23,7 @@ abstract class QuestionDomainObjectAbstract extends \HiEvents\DomainObjects\Abst
     final public const ORDER = 'order';
     final public const IS_HIDDEN = 'is_hidden';
     final public const DESCRIPTION = 'description';
+    final public const SHOW_DESCRIPTION_AS_PLACEHOLDER = 'show_description_as_placeholder';
 
     protected int $id;
     protected int $event_id;
@@ -37,6 +38,7 @@ abstract class QuestionDomainObjectAbstract extends \HiEvents\DomainObjects\Abst
     protected int $order = 1;
     protected bool $is_hidden = false;
     protected ?string $description = null;
+    protected bool $show_description_as_placeholder = false;
 
     public function toArray(): array
     {
@@ -54,6 +56,7 @@ abstract class QuestionDomainObjectAbstract extends \HiEvents\DomainObjects\Abst
                     'order' => $this->order ?? null,
                     'is_hidden' => $this->is_hidden ?? null,
                     'description' => $this->description ?? null,
+                    'show_description_as_placeholder' => $this->show_description_as_placeholder ?? false,
                 ];
     }
 
@@ -198,5 +201,16 @@ abstract class QuestionDomainObjectAbstract extends \HiEvents\DomainObjects\Abst
     public function getDescription(): ?string
     {
         return $this->description;
+    }
+
+    public function setShowDescriptionAsPlaceholder(bool $show_description_as_placeholder): self
+    {
+        $this->show_description_as_placeholder = $show_description_as_placeholder;
+        return $this;
+    }
+
+    public function getShowDescriptionAsPlaceholder(): bool
+    {
+        return $this->show_description_as_placeholder;
     }
 }

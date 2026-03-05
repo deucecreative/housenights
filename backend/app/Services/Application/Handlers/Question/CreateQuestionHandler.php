@@ -30,7 +30,8 @@ class CreateQuestionHandler
             ->setRequired($createQuestionDTO->required)
             ->setOptions($createQuestionDTO->options)
             ->setIsHidden($createQuestionDTO->is_hidden)
-            ->setDescription($this->purifier->purify($createQuestionDTO->description));
+            ->setDescription($this->purifier->purify($createQuestionDTO->description))
+            ->setShowDescriptionAsPlaceholder($createQuestionDTO->show_description_as_placeholder);
 
         return $this->createQuestionService->createQuestion(
             $question,

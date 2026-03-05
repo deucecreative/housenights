@@ -23,6 +23,7 @@ class QuestionResource extends BaseResource
             'event_id' => $this->getEventId(),
             'belongs_to' => $this->getBelongsTo(),
             'is_hidden' => $this->getIsHidden(),
+            'show_description_as_placeholder' => $this->getShowDescriptionAsPlaceholder(),
             'product_ids' => $this->when(
                 !is_null($this->getProducts()),
                 fn() => $this->getProducts()->map(fn($product) => $product->getId())

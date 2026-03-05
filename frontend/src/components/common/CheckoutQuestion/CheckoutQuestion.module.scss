@@ -1,6 +1,6 @@
 .descriptionWithNoStyle {
   color: unset;
-  font-size: unset;
+  font-size: var(--mantine-font-size-xs);
 
   a {
     text-decoration: underline;

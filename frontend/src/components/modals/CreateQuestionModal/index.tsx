@@ -1,24 +1,24 @@
-import {Button} from "@mantine/core";
-import {GenericModalProps, Question, QuestionRequestData, QuestionType} from "../../../types.ts";
-import {useForm} from "@mantine/form";
-import {useMutation, useQueryClient} from "@tanstack/react-query";
-import {notifications} from "@mantine/notifications";
-import {useParams} from "react-router";
-import {questionClient} from "../../../api/question.client.ts";
-import {useGetEvent} from "../../../queries/useGetEvent.ts";
-import {GET_EVENT_QUESTIONS_QUERY_KEY} from "../../../queries/useGetEventQuestions.ts";
-import {Modal} from "../../common/Modal";
-import {t} from "@lingui/macro";
-import {QuestionForm} from "../../forms/QuestionForm";
-import {showError} from "../../../utilites/notifications.tsx";
+import { Button } from "@mantine/core";
+import { GenericModalProps, Question, QuestionRequestData, QuestionType } from "../../../types.ts";
+import { useForm } from "@mantine/form";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { notifications } from "@mantine/notifications";
+import { useParams } from "react-router";
+import { questionClient } from "../../../api/question.client.ts";
+import { useGetEvent } from "../../../queries/useGetEvent.ts";
+import { GET_EVENT_QUESTIONS_QUERY_KEY } from "../../../queries/useGetEventQuestions.ts";
+import { Modal } from "../../common/Modal";
+import { t } from "@lingui/macro";
+import { QuestionForm } from "../../forms/QuestionForm";
+import { showError } from "../../../utilites/notifications.tsx";
 
 interface CreateQuestionModalProps extends GenericModalProps {
     onCompleted: (question: Question) => void;
     defaultBelongsTo?: 'ORDER' | 'PRODUCT';
 }
 
-export const CreateQuestionModal = ({onClose, onCompleted, defaultBelongsTo = 'ORDER'}: CreateQuestionModalProps) => {
-    const {eventId} = useParams();
+export const CreateQuestionModal = ({ onClose, onCompleted, defaultBelongsTo = 'ORDER' }: CreateQuestionModalProps) => {
+    const { eventId } = useParams();
     const queryClient = useQueryClient();
 
     const eventQuery = useGetEvent(eventId);
@@ -35,19 +35,20 @@ export const CreateQuestionModal = ({onClose, onCompleted, defaultBelongsTo = 'O
             apply_to_all_products: true,
             belongs_to: defaultBelongsTo,
             is_hidden: false,
+            show_description_as_placeholder: false,
         },
     });
 
     const mutation = useMutation({
         mutationFn: (questionData: Question) => questionClient.create(eventId, questionData as QuestionRequestData),
 
-        onSuccess: ({data: question}) => {
+        onSuccess: ({ data: question }) => {
             notifications.show({
                 message: t`Successfully Created Question`,
                 color: 'green',
                 position: 'top-center',
             });
-            queryClient.invalidateQueries({queryKey: [GET_EVENT_QUESTIONS_QUERY_KEY]}).then(() => {
+            queryClient.invalidateQueries({ queryKey: [GET_EVENT_QUESTIONS_QUERY_KEY] }).then(() => {
                 onCompleted(question);
                 onClose();
                 form.reset();
@@ -70,7 +71,7 @@ export const CreateQuestionModal = ({onClose, onCompleted, defaultBelongsTo = 'O
             heading={t`Create Question`}
         >
             <form onSubmit={form.onSubmit((values) => mutation.mutate(values as any as Question))}>
-                <QuestionForm form={form} productCategories={productCategories}/>
+                <QuestionForm form={form} productCategories={productCategories} />
                 <Button loading={mutation.isPending} type="submit" fullWidth mt="xl">
                     {mutation.isPending ? t`Working...` : t`Create Question`}
                 </Button>

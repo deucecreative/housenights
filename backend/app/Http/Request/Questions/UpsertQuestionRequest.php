@@ -22,6 +22,7 @@ class UpsertQuestionRequest extends BaseRequest
             'options' => 'max:2000|required_if:type,CHECKBOX,RADIO',
             'required' => 'required|boolean',
             'is_hidden' => 'required|boolean',
+            'show_description_as_placeholder' => 'sometimes|boolean',
         ];
     }
 

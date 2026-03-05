@@ -1,7 +1,7 @@
-import {CustomSelect, ItemProps} from "../../common/CustomSelect";
-import {t, Trans} from "@lingui/macro";
-import {ProductCategory, QuestionBelongsToType, QuestionType} from "../../../types.ts";
-import {Button, Group, Switch, TextInput} from "@mantine/core";
+import { CustomSelect, ItemProps } from "../../common/CustomSelect";
+import { t, Trans } from "@lingui/macro";
+import { ProductCategory, QuestionBelongsToType, QuestionType } from "../../../types.ts";
+import { Button, Group, Switch, TextInput } from "@mantine/core";
 import {
     IconAlignBoxLeftTop,
     IconCalendar,
@@ -15,14 +15,14 @@ import {
     IconTrash,
     IconUser
 } from "@tabler/icons-react";
-import {UseFormReturnType} from "@mantine/form";
-import {Card} from "../../common/Card";
+import { UseFormReturnType } from "@mantine/form";
+import { Card } from "../../common/Card";
 import classes from "./QuestionForm.module.scss";
-import {Editor} from "../../common/Editor";
-import {useState} from "react";
-import {ProductSelector} from "../../common/ProductSelector";
+import { Editor } from "../../common/Editor";
+import { useState } from "react";
+import { ProductSelector } from "../../common/ProductSelector";
 
-const Options = ({form}: { form: UseFormReturnType<any> }) => {
+const Options = ({ form }: { form: UseFormReturnType<any> }) => {
     return (
         <Card>
             <h3 className={classes.optionsHeading}><Trans>Options</Trans></h3>
@@ -53,7 +53,7 @@ const Options = ({form}: { form: UseFormReturnType<any> }) => {
                                 variant="outline"
                                 onClick={() => form.setFieldValue('options', form.values.options.filter((_: any, i: number) => i !== index))}
                             >
-                                <IconTrash size={16}/>
+                                <IconTrash size={16} />
                             </Button>
                         </div>
                     </Group>
@@ -76,18 +76,18 @@ interface QuestionFormProps {
     productCategories?: ProductCategory[];
 }
 
-export const QuestionForm = ({form, productCategories}: QuestionFormProps) => {
+export const QuestionForm = ({ form, productCategories }: QuestionFormProps) => {
     const [showDescription, setShowDescription] = useState(false);
 
     const belongToOptions: ItemProps[] = [
         {
-            icon: <IconReceipt/>,
+            icon: <IconReceipt />,
             label: t`Ask once per order`,
             value: QuestionBelongsToType.ORDER,
             description: t`A single question per order. E.g, What is your shipping address?`,
         },
         {
-            icon: <IconUser/>,
+            icon: <IconUser />,
             label: t`Ask once per product`,
             value: QuestionBelongsToType.PRODUCT,
             description: t`A single question per product. E.g, What is your t-shirt size?`,
@@ -96,43 +96,43 @@ export const QuestionForm = ({form, productCategories}: QuestionFormProps) => {
 
     const questionTypeOptions: ItemProps[] = [
         {
-            icon: <IconForms/>,
+            icon: <IconForms />,
             label: t`Single line text box`,
             value: QuestionType.SINGLE_LINE_TEXT,
             description: t`A single line text input`,
         },
         {
-            icon: <IconAlignBoxLeftTop/>,
+            icon: <IconAlignBoxLeftTop />,
             label: t`Multi line text box`,
             value: QuestionType.MULTI_LINE_TEXT,
             description: t`A multi line text input`,
         },
         {
-            icon: <IconSquareCheck/>,
+            icon: <IconSquareCheck />,
             label: t`Checkboxes`,
             value: QuestionType.CHECKBOX,
             description: t`Checkbox options allow multiple selections`,
         },
         {
-            icon: <IconCircleCheck/>,
+            icon: <IconCircleCheck />,
             label: t`Radio Option`,
             value: QuestionType.RADIO,
             description: t`A Radio option has multiple options but only one can be selected.`,
         },
         {
-            icon: <IconSelector/>,
+            icon: <IconSelector />,
             label: t`Dropdown selection`,
             value: QuestionType.DROPDOWN,
             description: t`A Dropdown input allows only one selection`,
         },
         {
-            icon: <IconMapPin/>,
+            icon: <IconMapPin />,
             label: t`Address`,
             value: QuestionType.ADDRESS,
             description: t`Shows common address fields, including country`,
         },
         {
-            icon: <IconCalendar/>,
+            icon: <IconCalendar />,
             label: t`Date`,
             value: QuestionType.DATE,
             description: t`A date input. Perfect for asking for a date of birth etc.`,
@@ -143,6 +143,14 @@ export const QuestionForm = ({form, productCategories}: QuestionFormProps) => {
         QuestionType.RADIO.toString(),
         QuestionType.DROPDOWN.toString(),
     ];
+
+    const textQuestionTypes = [
+        QuestionType.SINGLE_LINE_TEXT.toString(),
+        QuestionType.MULTI_LINE_TEXT.toString(),
+    ];
+
+    const isTextQuestion = textQuestionTypes.includes(form.values.type);
+    const hasDescription = !!form.values.description && form.values.description.replace(/<[^>]*>/g, '').trim().length > 0;
 
     return (
         <>
@@ -158,7 +166,7 @@ export const QuestionForm = ({form, productCategories}: QuestionFormProps) => {
                 <ProductSelector
                     label={t`What products does this code apply to?`}
                     placeholder="Select products"
-                    icon={<IconTicket size="1rem"/>}
+                    icon={<IconTicket size="1rem" />}
                     productCategories={productCategories ?? []}
                     form={form}
                     productFieldName="product_ids"
@@ -203,21 +211,30 @@ export const QuestionForm = ({form, productCategories}: QuestionFormProps) => {
                 </Button>
             )}
 
-            {multiAnswerQuestionTypes.includes(form.values.type) && <Options form={form}/>}
+            {multiAnswerQuestionTypes.includes(form.values.type) && <Options form={form} />}
 
             <Switch
                 mt={20}
-                {...form.getInputProps('required', {type: 'checkbox'})}
+                {...form.getInputProps('required', { type: 'checkbox' })}
                 description={t`Mandatory questions must be answered before the customer can checkout.`}
                 label={t`Make this question mandatory`}
             />
 
             <Switch
                 mt={20}
-                {...form.getInputProps('is_hidden', {type: 'checkbox'})}
+                {...form.getInputProps('is_hidden', { type: 'checkbox' })}
                 description={t`Hidden questions are only visible to the event organizer and not to the customer.`}
                 label={t`Hide this question`}
             />
+
+            {isTextQuestion && hasDescription && (
+                <Switch
+                    mt={20}
+                    {...form.getInputProps('show_description_as_placeholder', { type: 'checkbox' })}
+                    description={t`Show the description inside the text input as placeholder text instead of above it.`}
+                    label={t`Show description as placeholder`}
+                />
+            )}
         </>
     )
 }

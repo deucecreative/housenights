@@ -1,11 +1,11 @@
-import {Product, Question, QuestionType} from "../../../types.ts";
-import {UseFormReturnType} from "@mantine/form";
-import {Box, Checkbox, ComboboxItem, Group, NativeSelect, Radio, Select, Textarea, TextInput} from "@mantine/core";
-import {t} from "@lingui/macro";
+import { Product, Question, QuestionType } from "../../../types.ts";
+import { UseFormReturnType } from "@mantine/form";
+import { Box, Checkbox, ComboboxItem, Group, NativeSelect, Radio, Select, Textarea, TextInput } from "@mantine/core";
+import { t } from "@lingui/macro";
 import countries from "../../../../data/countries.json";
-import {InputGroup} from "../InputGroup";
+import { InputGroup } from "../InputGroup";
 import classes from "./CheckoutQuestion.module.scss";
-import {UserGeneratedContent} from "../UserGeneratedContent";
+import { UserGeneratedContent } from "../UserGeneratedContent";
 
 interface CheckoutQuestionProps {
     questions: Question[],
@@ -25,7 +25,7 @@ interface CheckoutProductQuestionProps {
     index: number,
 }
 
-const DropDownInput = ({question, name, form}: QuestionInputProps) => {
+const DropDownInput = ({ question, name, form }: QuestionInputProps) => {
     const items: ComboboxItem[] = [];
 
     question.options?.map((option) => {
@@ -39,7 +39,7 @@ const DropDownInput = ({question, name, form}: QuestionInputProps) => {
             classNames={{
                 description: classes.descriptionWithNoStyle,
             }}
-            description={(<UserGeneratedContent dangerouslySetInnerHTML={{__html: question.description || ''}}/>)}
+            description={(<UserGeneratedContent dangerouslySetInnerHTML={{ __html: question.description || '' }} />)}
             {...form.getInputProps(`${name}.answer`)}
             data={items}
             label={question.title}
@@ -48,35 +48,44 @@ const DropDownInput = ({question, name, form}: QuestionInputProps) => {
     );
 }
 
-const MultiLineTextInput = ({question, name, form}: QuestionInputProps) => {
+const MultiLineTextInput = ({ question, name, form }: QuestionInputProps) => {
+    const descriptionHtml = question.description || '';
+    const asPlaceholder = question.show_description_as_placeholder && !!descriptionHtml;
+    const plainText = asPlaceholder ? descriptionHtml.replace(/<[^>]*>/g, '').trim() : undefined;
+
     return (
         <>
             <Textarea
                 classNames={{
                     description: classes.descriptionWithNoStyle,
                 }}
-                description={(<UserGeneratedContent dangerouslySetInnerHTML={{__html: question.description || ''}}/>)}
+                description={asPlaceholder ? undefined : (<UserGeneratedContent dangerouslySetInnerHTML={{ __html: descriptionHtml }} />)}
+                placeholder={asPlaceholder ? plainText : undefined}
                 {...form.getInputProps(`${name}.answer`)} withAsterisk={question.required}
-                label={question.title}/>
+                label={question.title} />
         </>
     );
 }
 
-const DateInput = ({question, name, form}: QuestionInputProps) => {
+const DateInput = ({ question, name, form }: QuestionInputProps) => {
     return (
         <>
             <TextInput withAsterisk={question.required}
-                       type="date"
-                       {...form.getInputProps(`${name}.answer`)}
-                       label={question.title}
-                       description={(
-                           <UserGeneratedContent dangerouslySetInnerHTML={{__html: question.description || ''}}/>)}
+                type="date"
+                {...form.getInputProps(`${name}.answer`)}
+                label={question.title}
+                description={(
+                    <UserGeneratedContent dangerouslySetInnerHTML={{ __html: question.description || '' }} />)}
             />
         </>
     );
 }
 
-const SingleLineTextInput = ({question, name, form}: QuestionInputProps) => {
+const SingleLineTextInput = ({ question, name, form }: QuestionInputProps) => {
+    const descriptionHtml = question.description || '';
+    const asPlaceholder = question.show_description_as_placeholder && !!descriptionHtml;
+    const plainText = asPlaceholder ? descriptionHtml.replace(/<[^>]*>/g, '').trim() : undefined;
+
     return (
         <>
             <TextInput
@@ -86,13 +95,14 @@ const SingleLineTextInput = ({question, name, form}: QuestionInputProps) => {
                 {...form.getInputProps(`${name}.answer`)}
                 withAsterisk={question.required}
                 label={question.title}
-                description={(<UserGeneratedContent dangerouslySetInnerHTML={{__html: question.description || ''}}/>)}
+                placeholder={asPlaceholder ? plainText : undefined}
+                description={asPlaceholder ? undefined : (<UserGeneratedContent dangerouslySetInnerHTML={{ __html: descriptionHtml }} />)}
             />
         </>
     );
 }
 
-const RadioInput = ({question, name, form}: QuestionInputProps) => {
+const RadioInput = ({ question, name, form }: QuestionInputProps) => {
     return (
         <Radio.Group
             classNames={{
@@ -101,7 +111,7 @@ const RadioInput = ({question, name, form}: QuestionInputProps) => {
             withAsterisk={question.required}
             {...form.getInputProps(`${name}.answer`)}
             label={question.title}
-            description={(<UserGeneratedContent dangerouslySetInnerHTML={{__html: question.description || ''}}/>)}
+            description={(<UserGeneratedContent dangerouslySetInnerHTML={{ __html: question.description || '' }} />)}
         >
             <Group mt="xs">
                 {question.options?.map((option, index) => {
@@ -118,7 +128,7 @@ const RadioInput = ({question, name, form}: QuestionInputProps) => {
     )
 }
 
-const CheckBoxInput = ({question, name, form}: QuestionInputProps) => {
+const CheckBoxInput = ({ question, name, form }: QuestionInputProps) => {
     return (
         <Checkbox.Group
             classNames={{
@@ -127,7 +137,7 @@ const CheckBoxInput = ({question, name, form}: QuestionInputProps) => {
             withAsterisk={question.required}
             {...form.getInputProps(`${name}.answer`)}
             label={question.title}
-            description={(<UserGeneratedContent dangerouslySetInnerHTML={{__html: question.description || ''}}/>)}
+            description={(<UserGeneratedContent dangerouslySetInnerHTML={{ __html: question.description || '' }} />)}
         >
             <Group mt="xs">
                 {question.options?.map((option, index) => {
@@ -144,62 +154,62 @@ const CheckBoxInput = ({question, name, form}: QuestionInputProps) => {
     );
 }
 
-const AddressInput = ({question, name, form}: QuestionInputProps) => {
+const AddressInput = ({ question, name, form }: QuestionInputProps) => {
     return (
         <>
             <h4>{question.title}</h4>
             <UserGeneratedContent className={classes.description}
-                                  dangerouslySetInnerHTML={{__html: question.description || ''}}/>
+                dangerouslySetInnerHTML={{ __html: question.description || '' }} />
 
             <TextInput withAsterisk={question.required}
-                       {...form.getInputProps(`${name}.address_line_1`)}
-                       label={t`Address line 1`}/>
+                {...form.getInputProps(`${name}.address_line_1`)}
+                label={t`Address line 1`} />
             <TextInput mt={20}
-                       {...form.getInputProps(`${name}.address_line_2`)}
-                       label={t`Address line 2`}/>
+                {...form.getInputProps(`${name}.address_line_2`)}
+                label={t`Address line 2`} />
             <InputGroup>
                 <TextInput withAsterisk={question.required}
-                           {...form.getInputProps(`${name}.city`)} label={t`City`}/>
+                    {...form.getInputProps(`${name}.city`)} label={t`City`} />
                 <TextInput withAsterisk={question.required}
-                           {...form.getInputProps(`${name}.state_or_region`)}
-                           label={t`State or Region`}/>
+                    {...form.getInputProps(`${name}.state_or_region`)}
+                    label={t`State or Region`} />
             </InputGroup>
             <InputGroup>
                 <TextInput withAsterisk={question.required}
-                           {...form.getInputProps(`${name}.zip_or_postal_code`)}
-                           label={t`Zip or Postal Code`}/>
+                    {...form.getInputProps(`${name}.zip_or_postal_code`)}
+                    label={t`Zip or Postal Code`} />
                 <NativeSelect withAsterisk={question.required}
-                              data={countries}
-                              {...form.getInputProps(`${name}.country`)}
-                              label={t`Country`}/>
+                    data={countries}
+                    {...form.getInputProps(`${name}.country`)}
+                    label={t`Country`} />
             </InputGroup>
         </>
     );
 }
 
-export const QuestionInput = ({question, name, form}: QuestionInputProps) => {
+export const QuestionInput = ({ question, name, form }: QuestionInputProps) => {
     let input;
     switch (question.type) {
         case QuestionType.ADDRESS:
-            input = <AddressInput question={question} name={name} form={form}/>
+            input = <AddressInput question={question} name={name} form={form} />
             break;
         case QuestionType.CHECKBOX:
-            input = <CheckBoxInput question={question} name={name} form={form}/>
+            input = <CheckBoxInput question={question} name={name} form={form} />
             break;
         case QuestionType.MULTI_LINE_TEXT:
-            input = <MultiLineTextInput question={question} name={name} form={form}/>;
+            input = <MultiLineTextInput question={question} name={name} form={form} />;
             break;
         case QuestionType.RADIO:
-            input = <RadioInput question={question} name={name} form={form}/>;
+            input = <RadioInput question={question} name={name} form={form} />;
             break;
         case QuestionType.DROPDOWN:
-            input = <DropDownInput question={question} name={name} form={form}/>;
+            input = <DropDownInput question={question} name={name} form={form} />;
             break;
         case QuestionType.SINGLE_LINE_TEXT:
-            input = <SingleLineTextInput question={question} name={name} form={form}/>;
+            input = <SingleLineTextInput question={question} name={name} form={form} />;
             break;
         case QuestionType.DATE:
-            input = <DateInput question={question} name={name} form={form}/>;
+            input = <DateInput question={question} name={name} form={form} />;
             break;
     }
 
@@ -210,24 +220,24 @@ export const QuestionInput = ({question, name, form}: QuestionInputProps) => {
     )
 };
 
-export const CheckoutOrderQuestions = ({questions, form}: CheckoutQuestionProps) => {
+export const CheckoutOrderQuestions = ({ questions, form }: CheckoutQuestionProps) => {
     let questionIndex = 0;
     return (
         <>
             {questions.map((question, index) => {
                 const name = `order.questions.${questionIndex++}.response`;
-                return <QuestionInput key={`${index}-question`} question={question} name={name} form={form}/>
+                return <QuestionInput key={`${index}-question`} question={question} name={name} form={form} />
             })}
         </>
     )
 }
 
 export const CheckoutProductQuestions = ({
-                                             questions,
-                                             form,
-                                             product,
-                                             index: productIndex
-                                         }: CheckoutProductQuestionProps) => {
+    questions,
+    form,
+    product,
+    index: productIndex
+}: CheckoutProductQuestionProps) => {
     let questionIndex = 0;
     return (
         <>
@@ -237,7 +247,7 @@ export const CheckoutProductQuestions = ({
                 }
 
                 const name = `products.${productIndex}.questions.${questionIndex++}.response`;
-                return <QuestionInput key={`${index}-product`} question={question} name={name} form={form}/>
+                return <QuestionInput key={`${index}-product`} question={question} name={name} form={form} />
             })}
         </>
     )

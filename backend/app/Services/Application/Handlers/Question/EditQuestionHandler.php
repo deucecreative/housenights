@@ -30,7 +30,8 @@ class EditQuestionHandler
             ->setRequired($createQuestionDTO->required)
             ->setOptions($createQuestionDTO->options)
             ->setIsHidden($createQuestionDTO->is_hidden)
-            ->setDescription($createQuestionDTO->description);
+            ->setDescription($createQuestionDTO->description)
+            ->setShowDescriptionAsPlaceholder($createQuestionDTO->show_description_as_placeholder);
 
         return $this->editQuestionService->editQuestion(
             question: $question,

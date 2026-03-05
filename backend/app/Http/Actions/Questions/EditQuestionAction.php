@@ -41,6 +41,7 @@ class EditQuestionAction extends BaseAction
                 'is_hidden' => $request->boolean('is_hidden'),
                 'belongs_to' => QuestionBelongsTo::fromName($request->input('belongs_to')),
                 'description' => $request->input('description'),
+                'show_description_as_placeholder' => $request->boolean('show_description_as_placeholder'),
             ]));
 
         return $this->resourceResponse(QuestionResource::class, $question);
