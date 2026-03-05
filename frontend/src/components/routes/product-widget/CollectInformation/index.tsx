@@ -1,6 +1,6 @@
 import { useMutation } from "@tanstack/react-query";
 import { FinaliseOrderPayload, orderClientPublic } from "../../../../api/order.client.ts";
-import { useNavigate, useParams, useSearchParams } from "react-router";
+import { useNavigate, useParams } from "react-router";
 import {
     Button,
     Checkbox,
@@ -45,32 +45,6 @@ const LoadingSkeleton = () =>
 export const CollectInformation = () => {
     const { eventId, orderShortId } = useParams();
     const navigate = useNavigate();
-    const [searchParams] = useSearchParams();
-
-    // Get affiliate code from URL or localStorage (same storage pattern as SelectProducts)
-    const getAffiliateCode = (): string | null => {
-        const AFFILIATE_EXPIRY_DAYS = 30;
-        const affiliateCodeFromUrl = searchParams.get('aff');
-        if (affiliateCodeFromUrl) return affiliateCodeFromUrl;
-
-        if (typeof window === 'undefined') return null;
-
-        const storageKey = 'affiliate_code_' + eventId;
-        const storedData = localStorage.getItem(storageKey);
-        if (storedData) {
-            try {
-                const parsed = JSON.parse(storedData);
-                const ageInDays = (Date.now() - parsed.timestamp) / (1000 * 60 * 60 * 24);
-                if (ageInDays <= AFFILIATE_EXPIRY_DAYS) {
-                    return parsed.code;
-                }
-            } catch {
-                // Invalid stored data, ignore
-            }
-        }
-        return null;
-    };
-    const affiliateCode = getAffiliateCode();
     const {
         isFetched: isOrderFetched,
         data: order,
@@ -83,7 +57,7 @@ export const CollectInformation = () => {
         data: { product_categories: productCategories } = {},
         isFetched: isEventFetched,
         isError: isEventError,
-    } = useGetEventPublic(eventId, isOrderFetched, !!order?.promo_code, order?.promo_code ?? null, affiliateCode);
+    } = useGetEventPublic(eventId, isOrderFetched, !!order?.promo_code, order?.promo_code ?? null);
     const {
         data: questions,
         isFetched: isQuestionsFetched,
