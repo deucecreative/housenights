@@ -41,6 +41,7 @@ export const EditProductModal = ({ onClose, productId }: GenericModalProps & { p
             prices: [],
             product_type: ProductType.Ticket,
             product_category_id: undefined,
+            tickets_per_group: undefined,
         },
     });
 
@@ -73,6 +74,7 @@ export const EditProductModal = ({ onClose, productId }: GenericModalProps & { p
             highlight_message: product.highlight_message,
             product_type: product.product_type,
             product_category_id: String(product.product_category_id),
+            tickets_per_group: product.tickets_per_group ?? undefined,
             prices: product.prices?.map(p => ({
                 price: p.price ?? 0,
                 label: p.label,

@@ -42,6 +42,7 @@ export const DuplicateProductModal = ({ onClose, originalProductId }: DuplicateP
             product_type: ProductType.Ticket,
             tax_and_fee_ids: undefined,
             product_category_id: undefined,
+            tickets_per_group: undefined,
             prices: [{
                 price: 0,
                 label: undefined,
@@ -77,6 +78,7 @@ export const DuplicateProductModal = ({ onClose, originalProductId }: DuplicateP
             tax_and_fee_ids: originalProduct.taxes_and_fees?.map(t => String(t.id)) ?? [],
             product_type: originalProduct.product_type,
             product_category_id: originalProduct.product_category_id,
+            tickets_per_group: originalProduct.tickets_per_group ?? undefined,
             prices: originalProduct.prices?.map(price => ({
                 price: price.price,
                 label: price.label,

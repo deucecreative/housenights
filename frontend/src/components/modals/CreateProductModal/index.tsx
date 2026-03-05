@@ -39,6 +39,7 @@ export const CreateProductModal = ({ onClose, selectedCategoryId = undefined }: 
             product_type: ProductType.Ticket,
             tax_and_fee_ids: undefined,
             product_category_id: selectedCategoryId ? String(selectedCategoryId) : undefined,
+            tickets_per_group: undefined,
             prices: [{
                 price: 0,
                 label: undefined,
