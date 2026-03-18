@@ -93,7 +93,11 @@ class UpdateEventSettingsHandler
                     'homepage_theme_settings' => $settings->homepage_theme_settings,
 
                     // Self-service settings
-                    'allow_attendee_self_edit' => $settings->allow_attendee_self_edit
+                    'allow_attendee_self_edit' => $settings->allow_attendee_self_edit,
+
+                    // Tracking settings
+                    'meta_pixel_id' => $settings->meta_pixel_id,
+                    'meta_conversions_api_access_token' => $settings->meta_conversions_api_access_token,
                 ],
                 where: [
                     'event_id' => $settings->event_id,

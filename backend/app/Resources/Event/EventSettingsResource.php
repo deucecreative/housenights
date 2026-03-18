@@ -79,6 +79,10 @@ class EventSettingsResource extends JsonResource
 
             // Self-service settings
             'allow_attendee_self_edit' => $this->getAllowAttendeeSelfEdit(),
+
+            // Tracking settings
+            'meta_pixel_id' => $this->getMetaPixelId(),
+            'meta_conversions_api_access_token' => $this->getMetaConversionsApiAccessToken(),
         ];
     }
 }

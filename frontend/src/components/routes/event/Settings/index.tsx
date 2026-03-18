@@ -7,11 +7,13 @@ import {PageTitle} from "../../../common/PageTitle";
 import {t} from "@lingui/macro";
 import {SeoSettings} from "./Sections/SeoSettings";
 import {MiscSettings} from "./Sections/MiscSettings";
+import {TrackingSettings} from "./Sections/TrackingSettings";
 import {Box, Group, NavLink as MantineNavLink, Stack} from "@mantine/core";
 import {
     IconAdjustments,
     IconAt,
     IconBrandGoogleAnalytics,
+    IconBrandMeta,
     IconBuildingStore,
     IconCreditCard,
     IconHome,
@@ -54,6 +56,12 @@ export const Settings = () => {
                 label: t`SEO`,
                 icon: IconBrandGoogleAnalytics,
                 component: SeoSettings
+            },
+            {
+                id: 'tracking-settings',
+                label: t`Tracking Settings`,
+                icon: IconBrandMeta,
+                component: TrackingSettings
             },
             {
                 id: 'email-settings',

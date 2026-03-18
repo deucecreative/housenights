@@ -137,6 +137,14 @@ class PartialUpdateEventSettingsHandler
 
                 // Self-service settings
                 'allow_attendee_self_edit' => $eventSettingsDTO->settings['allow_attendee_self_edit'] ?? $existingSettings->getAllowAttendeeSelfEdit(),
+
+                // Tracking settings
+                'meta_pixel_id' => array_key_exists('meta_pixel_id', $eventSettingsDTO->settings)
+                    ? $eventSettingsDTO->settings['meta_pixel_id']
+                    : $existingSettings->getMetaPixelId(),
+                'meta_conversions_api_access_token' => array_key_exists('meta_conversions_api_access_token', $eventSettingsDTO->settings)
+                    ? $eventSettingsDTO->settings['meta_conversions_api_access_token']
+                    : $existingSettings->getMetaConversionsApiAccessToken(),
             ]),
         );
     }

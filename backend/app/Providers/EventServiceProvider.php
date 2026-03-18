@@ -2,6 +2,8 @@
 
 namespace HiEvents\Providers;
 
+use HiEvents\Events\OrderStatusChangedEvent;
+use HiEvents\Listeners\Order\SendMetaConversionsApiEventListener;
 use HiEvents\Listeners\Webhook\WebhookEventListener;
 use HiEvents\Services\Infrastructure\DomainEvents\Events\AttendeeEvent;
 use HiEvents\Services\Infrastructure\DomainEvents\Events\CheckinEvent;
@@ -23,6 +25,12 @@ class EventServiceProvider extends ServiceProvider
             OrderEvent::class,
             AttendeeEvent::class,
             CheckinEvent::class,
+        ],
+    ];
+
+    protected $listen = [
+        OrderStatusChangedEvent::class => [
+            SendMetaConversionsApiEventListener::class,
         ],
     ];
 

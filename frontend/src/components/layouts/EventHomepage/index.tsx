@@ -38,6 +38,7 @@ import { ShareComponent } from "../../common/ShareIcon";
 import { EventDateRange } from "../../common/EventDateRange";
 import { CalendarOptionsPopover } from "../../common/CalendarOptionsPopover";
 import { isDateInPast } from "../../../utilites/dates.ts";
+import { MetaPixel } from "../../common/MetaPixel";
 
 interface EventHomepageProps {
     event?: Event;
@@ -159,6 +160,7 @@ const EventHomepage = ({ ...loaderData }: EventHomepageProps) => {
 
     return (
         <>
+            <MetaPixel id={event?.settings?.meta_pixel_id} />
             {event?.status && event?.id && (
                 <StatusToggle
                     entityType="event"

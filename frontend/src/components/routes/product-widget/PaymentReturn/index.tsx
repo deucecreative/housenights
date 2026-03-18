@@ -10,6 +10,12 @@ import {HomepageInfoMessage} from "../../../common/HomepageInfoMessage";
 import {isSsr} from "../../../../utilites/helpers.ts";
 import {trackEvent, AnalyticsEvents} from "../../../../utilites/analytics.ts";
 
+declare global {
+    interface Window {
+        fbq?: (type: string, eventName: string, data?: any, options?: any) => void;
+    }
+}
+
 /**
  * This component is responsible for handling the return from the payment provider.
  * Stripe should send a webhook to the backend to update the order status to 'COMPLETED'
@@ -50,6 +56,15 @@ export const PaymentReturn = () => {
                 hasTrackedPurchase.current = true;
                 const totalCents = Math.round((order.total_gross || 0) * 100);
                 trackEvent(AnalyticsEvents.PURCHASE_COMPLETED_PAID, { value: totalCents });
+
+                if (typeof window !== 'undefined' && window.fbq) {
+                    window.fbq('track', 'Purchase', {
+                        value: order.total_gross || 0,
+                        currency: order.currency || 'GBP',
+                    }, {
+                        eventID: order.short_id
+                    });
+                }
             }
             navigate(eventCheckoutPath(eventId, orderShortId, 'summary'));
         } else {
@@ -70,6 +85,15 @@ export const PaymentReturn = () => {
                 hasTrackedPurchase.current = true;
                 const totalCents = Math.round((order.total_gross || 0) * 100);
                 trackEvent(AnalyticsEvents.PURCHASE_COMPLETED_PAID, { value: totalCents });
+
+                if (typeof window !== 'undefined' && window.fbq) {
+                    window.fbq('track', 'Purchase', {
+                        value: order.total_gross || 0,
+                        currency: order.currency || 'GBP',
+                    }, {
+                        eventID: order.short_id
+                    });
+                }
             }
             navigate(eventCheckoutPath(eventId, orderShortId, 'summary'));
         }

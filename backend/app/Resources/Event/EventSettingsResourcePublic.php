@@ -85,6 +85,9 @@ class EventSettingsResourcePublic extends JsonResource
 
             // Self-service settings
             'allow_attendee_self_edit' => $this->getAllowAttendeeSelfEdit(),
+
+            // Tracking settings (only pixel ID is public)
+            'meta_pixel_id' => $this->getMetaPixelId(),
         ];
     }
 }

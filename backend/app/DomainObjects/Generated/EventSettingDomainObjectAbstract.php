@@ -64,6 +64,8 @@ abstract class EventSettingDomainObjectAbstract extends \HiEvents\DomainObjects\
     final public const HOMEPAGE_THEME_SETTINGS = 'homepage_theme_settings';
     final public const PASS_PLATFORM_FEE_TO_BUYER = 'pass_platform_fee_to_buyer';
     final public const ALLOW_ATTENDEE_SELF_EDIT = 'allow_attendee_self_edit';
+    final public const META_PIXEL_ID = 'meta_pixel_id';
+    final public const META_CONVERSIONS_API_ACCESS_TOKEN = 'meta_conversions_api_access_token';
 
     protected int $id;
     protected int $event_id;
@@ -119,6 +121,8 @@ abstract class EventSettingDomainObjectAbstract extends \HiEvents\DomainObjects\
     protected array|string|null $homepage_theme_settings = null;
     protected bool $pass_platform_fee_to_buyer = false;
     protected bool $allow_attendee_self_edit = true;
+    protected ?string $meta_pixel_id = null;
+    protected ?string $meta_conversions_api_access_token = null;
 
     public function toArray(): array
     {
@@ -177,6 +181,8 @@ abstract class EventSettingDomainObjectAbstract extends \HiEvents\DomainObjects\
                     'homepage_theme_settings' => $this->homepage_theme_settings ?? null,
                     'pass_platform_fee_to_buyer' => $this->pass_platform_fee_to_buyer ?? null,
                     'allow_attendee_self_edit' => $this->allow_attendee_self_edit ?? null,
+                    'meta_pixel_id' => $this->meta_pixel_id ?? null,
+                    'meta_conversions_api_access_token' => $this->meta_conversions_api_access_token ?? null,
                 ];
     }
 
@@ -773,5 +779,27 @@ abstract class EventSettingDomainObjectAbstract extends \HiEvents\DomainObjects\
     public function getAllowAttendeeSelfEdit(): bool
     {
         return $this->allow_attendee_self_edit;
+    }
+
+    public function setMetaPixelId(?string $meta_pixel_id): self
+    {
+        $this->meta_pixel_id = $meta_pixel_id;
+        return $this;
+    }
+
+    public function getMetaPixelId(): ?string
+    {
+        return $this->meta_pixel_id;
+    }
+
+    public function setMetaConversionsApiAccessToken(?string $meta_conversions_api_access_token): self
+    {
+        $this->meta_conversions_api_access_token = $meta_conversions_api_access_token;
+        return $this;
+    }
+
+    public function getMetaConversionsApiAccessToken(): ?string
+    {
+        return $this->meta_conversions_api_access_token;
     }
 }

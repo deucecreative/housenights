@@ -83,6 +83,10 @@ class UpdateEventSettingsDTO extends BaseDTO
 
         // Self-service settings
         public readonly bool                    $allow_attendee_self_edit = false,
+
+        // Tracking settings
+        public readonly ?string                 $meta_pixel_id = null,
+        public readonly ?string                 $meta_conversions_api_access_token = null,
     )
     {
     }
@@ -165,6 +169,10 @@ class UpdateEventSettingsDTO extends BaseDTO
 
             // Self-service defaults
             allow_attendee_self_edit: false,
+
+            // Tracking defaults
+            meta_pixel_id: null,
+            meta_conversions_api_access_token: null,
         );
     }
 }

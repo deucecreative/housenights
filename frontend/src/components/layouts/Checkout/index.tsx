@@ -17,9 +17,10 @@ import {downloadBinary} from "../../../utilites/download.ts";
 import {withLoadingNotification} from "../../../utilites/withLoadingNotification.tsx";
 import {useAbandonOrderPublic} from "../../../mutations/useAbandonOrderPublic.ts";
 import {showError, showInfo} from "../../../utilites/notifications.tsx";
-import {isDateInFuture} from "../../../utilites/dates.ts";
-import {detectMode} from "../../../utilites/themeUtils.ts";
-import {CheckoutThemeProvider} from "./CheckoutThemeProvider.tsx";
+import {isDateInFuture} from "../../../utilites/dates";
+import {detectMode} from "../../../utilites/themeUtils";
+import {CheckoutThemeProvider} from "./CheckoutThemeProvider";
+import {MetaPixel} from "../../common/MetaPixel";
 
 const DEFAULT_ACCENT = '#8b5cf6';
 
@@ -150,6 +151,7 @@ const Checkout = () => {
 
     return (
         <CheckoutThemeProvider accentColor={accentColor} mode={checkoutMode}>
+            <MetaPixel id={event?.settings?.meta_pixel_id} />
             <div className={classes.container} data-mode={checkoutMode}>
                 <div className={classes.mainContent}>
                     <header className={classes.header}>

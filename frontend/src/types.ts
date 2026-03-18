@@ -198,6 +198,10 @@ export interface EventSettings {
     support_email?: string;
     notify_organizer_of_new_orders: boolean;
     order_timeout_in_minutes?: number;
+
+    // Tracking settings
+    meta_pixel_id?: string;
+    meta_conversions_api_access_token?: string;
     homepage_background_color: string;
     homepage_primary_color: string;
     homepage_primary_text_color: string;

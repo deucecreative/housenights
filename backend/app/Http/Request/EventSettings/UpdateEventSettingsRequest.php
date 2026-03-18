@@ -101,6 +101,10 @@ class UpdateEventSettingsRequest extends BaseRequest
 
             // Self-service settings
             'allow_attendee_self_edit' => ['boolean'],
+
+            // Tracking settings
+            'meta_pixel_id' => ['string', 'nullable', 'max:255'],
+            'meta_conversions_api_access_token' => ['string', 'nullable', 'max:1000'],
         ];
     }
 
