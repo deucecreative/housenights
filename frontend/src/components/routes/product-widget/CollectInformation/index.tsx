@@ -19,7 +19,7 @@ import { useGetOrderPublic } from "../../../../queries/useGetOrderPublic.ts";
 import { useGetEventPublic } from "../../../../queries/useGetEventPublic.ts";
 import { useGetEventQuestionsPublic } from "../../../../queries/useGetEventQuestionsPublic.ts";
 import { CheckoutOrderQuestions, CheckoutProductQuestions } from "../../../common/CheckoutQuestion";
-import { Event, IdParam, Question } from "../../../../types.ts";
+import { Event, IdParam, Question, Product } from "../../../../types.ts";
 import { useEffect, useState } from "react";
 import { InputGroup } from "../../../common/InputGroup";
 import { Card } from "../../../common/Card";
@@ -72,6 +72,15 @@ export const CollectInformation = () => {
     const isPerOrderCollection = event?.settings?.attendee_details_collection_method === 'PER_ORDER';
     const [copyOption, setCopyOption] = useState<'none' | 'first' | 'all'>('none');
 
+    const getProduct = (productId: IdParam): Product | undefined => {
+        if (!productId) return undefined;
+        let product = products?.find(p => Number(p!.id) === Number(productId));
+        if (!product && order?.attendees) {
+            product = order.attendees.find(a => Number(a.product_id) === Number(productId))?.product;
+        }
+        return product;
+    };
+
     const isEmailValid = (email: string) => {
         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
         return emailRegex.test(email);
@@ -116,28 +125,28 @@ export const CollectInformation = () => {
                 first_name: (value, values, path) => {
                     const index = parseInt(path.split('.')[1]);
                     const formProduct = values.products[index];
-                    const productDef = products?.find(p => Number(p!.id) === Number(formProduct?.product_id));
+                    const productDef = getProduct(formProduct?.product_id);
                     if (isPerOrderCollection || !productDef || productDef.product_type !== 'TICKET') return null;
                     return value.trim().length === 0 ? t`First name is required` : null;
                 },
                 last_name: (value, values, path) => {
                     const index = parseInt(path.split('.')[1]);
                     const formProduct = values.products[index];
-                    const productDef = products?.find(p => Number(p!.id) === Number(formProduct?.product_id));
+                    const productDef = getProduct(formProduct?.product_id);
                     if (isPerOrderCollection || !productDef || productDef.product_type !== 'TICKET') return null;
                     return value.trim().length === 0 ? t`Last name is required` : null;
                 },
                 email: (value, values, path) => {
                     const index = parseInt(path.split('.')[1]);
                     const formProduct = values.products[index];
-                    const productDef = products?.find(p => Number(p!.id) === Number(formProduct?.product_id));
+                    const productDef = getProduct(formProduct?.product_id);
                     if (isPerOrderCollection || !productDef || productDef.product_type !== 'TICKET') return null;
                     return !/^\S+@\S+\.\S+$/.test(value) ? t`Valid email is required` : null;
                 },
                 email_confirmation: (value, values, path) => {
                     const index = parseInt(path.split('.')[1]);
                     const formProduct = values.products[index];
-                    const productDef = products?.find(p => Number(p!.id) === Number(formProduct?.product_id));
+                    const productDef = getProduct(formProduct?.product_id);
                     if (isPerOrderCollection || !productDef || productDef.product_type !== 'TICKET') return null;
                     if (formProduct && formProduct.email !== value) {
                         return t`Email addresses do not match`;
@@ -150,12 +159,12 @@ export const CollectInformation = () => {
     });
 
     const getTicketAttendeeIndices = (): number[] => {
-        if (!products || !form.values.products) return [];
+        if (!orderItems || !form.values.products) return [];
 
         const attendeeProductIds = new Set<IdParam>(
-            products
-                .filter(product => product && product.product_type === 'TICKET')
-                .map(product => product!.id)
+            orderItems
+                .filter(item => getProduct(item.product_id)?.product_type === 'TICKET')
+                .map(item => item.product_id)
         );
 
         return form.values.products
@@ -274,7 +283,7 @@ export const CollectInformation = () => {
         const productsResult: any = [];
 
         orderItems?.forEach(orderItem => {
-            const matchingProduct = products?.find(p => p!.id === orderItem?.product_id);
+            const matchingProduct = getProduct(orderItem?.product_id);
             const ticketsPerUnit = matchingProduct?.tickets_per_group ?? 1;
             const totalAttendees = (orderItem?.quantity ?? 0) * ticketsPerUnit;
 
@@ -408,7 +417,7 @@ export const CollectInformation = () => {
     }
 
     const orderRequiresAttendeeDetails = orderItems?.some(orderItem => {
-        const product = products?.find(product => product!.id === orderItem.product_id);
+        const product = getProduct(orderItem.product_id);
         return product?.product_type === 'TICKET';
     });
 
@@ -570,7 +579,7 @@ export const CollectInformation = () => {
                 </Card>
 
                 {orderItems?.map(orderItem => {
-                    const product = products?.find(product => product!.id === orderItem.product_id);
+                    const product = getProduct(orderItem.product_id);
                     const productRequiresDetails = product?.product_type === 'TICKET' && !isPerOrderCollection;
                     const productHasQuestions = productQuestions?.some(question => question.product_ids?.includes(orderItem.product_id));
                     const ticketsPerUnit = product?.tickets_per_group ?? 1;
