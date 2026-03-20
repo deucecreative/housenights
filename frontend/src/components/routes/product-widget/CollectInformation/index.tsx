@@ -1,6 +1,6 @@
 import { useMutation } from "@tanstack/react-query";
 import { FinaliseOrderPayload, orderClientPublic } from "../../../../api/order.client.ts";
-import { useNavigate, useParams } from "react-router";
+import { useNavigate, useParams, useSearchParams } from "react-router";
 import {
     Button,
     Checkbox,
@@ -44,6 +44,8 @@ const LoadingSkeleton = () =>
 
 export const CollectInformation = () => {
     const { eventId, orderShortId } = useParams();
+    const [searchParams] = useSearchParams();
+    const affiliateCode = searchParams.get('aff');
     const navigate = useNavigate();
     const {
         isFetched: isOrderFetched,
@@ -57,7 +59,7 @@ export const CollectInformation = () => {
         data: { product_categories: productCategories } = {},
         isFetched: isEventFetched,
         isError: isEventError,
-    } = useGetEventPublic(eventId, isOrderFetched, !!order?.promo_code, order?.promo_code ?? null);
+    } = useGetEventPublic(eventId, isOrderFetched, !!order?.promo_code, order?.promo_code ?? null, affiliateCode);
     const {
         data: questions,
         isFetched: isQuestionsFetched,
@@ -104,13 +106,36 @@ export const CollectInformation = () => {
         },
         validate: {
             order: {
+                first_name: (value) => (value.trim().length === 0 ? t`First name is required` : null),
+                last_name: (value) => (value.trim().length === 0 ? t`Last name is required` : null),
+                email: (value) => (!/^\S+@\S+\.\S+$/.test(value) ? t`Valid email is required` : null),
                 email_confirmation: (value, values) =>
                     value !== values.order.email ? t`Email addresses do not match` : null,
             },
             products: {
+                first_name: (value, values, path) => {
+                    const index = parseInt(path.split('.')[1]);
+                    const product = form.values ? form.values.products[index] : values.products[index];
+                    // Skip validation if we are doing PER_ORDER
+                    if (isPerOrderCollection || !product || product.product_type !== 'TICKET') return null;
+                    return value.trim().length === 0 ? t`First name is required` : null;
+                },
+                last_name: (value, values, path) => {
+                    const index = parseInt(path.split('.')[1]);
+                    const product = form.values ? form.values.products[index] : values.products[index];
+                    if (isPerOrderCollection || !product || product.product_type !== 'TICKET') return null;
+                    return value.trim().length === 0 ? t`Last name is required` : null;
+                },
+                email: (value, values, path) => {
+                    const index = parseInt(path.split('.')[1]);
+                    const product = form.values ? form.values.products[index] : values.products[index];
+                    if (isPerOrderCollection || !product || product.product_type !== 'TICKET') return null;
+                    return !/^\S+@\S+\.\S+$/.test(value) ? t`Valid email is required` : null;
+                },
                 email_confirmation: (value, values, path) => {
                     const index = parseInt(path.split('.')[1]);
-                    const product = values.products[index];
+                    const product = form.values ? form.values.products[index] : values.products[index];
+                    if (isPerOrderCollection || !product || product.product_type !== 'TICKET') return null;
                     if (product && product.email !== value) {
                         return t`Email addresses do not match`;
                     }
