@@ -115,28 +115,31 @@ export const CollectInformation = () => {
             products: {
                 first_name: (value, values, path) => {
                     const index = parseInt(path.split('.')[1]);
-                    const product = form.values ? form.values.products[index] : values.products[index];
-                    // Skip validation if we are doing PER_ORDER
-                    if (isPerOrderCollection || !product || product.product_type !== 'TICKET') return null;
+                    const formProduct = values.products[index];
+                    const productDef = products?.find(p => Number(p!.id) === Number(formProduct?.product_id));
+                    if (isPerOrderCollection || !productDef || productDef.product_type !== 'TICKET') return null;
                     return value.trim().length === 0 ? t`First name is required` : null;
                 },
                 last_name: (value, values, path) => {
                     const index = parseInt(path.split('.')[1]);
-                    const product = form.values ? form.values.products[index] : values.products[index];
-                    if (isPerOrderCollection || !product || product.product_type !== 'TICKET') return null;
+                    const formProduct = values.products[index];
+                    const productDef = products?.find(p => Number(p!.id) === Number(formProduct?.product_id));
+                    if (isPerOrderCollection || !productDef || productDef.product_type !== 'TICKET') return null;
                     return value.trim().length === 0 ? t`Last name is required` : null;
                 },
                 email: (value, values, path) => {
                     const index = parseInt(path.split('.')[1]);
-                    const product = form.values ? form.values.products[index] : values.products[index];
-                    if (isPerOrderCollection || !product || product.product_type !== 'TICKET') return null;
+                    const formProduct = values.products[index];
+                    const productDef = products?.find(p => Number(p!.id) === Number(formProduct?.product_id));
+                    if (isPerOrderCollection || !productDef || productDef.product_type !== 'TICKET') return null;
                     return !/^\S+@\S+\.\S+$/.test(value) ? t`Valid email is required` : null;
                 },
                 email_confirmation: (value, values, path) => {
                     const index = parseInt(path.split('.')[1]);
-                    const product = form.values ? form.values.products[index] : values.products[index];
-                    if (isPerOrderCollection || !product || product.product_type !== 'TICKET') return null;
-                    if (product && product.email !== value) {
+                    const formProduct = values.products[index];
+                    const productDef = products?.find(p => Number(p!.id) === Number(formProduct?.product_id));
+                    if (isPerOrderCollection || !productDef || productDef.product_type !== 'TICKET') return null;
+                    if (formProduct && formProduct.email !== value) {
                         return t`Email addresses do not match`;
                     }
                     return null;
@@ -152,7 +155,7 @@ export const CollectInformation = () => {
         const attendeeProductIds = new Set<IdParam>(
             products
                 .filter(product => product && product.product_type === 'TICKET')
-                .map(product => product.id)
+                .map(product => product!.id)
         );
 
         return form.values.products
@@ -183,26 +186,16 @@ export const CollectInformation = () => {
             const isFirst = index === ticketIndices[0];
             const shouldCopy = option === 'all' ? isTicketAttendee : (option === 'first' && isFirst);
 
-            if (isTicketAttendee) {
-                if (shouldCopy) {
-                    return {
-                        ...product,
-                        first_name: form.values.order.first_name,
-                        last_name: form.values.order.last_name,
-                        email: form.values.order.email,
-                        email_confirmation: form.values.order.email,
-                    };
-                } else {
-                    return {
-                        ...product,
-                        first_name: "",
-                        last_name: "",
-                        email: "",
-                        email_confirmation: "",
-                    };
-                }
+            if (isTicketAttendee && shouldCopy) {
+                return {
+                    ...product,
+                    first_name: form.values.order.first_name,
+                    last_name: form.values.order.last_name,
+                    email: form.values.order.email,
+                    email_confirmation: form.values.order.email,
+                };
             }
-            return product;
+            return product; // Preserve any manually typed info
         });
 
         form.setValues({
@@ -223,11 +216,14 @@ export const CollectInformation = () => {
         copyDetailsToAttendees(option);
     };
 
-    // Reset copy option if order details become incomplete
+    // Maintain sync or reset copy option if order details become incomplete
     useEffect(() => {
-        if (copyOption !== 'none' && !areOrderDetailsComplete()) {
-            setCopyOption('none');
-            copyDetailsToAttendees('none');
+        if (copyOption !== 'none') {
+            if (!areOrderDetailsComplete()) {
+                setCopyOption('none');
+            } else {
+                copyDetailsToAttendees(copyOption);
+            }
         }
     }, [form.values.order.first_name, form.values.order.last_name, form.values.order.email]);
 
@@ -387,7 +383,7 @@ export const CollectInformation = () => {
         />;
     }
 
-    if (isOrderError && orderError?.response?.status === 404) {
+    if (isOrderError && (orderError as any)?.response?.status === 404) {
         return (
             <HomepageInfoMessage
                 status="not_found"
