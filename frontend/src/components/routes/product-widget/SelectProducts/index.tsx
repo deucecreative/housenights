@@ -37,7 +37,7 @@ import {IconChevronRight, IconX} from "@tabler/icons-react"
 import {getSessionIdentifier} from "../../../../utilites/sessionIdentifier.ts";
 import {Constants} from "../../../../constants.ts";
 
-const AFFILIATE_EXPIRY_DAYS = 30;
+
 
 const sendHeightToIframeWidgets = () => {
     const height = document.documentElement.scrollHeight;
@@ -94,32 +94,14 @@ const SelectProducts = (props: SelectProductsProps) => {
 
     useEffect(() => {
         const storageKey = 'affiliate_code_' + eventId;
-
-        const now = Date.now();
         const affiliateCodeFromUrl = new URLSearchParams(window.location.search).get('aff');
 
         if (affiliateCodeFromUrl) {
-            const data = {code: affiliateCodeFromUrl, timestamp: now};
-            localStorage.setItem(storageKey, JSON.stringify(data));
             setAffiliateCode(affiliateCodeFromUrl);
-            return;
+        } else {
+            localStorage.removeItem(storageKey); // Clean up any old cached data
         }
-
-        const storedData = localStorage.getItem(storageKey);
-        if (storedData) {
-            try {
-                const parsed = JSON.parse(storedData);
-                const ageInDays = (now - parsed.timestamp) / (1000 * 60 * 60 * 24);
-                if (ageInDays <= AFFILIATE_EXPIRY_DAYS) {
-                    setAffiliateCode(parsed.code);
-                } else {
-                    localStorage.removeItem(storageKey);
-                }
-            } catch {
-                localStorage.removeItem(storageKey);
-            }
-        }
-    }, []);
+    }, [eventId]);
 
     useEffect(() => {
         form.setFieldValue('affiliate_code', affiliateCode || null);
