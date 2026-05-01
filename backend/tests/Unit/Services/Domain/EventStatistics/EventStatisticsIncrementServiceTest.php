@@ -6,11 +6,13 @@ use HiEvents\DomainObjects\EventDailyStatisticDomainObject;
 use HiEvents\DomainObjects\EventStatisticDomainObject;
 use HiEvents\DomainObjects\Generated\ProductDomainObjectAbstract;
 use HiEvents\DomainObjects\Generated\PromoCodeDomainObjectAbstract;
+use HiEvents\DomainObjects\ProductDomainObject;
 use HiEvents\DomainObjects\OrderDomainObject;
 use HiEvents\DomainObjects\OrderItemDomainObject;
 use HiEvents\Repository\Interfaces\EventDailyStatisticRepositoryInterface;
 use HiEvents\Repository\Interfaces\EventStatisticRepositoryInterface;
 use HiEvents\Repository\Interfaces\OrderRepositoryInterface;
+use HiEvents\Repository\Eloquent\Value\Relationship;
 use HiEvents\Repository\Interfaces\ProductRepositoryInterface;
 use HiEvents\Repository\Interfaces\PromoCodeRepositoryInterface;
 use HiEvents\Services\Domain\EventStatistics\EventStatisticsIncrementService;
@@ -66,16 +68,24 @@ class EventStatisticsIncrementServiceTest extends TestCase
         $promoCodeId = 456;
         $orderDate = '2024-01-15 10:30:00';
 
+        // Create standard product mocks (ticketsPerUnit = 1)
+        $product1 = Mockery::mock(ProductDomainObject::class);
+        $product1->shouldReceive('getEffectiveTicketsPerUnit')->andReturn(1);
+        $product2 = Mockery::mock(ProductDomainObject::class);
+        $product2->shouldReceive('getEffectiveTicketsPerUnit')->andReturn(1);
+
         // Create mock order items
         $ticketOrderItem1 = Mockery::mock(OrderItemDomainObject::class);
         $ticketOrderItem1->shouldReceive('getQuantity')->andReturn(2);
         $ticketOrderItem1->shouldReceive('getProductId')->andReturn(1);
         $ticketOrderItem1->shouldReceive('getTotalBeforeAdditions')->andReturn(100.00);
+        $ticketOrderItem1->shouldReceive('getProduct')->andReturn($product1);
 
         $ticketOrderItem2 = Mockery::mock(OrderItemDomainObject::class);
         $ticketOrderItem2->shouldReceive('getQuantity')->andReturn(1);
         $ticketOrderItem2->shouldReceive('getProductId')->andReturn(2);
         $ticketOrderItem2->shouldReceive('getTotalBeforeAdditions')->andReturn(50.00);
+        $ticketOrderItem2->shouldReceive('getProduct')->andReturn($product2);
 
         $orderItems = new Collection([$ticketOrderItem1, $ticketOrderItem2]);
         $ticketOrderItems = new Collection([$ticketOrderItem1, $ticketOrderItem2]);
@@ -96,7 +106,7 @@ class EventStatisticsIncrementServiceTest extends TestCase
         // Mock order repository to return order with relations
         $this->orderRepository
             ->shouldReceive('loadRelation')
-            ->with(OrderItemDomainObject::class)
+            ->with(Mockery::type(Relationship::class))
             ->andReturnSelf();
 
         $this->orderRepository
@@ -236,11 +246,16 @@ class EventStatisticsIncrementServiceTest extends TestCase
         $orderId = 123;
         $orderDate = '2024-01-15 10:30:00';
 
+        // Create standard product mock (ticketsPerUnit = 1)
+        $product1 = Mockery::mock(ProductDomainObject::class);
+        $product1->shouldReceive('getEffectiveTicketsPerUnit')->andReturn(1);
+
         // Create mock order item
         $orderItem = Mockery::mock(OrderItemDomainObject::class);
         $orderItem->shouldReceive('getQuantity')->andReturn(2);
         $orderItem->shouldReceive('getProductId')->andReturn(1);
         $orderItem->shouldReceive('getTotalBeforeAdditions')->andReturn(100.00);
+        $orderItem->shouldReceive('getProduct')->andReturn($product1);
 
         $orderItems = new Collection([$orderItem]);
         $ticketOrderItems = new Collection([$orderItem]);
@@ -261,7 +276,7 @@ class EventStatisticsIncrementServiceTest extends TestCase
         // Mock order repository
         $this->orderRepository
             ->shouldReceive('loadRelation')
-            ->with(OrderItemDomainObject::class)
+            ->with(Mockery::type(Relationship::class))
             ->andReturnSelf();
 
         $this->orderRepository
@@ -341,6 +356,126 @@ class EventStatisticsIncrementServiceTest extends TestCase
         // Execute
         $this->service->incrementForOrder($order);
 
+
+        $this->assertTrue(true);
+    }
+
+    public function testIncrementForOrderWithGroupTickets(): void
+    {
+        $eventId = 1;
+        $orderId = 789;
+        $orderDate = '2024-01-15 10:30:00';
+
+        // Create a group ticket product (tickets_per_group = 4)
+        $groupProduct = Mockery::mock(ProductDomainObject::class);
+        $groupProduct->shouldReceive('getEffectiveTicketsPerUnit')->andReturn(4);
+
+        // Create mock order item: quantity 2 × ticketsPerGroup 4 = 8 attendees
+        $orderItem = Mockery::mock(OrderItemDomainObject::class);
+        $orderItem->shouldReceive('getQuantity')->andReturn(2);
+        $orderItem->shouldReceive('getProductId')->andReturn(1);
+        $orderItem->shouldReceive('getTotalBeforeAdditions')->andReturn(200.00);
+        $orderItem->shouldReceive('getProduct')->andReturn($groupProduct);
+
+        $orderItems = new Collection([$orderItem]);
+        $ticketOrderItems = new Collection([$orderItem]);
+
+        // Create mock order
+        $order = Mockery::mock(OrderDomainObject::class);
+        $order->shouldReceive('getEventId')->andReturn($eventId);
+        $order->shouldReceive('getId')->andReturn($orderId);
+        $order->shouldReceive('getCreatedAt')->andReturn($orderDate);
+        $order->shouldReceive('getOrderItems')->andReturn($orderItems);
+        $order->shouldReceive('getTicketOrderItems')->andReturn($ticketOrderItems);
+        $order->shouldReceive('getPromoCodeId')->andReturnNull();
+        $order->shouldReceive('getTotalGross')->andReturn(200.00);
+        $order->shouldReceive('getTotalBeforeAdditions')->andReturn(190.00);
+        $order->shouldReceive('getTotalTax')->andReturn(8.00);
+        $order->shouldReceive('getTotalFee')->andReturn(2.00);
+
+        // Mock order repository
+        $this->orderRepository
+            ->shouldReceive('loadRelation')
+            ->with(Mockery::type(Relationship::class))
+            ->andReturnSelf();
+
+        $this->orderRepository
+            ->shouldReceive('findById')
+            ->with($orderId)
+            ->andReturn($order);
+
+        // Set up retrier
+        $this->retrier
+            ->shouldReceive('retry')
+            ->andReturnUsing(function ($callableAction) {
+                return $callableAction(1);
+            });
+
+        // Set up database transaction
+        $this->databaseManager
+            ->shouldReceive('transaction')
+            ->andReturnUsing(function ($callback) {
+                return $callback();
+            });
+
+        // Expect aggregate statistics not found, so create new
+        $this->eventStatisticsRepository
+            ->shouldReceive('findFirstWhere')
+            ->with(['event_id' => $eventId])
+            ->andReturnNull();
+
+        // products_sold = 2 (raw quantity), attendees_registered = 8 (2 × 4)
+        $this->eventStatisticsRepository
+            ->shouldReceive('create')
+            ->with([
+                'event_id' => $eventId,
+                'products_sold' => 2,
+                'attendees_registered' => 8,
+                'sales_total_gross' => 200.00,
+                'sales_total_before_additions' => 190.00,
+                'total_tax' => 8.00,
+                'total_fee' => 2.00,
+                'orders_created' => 1,
+                'orders_cancelled' => 0,
+            ])
+            ->once();
+
+        // Expect daily statistics not found, so create new
+        $this->eventDailyStatisticRepository
+            ->shouldReceive('findFirstWhere')
+            ->with([
+                'event_id' => $eventId,
+                'date' => '2024-01-15',
+            ])
+            ->andReturnNull();
+
+        $this->eventDailyStatisticRepository
+            ->shouldReceive('create')
+            ->with([
+                'event_id' => $eventId,
+                'date' => '2024-01-15',
+                'products_sold' => 2,
+                'attendees_registered' => 8,
+                'sales_total_gross' => 200.00,
+                'sales_total_before_additions' => 190.00,
+                'total_tax' => 8.00,
+                'total_fee' => 2.00,
+                'orders_created' => 1,
+                'orders_cancelled' => 0,
+            ])
+            ->once();
+
+        // Expect incrementing product statistics
+        $this->productRepository
+            ->shouldReceive('increment')
+            ->with(1, ProductDomainObjectAbstract::SALES_VOLUME, 200.00)
+            ->once();
+
+        // Expect logging
+        $this->logger->shouldReceive('info')->atLeast()->once();
+
+        // Execute
+        $this->service->incrementForOrder($order);
 
         $this->assertTrue(true);
     }

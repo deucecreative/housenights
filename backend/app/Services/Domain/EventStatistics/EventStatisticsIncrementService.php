@@ -8,7 +8,9 @@ use HiEvents\DomainObjects\Generated\ProductDomainObjectAbstract;
 use HiEvents\DomainObjects\Generated\PromoCodeDomainObjectAbstract;
 use HiEvents\DomainObjects\OrderDomainObject;
 use HiEvents\DomainObjects\OrderItemDomainObject;
+use HiEvents\DomainObjects\ProductDomainObject;
 use HiEvents\Exceptions\EventStatisticsVersionMismatchException;
+use HiEvents\Repository\Eloquent\Value\Relationship;
 use HiEvents\Repository\Interfaces\EventDailyStatisticRepositoryInterface;
 use HiEvents\Repository\Interfaces\EventStatisticRepositoryInterface;
 use HiEvents\Repository\Interfaces\OrderRepositoryInterface;
@@ -44,7 +46,12 @@ class EventStatisticsIncrementService
     public function incrementForOrder(OrderDomainObject $order): void
     {
         $order = $this->orderRepository
-            ->loadRelation(OrderItemDomainObject::class)
+            ->loadRelation(
+                new Relationship(
+                    domainObject: OrderItemDomainObject::class,
+                    nested: [new Relationship(ProductDomainObject::class, name: 'product')]
+                )
+            )
             ->findById($order->getId());
 
         $this->retrier->retry(
@@ -87,7 +94,9 @@ class EventStatisticsIncrementService
             ?->sum(fn(OrderItemDomainObject $orderItem) => $orderItem->getQuantity()) ?? 0;
 
         $attendeesRegistered = $order->getTicketOrderItems()
-            ?->sum(fn(OrderItemDomainObject $orderItem) => $orderItem->getQuantity()) ?? 0;
+            ?->sum(fn(OrderItemDomainObject $orderItem) =>
+                $orderItem->getQuantity() * ($orderItem->getProduct()?->getEffectiveTicketsPerUnit() ?? 1)
+            ) ?? 0;
 
         if ($eventStatistics === null) {
             $this->eventStatisticsRepository->create([
@@ -171,7 +180,9 @@ class EventStatisticsIncrementService
             ?->sum(fn(OrderItemDomainObject $orderItem) => $orderItem->getQuantity()) ?? 0;
 
         $attendeesRegistered = $order->getTicketOrderItems()
-            ?->sum(fn(OrderItemDomainObject $orderItem) => $orderItem->getQuantity()) ?? 0;
+            ?->sum(fn(OrderItemDomainObject $orderItem) =>
+                $orderItem->getQuantity() * ($orderItem->getProduct()?->getEffectiveTicketsPerUnit() ?? 1)
+            ) ?? 0;
 
         if ($eventDailyStatistic === null) {
             $this->eventDailyStatisticRepository->create([
