@@ -8,6 +8,7 @@ import {useGetEvent} from "../../../queries/useGetEvent.ts";
 import {formatCurrency} from "../../../utilites/currency.ts";
 import {formatNumber} from "../../../utilites/helpers.ts";
 import {ReactNode} from "react";
+import {useGetMe} from "../../../queries/useGetMe.ts";
 
 interface StatBoxProps {
     number: string | number;
@@ -38,6 +39,12 @@ export const StatBoxes = () => {
     const eventQuery = useGetEvent(eventId);
     const event = eventQuery?.data;
     const {data: eventStats} = eventStatsQuery;
+    const {data: me} = useGetMe();
+    const isOrganizerRole = me?.role === 'ORGANIZER';
+
+    const grossSales = eventStats?.total_gross_sales || 0;
+    const totalFees = eventStats?.total_fees || 0;
+    const salesValue = isOrganizerRole ? grossSales - totalFees : grossSales;
 
     const data = [
         {
@@ -59,8 +66,8 @@ export const StatBoxes = () => {
             backgroundColor: '#49A6B7'
         },
         {
-            number: formatCurrency(eventStats?.total_gross_sales || 0, event?.currency),
-            description: t`Gross sales`,
+            number: formatCurrency(salesValue, event?.currency),
+            description: isOrganizerRole ? t`Net sales` : t`Gross sales`,
             icon: <IconCash size={18}/>,
             backgroundColor: '#7C63E6'
         },

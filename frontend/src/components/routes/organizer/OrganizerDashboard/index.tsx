@@ -31,6 +31,7 @@ import {currenciesMap} from "../../../../../data/currencies.ts";
 import {Card} from "../../../common/Card";
 import {CreateEventModal} from "../../../modals/CreateEventModal";
 import {getEventQueryFilters} from "../../../../utilites/eventsPageFiltersHelper.ts";
+import {useGetMe} from "../../../../queries/useGetMe.ts";
 
 interface OrganizerStatDisplayItem {
     value: string | number;
@@ -72,6 +73,8 @@ export const DashboardSkeleton = () => {
 export const OrganizerDashboard = () => {
     const {organizerId} = useParams<{ organizerId: string }>();
     const {data: organizer} = useGetOrganizer(organizerId);
+    const {data: me} = useGetMe();
+    const isOrganizerRole = me?.role === 'ORGANIZER';
     const [showCreateEventModal, setShowCreateEventModal] = useState(false);
 
     const [selectedCurrency, setSelectedCurrency] = useState<string>(
@@ -115,8 +118,11 @@ export const OrganizerDashboard = () => {
     if (stats && selectedCurrency) {
         organizerStatItems.push(
             {
-                value: formatCurrency(stats.total_gross_sales, selectedCurrency),
-                description: t`Gross Sales`,
+                value: formatCurrency(
+                    isOrganizerRole ? stats.total_gross_sales - stats.total_fees : stats.total_gross_sales,
+                    selectedCurrency
+                ),
+                description: isOrganizerRole ? t`Net Sales` : t`Gross Sales`,
                 icon: <IconCash size={18}/>,
                 backgroundColor: '#7C63E6'
             },
