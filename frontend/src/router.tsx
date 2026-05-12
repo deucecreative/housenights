@@ -644,6 +644,14 @@ export const router: RouteObject[] = [
             return { Component: MyTickets.default };
         },
         errorElement: <ErrorPage />,
+    },
+    {
+        path: "/doorman/privacy",
+        async lazy() {
+            const Privacy = await import("./components/routes/doorman/Privacy");
+            return { Component: Privacy.default };
+        },
+        errorElement: <ErrorPage />,
     }
 ];
 
