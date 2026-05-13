@@ -1,4 +1,4 @@
-@php use Carbon\Carbon; @endphp
+@php use Carbon\Carbon; use HiEvents\Helper\DateHelper; @endphp
 @php /** @var \Illuminate\Support\Collection|array $attendees */ @endphp
 @php /** @var \HiEvents\DomainObjects\EventDomainObject $event */ @endphp
 @php /** @var \HiEvents\DomainObjects\OrganizerDomainObject|null $organizer */ @endphp
@@ -16,23 +16,23 @@
             $venueText = $eventSettings->getAddressString();
         }
     }
-    $timezone = $event->getTimezone() ?: 'UTC';
     $startDateText = null;
     if ($event->getStartDate()) {
         try {
-            $startDateText = Carbon::parse($event->getStartDate(), $timezone)
-                ->setTimezone($timezone)
-                ->format('l, jS F Y · g:i A');
+            $startDateText = Carbon::parse(
+                DateHelper::convertFromUTC($event->getStartDate(), $event->getTimezone())
+            )->format('l, jS F Y · g:i A');
         } catch (\Throwable $e) {
             $startDateText = null;
         }
     }
     $organizerLogo = null;
-    if ($organizer && $organizer->getImages() && $organizer->getImages()->isNotEmpty()) {
-        $firstImage = $organizer->getImages()->first();
-        // Best-effort: only embed if a usable path is present; DOMPDF accepts data URIs.
-        if (is_object($firstImage) && method_exists($firstImage, 'getUrl')) {
-            $organizerLogo = $firstImage->getUrl();
+    if ($organizer && method_exists($organizer, 'getImages') && $organizer->getImages()) {
+        $logo = $organizer->getImages()->first(
+            fn($i) => $i->getType() === \HiEvents\DomainObjects\Enums\ImageType::ORGANIZER_LOGO->name
+        );
+        if ($logo) {
+            $organizerLogo = \HiEvents\Helper\Url::getCdnUrl($logo->getPath());
         }
     }
 @endphp

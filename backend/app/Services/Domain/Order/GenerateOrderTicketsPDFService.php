@@ -10,7 +10,7 @@ use HiEvents\DomainObjects\OrderDomainObject;
 use HiEvents\DomainObjects\Status\AttendeeStatus;
 use HiEvents\Services\Domain\QrCode\QrCodeService;
 use Illuminate\Support\Collection;
-use RuntimeException;
+use Symfony\Component\Routing\Exception\ResourceNotFoundException;
 
 class GenerateOrderTicketsPDFService
 {
@@ -28,7 +28,7 @@ class GenerateOrderTicketsPDFService
      *   - $order->getEvent() with Organizer + EventSettings
      *
      * @return string Raw PDF bytes (begins with `%PDF-`).
-     * @throws RuntimeException When the order has no ACTIVE attendees to generate tickets for.
+     * @throws ResourceNotFoundException When the order has no ACTIVE attendees to generate tickets for.
      */
     public function generate(OrderDomainObject $order): string
     {
@@ -39,7 +39,7 @@ class GenerateOrderTicketsPDFService
         )->values();
 
         if ($activeAttendees->isEmpty()) {
-            throw new RuntimeException('No active attendees to generate tickets for');
+            throw new ResourceNotFoundException(__('No active attendees to generate tickets for'));
         }
 
         $qrCodes = [];

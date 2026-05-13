@@ -14,7 +14,7 @@ use HiEvents\DomainObjects\Status\AttendeeStatus;
 use HiEvents\Services\Domain\Order\GenerateOrderTicketsPDFService;
 use HiEvents\Services\Domain\QrCode\QrCodeService;
 use Illuminate\Support\Collection;
-use RuntimeException;
+use Symfony\Component\Routing\Exception\ResourceNotFoundException;
 use Tests\TestCase;
 
 class GenerateOrderTicketsPDFServiceTest extends TestCase
@@ -70,7 +70,7 @@ class GenerateOrderTicketsPDFServiceTest extends TestCase
             ['Carla', 'Cancelled', AttendeeStatus::CANCELLED->name],
         ]);
 
-        $this->expectException(RuntimeException::class);
+        $this->expectException(ResourceNotFoundException::class);
         $this->expectExceptionMessage('No active attendees to generate tickets for');
 
         $this->service->generate($order);
