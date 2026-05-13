@@ -10,8 +10,11 @@ use HiEvents\DomainObjects\InvoiceDomainObject;
 use HiEvents\DomainObjects\OrderDomainObject;
 use HiEvents\DomainObjects\OrderItemDomainObject;
 use HiEvents\DomainObjects\OrganizerDomainObject;
+use HiEvents\DomainObjects\ProductDomainObject;
+use HiEvents\DomainObjects\Status\AttendeeStatus;
 use HiEvents\Mail\Order\OrderFailed;
 use HiEvents\Mail\Order\OrderSummary;
+use HiEvents\Mail\Order\OrderTicketsMail;
 use HiEvents\Mail\Organizer\OrderSummaryForOrganizer;
 use HiEvents\Repository\Eloquent\Value\Relationship;
 use HiEvents\Repository\Interfaces\EventRepositoryInterface;
@@ -36,7 +39,10 @@ class SendOrderDetailsService
     {
         $order = $this->orderRepository
             ->loadRelation(OrderItemDomainObject::class)
-            ->loadRelation(AttendeeDomainObject::class)
+            ->loadRelation(new Relationship(
+                domainObject: AttendeeDomainObject::class,
+                nested: [new Relationship(ProductDomainObject::class, name: 'product')],
+            ))
             ->loadRelation(InvoiceDomainObject::class)
             ->loadRelation(new Relationship(AffiliateDomainObject::class, name: 'affiliate'))
             ->findById($order->getId());
@@ -116,6 +122,8 @@ class SendOrderDetailsService
             invoice: $order->getLatestInvoice(),
         );
 
+        $this->sendOrderTicketsToPurchaser($order, $event);
+
         if ($order->getIsManuallyCreated() || !$event->getEventSettings()->getNotifyOrganizerOfNewOrders()) {
             return;
         }
@@ -123,5 +131,49 @@ class SendOrderDetailsService
         $this->mailer
             ->to($event->getOrganizer()->getEmail())
             ->send(new OrderSummaryForOrganizer($order, $event, $order->getAffiliate()?->getName()));
+    }
+
+    /**
+     * Send the purchaser a consolidated tickets email (inline QR per attendee + multi-ticket PDF).
+     *
+     * Skips when the order has no ACTIVE attendees, since the PDF service requires at least one.
+     */
+    public function sendOrderTicketsToPurchaser(
+        OrderDomainObject $order,
+        EventDomainObject $event,
+        bool              $isReminder = false,
+    ): void
+    {
+        if (!$this->orderHasActiveAttendees($order)) {
+            return;
+        }
+
+        $this->mailer
+            ->to($order->getEmail())
+            ->locale($order->getLocale())
+            ->send(new OrderTicketsMail(
+                order: $order,
+                event: $event,
+                eventSettings: $event->getEventSettings(),
+                organizer: $event->getOrganizer(),
+                isReminder: $isReminder,
+            ));
+    }
+
+    private function orderHasActiveAttendees(OrderDomainObject $order): bool
+    {
+        $attendees = $order->getAttendees();
+
+        if ($attendees === null) {
+            return false;
+        }
+
+        foreach ($attendees as $attendee) {
+            if ($attendee->getStatus() === AttendeeStatus::ACTIVE->name) {
+                return true;
+            }
+        }
+
+        return false;
     }
 }

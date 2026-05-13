@@ -10,6 +10,7 @@ use HiEvents\DomainObjects\InvoiceDomainObject;
 use HiEvents\DomainObjects\OrderDomainObject;
 use HiEvents\DomainObjects\OrderItemDomainObject;
 use HiEvents\DomainObjects\OrganizerDomainObject;
+use HiEvents\DomainObjects\ProductDomainObject;
 use HiEvents\Repository\Eloquent\Value\Relationship;
 use HiEvents\Repository\Interfaces\AttendeeRepositoryInterface;
 use HiEvents\Repository\Interfaces\EventRepositoryInterface;
@@ -39,6 +40,7 @@ class SelfServiceResendEmailService
             ->loadRelation(new Relationship(OrderDomainObject::class, nested: [
                 new Relationship(OrderItemDomainObject::class),
             ], name: 'order'))
+            ->loadRelation(new Relationship(ProductDomainObject::class, name: 'product'))
             ->findFirstWhere([
                 'id' => $attendeeId,
                 'order_id' => $orderId,
@@ -76,7 +78,10 @@ class SelfServiceResendEmailService
     ): void {
         $order = $this->orderRepository
             ->loadRelation(OrderItemDomainObject::class)
-            ->loadRelation(AttendeeDomainObject::class)
+            ->loadRelation(new Relationship(
+                domainObject: AttendeeDomainObject::class,
+                nested: [new Relationship(ProductDomainObject::class, name: 'product')],
+            ))
             ->loadRelation(InvoiceDomainObject::class)
             ->findFirstWhere([
                 'id' => $orderId,
@@ -95,6 +100,8 @@ class SelfServiceResendEmailService
             eventSettings: $event->getEventSettings(),
             invoice: $order->getLatestInvoice()
         );
+
+        $this->sendOrderDetailsService->sendOrderTicketsToPurchaser($order, $event);
 
         $this->orderAuditLogService->logEmailResent(
             action: OrderAuditAction::ORDER_EMAIL_RESENT->value,

@@ -124,6 +124,7 @@ class SelfServiceEditAttendeeService
             ->loadRelation(new Relationship(OrderDomainObject::class, nested: [
                 new Relationship(OrderItemDomainObject::class),
             ], name: 'order'))
+            ->loadRelation(new Relationship(ProductDomainObject::class, name: 'product'))
             ->findById($attendeeId);
 
         $this->sendAttendeeTicketService->send(
