@@ -109,6 +109,9 @@ class UpdateEventSettingsRequest extends BaseRequest
             // Pre-event reminder settings
             'pre_event_reminder_enabled' => ['sometimes', 'boolean'],
             'pre_event_reminder_hours' => ['sometimes', 'integer', 'min:1', 'max:168'],
+
+            // Wallet pass settings
+            'wallet_passes_enabled' => ['sometimes', 'boolean'],
         ];
     }
 

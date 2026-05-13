@@ -99,12 +99,17 @@ class AttendeeTicketMail extends BaseMail
     }
 
     /**
-     * Build a "Save to Google Wallet" URL. Returns null when Google Wallet
-     * isn't configured for this install or when signing fails — the blade
-     * conditionally hides the button.
+     * Build a "Save to Google Wallet" URL. Returns null when wallet passes
+     * are disabled for this event, when Google Wallet isn't configured for
+     * this install, or when signing fails — the blade conditionally hides
+     * the button.
      */
     private function generateGoogleWalletUrl(): ?string
     {
+        if (!$this->eventSettings->getWalletPassesEnabled()) {
+            return null;
+        }
+
         if (!config('wallet.google.issuer_id')) {
             return null;
         }

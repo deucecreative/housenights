@@ -91,6 +91,9 @@ class UpdateEventSettingsDTO extends BaseDTO
         // Pre-event reminder settings
         public readonly bool                    $pre_event_reminder_enabled = true,
         public readonly int                     $pre_event_reminder_hours = 24,
+
+        // Wallet pass settings
+        public readonly bool                    $wallet_passes_enabled = false,
     )
     {
     }
@@ -181,6 +184,9 @@ class UpdateEventSettingsDTO extends BaseDTO
             // Pre-event reminder defaults
             pre_event_reminder_enabled: true,
             pre_event_reminder_hours: 24,
+
+            // Wallet pass defaults (opt-in)
+            wallet_passes_enabled: false,
         );
     }
 }

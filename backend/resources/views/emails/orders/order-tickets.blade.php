@@ -45,7 +45,7 @@
 @endif
 
 @php $googleWalletUrlForAttendee = $googleWalletUrls[$attendee->getId()] ?? null; @endphp
-@if(config('wallet.apple.pass_type_id') || !empty($googleWalletUrlForAttendee))
+@if($eventSettings->getWalletPassesEnabled() && (config('wallet.apple.pass_type_id') || !empty($googleWalletUrlForAttendee)))
 <div style="text-align: center; margin: 0.5rem 0 1rem 0;">
 @if(config('wallet.apple.pass_type_id'))
 <a href="{{ url('/public/attendee/' . $event->getId() . '/' . $attendee->getShortId() . '/apple-pass') }}" style="text-decoration: none; display: inline-block; margin: 0 6px;">

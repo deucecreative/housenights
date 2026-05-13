@@ -38,7 +38,7 @@ class DownloadApplePassActionTest extends TestCase
 
     public function test_downloads_pkpass_for_active_attendee(): void
     {
-        $ctx = $this->seedAttendee(AttendeeStatus::ACTIVE->name);
+        $ctx = $this->seedAttendee(AttendeeStatus::ACTIVE->name, walletPassesEnabled: true);
 
         $response = $this->get('/public/attendee/' . $ctx['event_id'] . '/' . $ctx['short_id'] . '/apple-pass');
 
@@ -56,7 +56,7 @@ class DownloadApplePassActionTest extends TestCase
 
     public function test_returns_404_for_non_active_attendee(): void
     {
-        $ctx = $this->seedAttendee(AttendeeStatus::CANCELLED->name);
+        $ctx = $this->seedAttendee(AttendeeStatus::CANCELLED->name, walletPassesEnabled: true);
 
         $response = $this->get('/public/attendee/' . $ctx['event_id'] . '/' . $ctx['short_id'] . '/apple-pass');
 
@@ -65,9 +65,18 @@ class DownloadApplePassActionTest extends TestCase
 
     public function test_returns_404_for_unknown_short_id(): void
     {
-        $ctx = $this->seedAttendee(AttendeeStatus::ACTIVE->name);
+        $ctx = $this->seedAttendee(AttendeeStatus::ACTIVE->name, walletPassesEnabled: true);
 
         $response = $this->get('/public/attendee/' . $ctx['event_id'] . '/totally-bogus-short-id/apple-pass');
+
+        $response->assertStatus(404);
+    }
+
+    public function test_returns_404_when_wallet_disabled_for_event(): void
+    {
+        $ctx = $this->seedAttendee(AttendeeStatus::ACTIVE->name, walletPassesEnabled: false);
+
+        $response = $this->get('/public/attendee/' . $ctx['event_id'] . '/' . $ctx['short_id'] . '/apple-pass');
 
         $response->assertStatus(404);
     }
@@ -75,7 +84,7 @@ class DownloadApplePassActionTest extends TestCase
     /**
      * @return array{event_id:int, short_id:string}
      */
-    private function seedAttendee(string $status): array
+    private function seedAttendee(string $status, bool $walletPassesEnabled = false): array
     {
         $user = User::factory()->withAccount()->create();
         $this->actingAs($user);
@@ -104,6 +113,7 @@ class DownloadApplePassActionTest extends TestCase
         $eventSetting = new EventSetting();
         $eventSetting->event_id = $event->id;
         $eventSetting->support_email = 'support@example.com';
+        $eventSetting->wallet_passes_enabled = $walletPassesEnabled;
         $eventSetting->save();
 
         $product = new Product();

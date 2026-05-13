@@ -261,6 +261,9 @@ export interface EventSettings {
     // Pre-event reminder settings
     pre_event_reminder_enabled?: boolean;
     pre_event_reminder_hours?: number;
+
+    // Wallet pass settings
+    wallet_passes_enabled?: boolean;
 }
 
 export interface VenueAddress {
@@ -413,6 +416,7 @@ export interface OrganizerSettings {
     default_show_marketing_opt_in?: boolean;
     default_pass_platform_fee_to_buyer?: boolean;
     default_allow_attendee_self_edit?: boolean;
+    default_wallet_passes_enabled?: boolean;
     homepage_visibility: 'PUBLIC' | 'PRIVATE' | 'PASSWORD_PROTECTED';
     homepage_theme_settings: HomepageThemeSettings;
     website_url?: string;

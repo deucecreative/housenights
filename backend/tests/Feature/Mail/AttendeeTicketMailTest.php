@@ -68,9 +68,35 @@ class AttendeeTicketMailTest extends TestCase
         );
     }
 
-    private function buildMail(bool $isReminder = false): AttendeeTicketMail
+    public function test_hides_wallet_buttons_when_disabled(): void
     {
-        [$order, $attendee, $event, $eventSettings, $organizer] = $this->buildFixtures();
+        $mail = $this->buildMail(walletPassesEnabled: false);
+
+        $rendered = $mail->render();
+
+        $this->assertStringNotContainsString('Add to Apple Wallet', $rendered);
+        $this->assertStringNotContainsString('Add to Google Wallet', $rendered);
+        $this->assertStringNotContainsString('/apple-pass', $rendered);
+    }
+
+    public function test_shows_wallet_buttons_when_enabled_and_apple_configured(): void
+    {
+        // Force Apple Wallet config so the blade renders the Apple button regardless
+        // of the test environment's underlying wallet credentials. This isolates the
+        // assertion to the per-event toggle behaviour.
+        config(['wallet.apple.pass_type_id' => 'pass.test.housenights']);
+
+        $mail = $this->buildMail(walletPassesEnabled: true);
+
+        $rendered = $mail->render();
+
+        $this->assertStringContainsString('Add to Apple Wallet', $rendered);
+        $this->assertStringContainsString('/apple-pass', $rendered);
+    }
+
+    private function buildMail(bool $isReminder = false, bool $walletPassesEnabled = false): AttendeeTicketMail
+    {
+        [$order, $attendee, $event, $eventSettings, $organizer] = $this->buildFixtures($walletPassesEnabled);
 
         return new AttendeeTicketMail(
             order: $order,
@@ -86,7 +112,7 @@ class AttendeeTicketMailTest extends TestCase
     /**
      * @return array{0: OrderDomainObject, 1: AttendeeDomainObject, 2: EventDomainObject, 3: EventSettingDomainObject, 4: OrganizerDomainObject}
      */
-    private function buildFixtures(): array
+    private function buildFixtures(bool $walletPassesEnabled = false): array
     {
         $product = (new ProductDomainObject())
             ->setId(101)
@@ -101,6 +127,7 @@ class AttendeeTicketMailTest extends TestCase
             ->setId(22)
             ->setEventId(33)
             ->setSupportEmail('support@example.com')
+            ->setWalletPassesEnabled($walletPassesEnabled)
             ->setLocationDetails([
                 'venue_name' => 'The Venue',
                 'address_line_1' => '1 Main Street',

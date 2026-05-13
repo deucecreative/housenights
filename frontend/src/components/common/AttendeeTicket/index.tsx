@@ -174,7 +174,7 @@ export const AttendeeTicket = ({
                             >{attendee.public_id}</div>
                         </div>
 
-                        {!isCancelled && !isAwaitingPayment && isIOS() && (
+                        {!isCancelled && !isAwaitingPayment && event?.settings?.wallet_passes_enabled && isIOS() && (
                             <a
                                 href={`${getConfig('VITE_API_URL_CLIENT')}/public/attendee/${event.id}/${attendee.short_id}/apple-pass`}
                                 style={{
@@ -194,7 +194,7 @@ export const AttendeeTicket = ({
                             </a>
                         )}
 
-                        {!isCancelled && !isAwaitingPayment && !isIOS() && (isAndroid() || typeof window !== 'undefined') && (
+                        {!isCancelled && !isAwaitingPayment && event?.settings?.wallet_passes_enabled && !isIOS() && (isAndroid() || typeof window !== 'undefined') && (
                             <button
                                 type="button"
                                 onClick={async () => {

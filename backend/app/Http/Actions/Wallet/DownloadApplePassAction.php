@@ -59,6 +59,12 @@ class DownloadApplePassAction extends BaseAction
             return $this->notFoundResponse();
         }
 
+        // Honor the per-event wallet pass toggle. Hide passes when the organizer
+        // hasn't opted in for this event so URL probing can't bypass the UI hide.
+        if (!$event->getEventSettings()->getWalletPassesEnabled()) {
+            return $this->notFoundResponse();
+        }
+
         try {
             $bytes = $this->passService->generatePass(
                 attendee: $attendee,

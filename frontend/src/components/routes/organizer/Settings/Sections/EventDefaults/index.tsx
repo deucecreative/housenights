@@ -23,6 +23,7 @@ export const EventDefaults = () => {
             default_attendee_details_collection_method: 'PER_TICKET' as 'PER_TICKET' | 'PER_ORDER',
             default_show_marketing_opt_in: true,
             default_allow_attendee_self_edit: false,
+            default_wallet_passes_enabled: false,
             affiliate_term: '',
             hide_organizer_on_event_pages: false,
         }
@@ -51,13 +52,14 @@ export const EventDefaults = () => {
                 default_attendee_details_collection_method: organizerSettingsQuery.data.default_attendee_details_collection_method || 'PER_TICKET',
                 default_show_marketing_opt_in: organizerSettingsQuery.data.default_show_marketing_opt_in ?? true,
                 default_allow_attendee_self_edit: organizerSettingsQuery.data.default_allow_attendee_self_edit ?? false,
+                default_wallet_passes_enabled: organizerSettingsQuery.data.default_wallet_passes_enabled ?? false,
                 affiliate_term: organizerSettingsQuery.data.affiliate_term || '',
                 hide_organizer_on_event_pages: organizerSettingsQuery.data.hide_organizer_on_event_pages ?? false,
             });
         }
     }, [organizerSettingsQuery.isFetched]);
 
-    const handleSubmit = (values: { default_attendee_details_collection_method: 'PER_TICKET' | 'PER_ORDER'; default_show_marketing_opt_in: boolean; default_allow_attendee_self_edit: boolean; affiliate_term: string; hide_organizer_on_event_pages: boolean }) => {
+    const handleSubmit = (values: { default_attendee_details_collection_method: 'PER_TICKET' | 'PER_ORDER'; default_show_marketing_opt_in: boolean; default_allow_attendee_self_edit: boolean; default_wallet_passes_enabled: boolean; affiliate_term: string; hide_organizer_on_event_pages: boolean }) => {
         updateMutation.mutate({
             organizerSettings: values,
             organizerId: organizerId,
@@ -98,6 +100,13 @@ export const EventDefaults = () => {
                         value={form.values.default_allow_attendee_self_edit}
                         onChange={(value) => form.setFieldValue('default_allow_attendee_self_edit', value)}
                         isDefault={true}
+                    />
+
+                    <Switch
+                        mt="md"
+                        label={t`Enable wallet passes by default for new events`}
+                        description={t`When creating a new event, this preset is used. You can still toggle it per event.`}
+                        {...form.getInputProps('default_wallet_passes_enabled', { type: 'checkbox' })}
                     />
 
                     <TextInput

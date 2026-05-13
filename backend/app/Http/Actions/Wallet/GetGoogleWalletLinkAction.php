@@ -59,6 +59,11 @@ class GetGoogleWalletLinkAction extends BaseAction
             return $this->notFoundResponse();
         }
 
+        // Honor the per-event wallet pass toggle.
+        if (!$event->getEventSettings()->getWalletPassesEnabled()) {
+            return $this->notFoundResponse();
+        }
+
         try {
             $url = $this->passService->generateSaveLink(
                 attendee: $attendee,

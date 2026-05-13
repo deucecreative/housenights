@@ -25,6 +25,7 @@ class PartialUpdateOrganizerSettingsDTO extends BaseDataObject
         public readonly bool|Optional|null                            $defaultShowMarketingOptIn,
         public readonly bool|Optional|null                            $defaultPassPlatformFeeToBuyer,
         public readonly bool|Optional|null                            $defaultAllowAttendeeSelfEdit,
+        public readonly bool|Optional|null                            $defaultWalletPassesEnabled,
         public readonly string|Optional|null                          $affiliateTerm,
 
         // Social

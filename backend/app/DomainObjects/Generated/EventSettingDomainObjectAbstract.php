@@ -68,6 +68,7 @@ abstract class EventSettingDomainObjectAbstract extends \HiEvents\DomainObjects\
     final public const META_CONVERSIONS_API_ACCESS_TOKEN = 'meta_conversions_api_access_token';
     final public const PRE_EVENT_REMINDER_ENABLED = 'pre_event_reminder_enabled';
     final public const PRE_EVENT_REMINDER_HOURS = 'pre_event_reminder_hours';
+    final public const WALLET_PASSES_ENABLED = 'wallet_passes_enabled';
 
     protected int $id;
     protected int $event_id;
@@ -127,6 +128,7 @@ abstract class EventSettingDomainObjectAbstract extends \HiEvents\DomainObjects\
     protected ?string $meta_conversions_api_access_token = null;
     protected bool $pre_event_reminder_enabled = true;
     protected int $pre_event_reminder_hours = 24;
+    protected bool $wallet_passes_enabled = false;
 
     public function toArray(): array
     {
@@ -189,6 +191,7 @@ abstract class EventSettingDomainObjectAbstract extends \HiEvents\DomainObjects\
                     'meta_conversions_api_access_token' => $this->meta_conversions_api_access_token ?? null,
                     'pre_event_reminder_enabled' => $this->pre_event_reminder_enabled ?? null,
                     'pre_event_reminder_hours' => $this->pre_event_reminder_hours ?? null,
+                    'wallet_passes_enabled' => $this->wallet_passes_enabled ?? null,
                 ];
     }
 
@@ -829,5 +832,16 @@ abstract class EventSettingDomainObjectAbstract extends \HiEvents\DomainObjects\
     public function getPreEventReminderHours(): int
     {
         return $this->pre_event_reminder_hours;
+    }
+
+    public function setWalletPassesEnabled(bool $wallet_passes_enabled): self
+    {
+        $this->wallet_passes_enabled = $wallet_passes_enabled;
+        return $this;
+    }
+
+    public function getWalletPassesEnabled(): bool
+    {
+        return $this->wallet_passes_enabled;
     }
 }

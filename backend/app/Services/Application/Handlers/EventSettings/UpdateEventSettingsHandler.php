@@ -102,6 +102,9 @@ class UpdateEventSettingsHandler
                     // Pre-event reminder settings
                     'pre_event_reminder_enabled' => $settings->pre_event_reminder_enabled,
                     'pre_event_reminder_hours' => $settings->pre_event_reminder_hours,
+
+                    // Wallet pass settings
+                    'wallet_passes_enabled' => $settings->wallet_passes_enabled,
                 ],
                 where: [
                     'event_id' => $settings->event_id,

@@ -66,7 +66,8 @@ class OrderTicketsMail extends BaseMail
         $attendeeTicketUrls = [];
         $googleWalletUrls = [];
 
-        $googleWalletEnabled = (bool)config('wallet.google.issuer_id');
+        $walletPassesEnabled = $this->eventSettings->getWalletPassesEnabled();
+        $googleWalletEnabled = $walletPassesEnabled && (bool)config('wallet.google.issuer_id');
         $googleWalletService = $googleWalletEnabled ? app(GoogleWalletPassService::class) : null;
 
         foreach ($activeAttendees as $attendee) {

@@ -23,6 +23,7 @@ export const MiscSettings = () => {
             price_display_mode: 'EXCLUSIVE',
             hide_getting_started_page: false,
             allow_attendee_self_edit: false,
+            wallet_passes_enabled: false,
         }
     });
     const formErrorHandle = useFormErrorResponseHandler();
@@ -33,6 +34,7 @@ export const MiscSettings = () => {
                 price_display_mode: eventSettingsQuery.data.price_display_mode,
                 hide_getting_started_page: eventSettingsQuery.data.hide_getting_started_page,
                 allow_attendee_self_edit: eventSettingsQuery.data.allow_attendee_self_edit ?? false,
+                wallet_passes_enabled: eventSettingsQuery.data.wallet_passes_enabled ?? false,
             });
         }
     }, [eventSettingsQuery.isFetched]);
@@ -96,6 +98,13 @@ export const MiscSettings = () => {
                     <SelfServiceSettings
                         value={form.values.allow_attendee_self_edit}
                         onChange={(value) => form.setFieldValue('allow_attendee_self_edit', value)}
+                    />
+
+                    <Switch
+                        mt="md"
+                        {...form.getInputProps('wallet_passes_enabled', {type: 'checkbox'})}
+                        label={t`Show Apple/Google Wallet buttons on tickets`}
+                        description={t`Lets attendees save their ticket QR to their phone's wallet app for offline access at the gate.`}
                     />
 
                     <Button loading={updateMutation.isPending} type={'submit'}>

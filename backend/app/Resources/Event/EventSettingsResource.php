@@ -87,6 +87,9 @@ class EventSettingsResource extends JsonResource
             // Pre-event reminder settings
             'pre_event_reminder_enabled' => $this->getPreEventReminderEnabled(),
             'pre_event_reminder_hours' => $this->getPreEventReminderHours(),
+
+            // Wallet pass settings
+            'wallet_passes_enabled' => $this->getWalletPassesEnabled(),
         ];
     }
 }

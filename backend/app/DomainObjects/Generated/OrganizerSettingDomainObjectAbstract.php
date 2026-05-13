@@ -31,6 +31,7 @@ abstract class OrganizerSettingDomainObjectAbstract extends \HiEvents\DomainObje
     final public const DEFAULT_ALLOW_ATTENDEE_SELF_EDIT = 'default_allow_attendee_self_edit';
     final public const AFFILIATE_TERM = 'affiliate_term';
     final public const HIDE_ORGANIZER_ON_EVENT_PAGES = 'hide_organizer_on_event_pages';
+    final public const DEFAULT_WALLET_PASSES_ENABLED = 'default_wallet_passes_enabled';
 
     protected int $id;
     protected int $organizer_id;
@@ -53,6 +54,7 @@ abstract class OrganizerSettingDomainObjectAbstract extends \HiEvents\DomainObje
     protected bool $default_allow_attendee_self_edit = true;
     protected ?string $affiliate_term = null;
     protected bool $hide_organizer_on_event_pages = false;
+    protected bool $default_wallet_passes_enabled = false;
 
     public function toArray(): array
     {
@@ -78,6 +80,7 @@ abstract class OrganizerSettingDomainObjectAbstract extends \HiEvents\DomainObje
                     'default_allow_attendee_self_edit' => $this->default_allow_attendee_self_edit ?? null,
                     'affiliate_term' => $this->affiliate_term ?? null,
                     'hide_organizer_on_event_pages' => $this->hide_organizer_on_event_pages ?? null,
+                    'default_wallet_passes_enabled' => $this->default_wallet_passes_enabled ?? null,
                 ];
     }
 
@@ -311,5 +314,16 @@ abstract class OrganizerSettingDomainObjectAbstract extends \HiEvents\DomainObje
     public function getHideOrganizerOnEventPages(): bool
     {
         return $this->hide_organizer_on_event_pages;
+    }
+
+    public function setDefaultWalletPassesEnabled(bool $default_wallet_passes_enabled): self
+    {
+        $this->default_wallet_passes_enabled = $default_wallet_passes_enabled;
+        return $this;
+    }
+
+    public function getDefaultWalletPassesEnabled(): bool
+    {
+        return $this->default_wallet_passes_enabled;
     }
 }

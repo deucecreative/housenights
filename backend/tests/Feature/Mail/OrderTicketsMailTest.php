@@ -64,11 +64,23 @@ class OrderTicketsMailTest extends TestCase
         $this->assertStringNotContainsString('Cancelled', $rendered, 'Cancelled attendee should not appear');
     }
 
+    public function test_hides_wallet_buttons_when_disabled(): void
+    {
+        $mail = $this->buildMail(walletPassesEnabled: false);
+
+        $rendered = $mail->render();
+
+        $this->assertStringNotContainsString('Add to Apple Wallet', $rendered);
+        $this->assertStringNotContainsString('Add to Google Wallet', $rendered);
+        $this->assertStringNotContainsString('/apple-pass', $rendered);
+    }
+
     private function buildMail(
         bool $isReminder = false,
         bool $includeCancelledAttendee = false,
+        bool $walletPassesEnabled = false,
     ): OrderTicketsMail {
-        [$order, $event, $eventSettings, $organizer] = $this->buildFixtures($includeCancelledAttendee);
+        [$order, $event, $eventSettings, $organizer] = $this->buildFixtures($includeCancelledAttendee, $walletPassesEnabled);
 
         return new OrderTicketsMail(
             order: $order,
@@ -82,7 +94,7 @@ class OrderTicketsMailTest extends TestCase
     /**
      * @return array{0: OrderDomainObject, 1: EventDomainObject, 2: EventSettingDomainObject, 3: OrganizerDomainObject}
      */
-    private function buildFixtures(bool $includeCancelledAttendee): array
+    private function buildFixtures(bool $includeCancelledAttendee, bool $walletPassesEnabled = false): array
     {
         $product = (new ProductDomainObject())
             ->setId(101)
@@ -97,6 +109,7 @@ class OrderTicketsMailTest extends TestCase
             ->setId(22)
             ->setEventId(33)
             ->setSupportEmail('support@example.com')
+            ->setWalletPassesEnabled($walletPassesEnabled)
             ->setLocationDetails([
                 'venue_name' => 'The Venue',
                 'address_line_1' => '1 Main Street',

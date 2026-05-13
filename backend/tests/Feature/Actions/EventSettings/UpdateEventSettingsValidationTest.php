@@ -91,4 +91,38 @@ class UpdateEventSettingsValidationTest extends TestCase
 
         $this->assertFalse($validator->errors()->has('pre_event_reminder_hours'));
     }
+
+    public function test_accepts_wallet_passes_enabled_true(): void
+    {
+        $validator = $this->validate([
+            'wallet_passes_enabled' => true,
+        ]);
+
+        $this->assertFalse($validator->errors()->has('wallet_passes_enabled'));
+    }
+
+    public function test_accepts_wallet_passes_enabled_false(): void
+    {
+        $validator = $this->validate([
+            'wallet_passes_enabled' => false,
+        ]);
+
+        $this->assertFalse($validator->errors()->has('wallet_passes_enabled'));
+    }
+
+    public function test_rejects_non_boolean_wallet_passes_enabled(): void
+    {
+        $validator = $this->validate([
+            'wallet_passes_enabled' => 'not-a-boolean',
+        ]);
+
+        $this->assertTrue($validator->errors()->has('wallet_passes_enabled'));
+    }
+
+    public function test_omitting_wallet_passes_enabled_is_allowed(): void
+    {
+        $validator = $this->validate([]);
+
+        $this->assertFalse($validator->errors()->has('wallet_passes_enabled'));
+    }
 }
