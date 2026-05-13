@@ -11,6 +11,7 @@ class Kernel extends ConsoleKernel
     protected function schedule(Schedule $schedule): void
     {
         $schedule->job(new SendScheduledMessagesJob)->everyMinute()->withoutOverlapping();
+        $schedule->command('app:send-pre-event-reminders')->hourly()->withoutOverlapping();
     }
 
     protected function commands(): void
