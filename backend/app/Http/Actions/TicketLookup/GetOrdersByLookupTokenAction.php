@@ -4,7 +4,7 @@ namespace HiEvents\Http\Actions\TicketLookup;
 
 use HiEvents\Exceptions\InvalidTicketLookupTokenException;
 use HiEvents\Http\Actions\BaseAction;
-use HiEvents\Resources\Order\OrderResourcePublic;
+use HiEvents\Resources\Order\TicketLookupOrderResource;
 use HiEvents\Services\Application\Handlers\TicketLookup\DTO\GetOrdersByLookupTokenDTO;
 use HiEvents\Services\Application\Handlers\TicketLookup\GetOrdersByLookupTokenHandler;
 use Illuminate\Http\JsonResponse;
@@ -26,7 +26,7 @@ class GetOrdersByLookupTokenAction extends BaseAction
             );
 
             return $this->resourceResponse(
-                resource: OrderResourcePublic::class,
+                resource: TicketLookupOrderResource::class,
                 data: $orders,
             );
         } catch (InvalidTicketLookupTokenException $e) {

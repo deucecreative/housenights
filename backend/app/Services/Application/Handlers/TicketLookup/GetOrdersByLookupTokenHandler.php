@@ -15,6 +15,7 @@ use HiEvents\DomainObjects\OrderDomainObject;
 use HiEvents\DomainObjects\OrganizerDomainObject;
 use HiEvents\DomainObjects\ProductDomainObject;
 use HiEvents\DomainObjects\ProductPriceDomainObject;
+use HiEvents\DomainObjects\Status\AttendeeStatus;
 use HiEvents\DomainObjects\Status\OrderStatus;
 use HiEvents\DomainObjects\TicketLookupTokenDomainObject;
 use HiEvents\Exceptions\InvalidTicketLookupTokenException;
@@ -23,6 +24,7 @@ use HiEvents\Repository\Eloquent\Value\Relationship;
 use HiEvents\Repository\Interfaces\OrderRepositoryInterface;
 use HiEvents\Repository\Interfaces\TicketLookupTokenRepositoryInterface;
 use HiEvents\Services\Application\Handlers\TicketLookup\DTO\GetOrdersByLookupTokenDTO;
+use Illuminate\Database\DatabaseManager;
 use Illuminate\Support\Collection;
 
 class GetOrdersByLookupTokenHandler
@@ -30,6 +32,7 @@ class GetOrdersByLookupTokenHandler
     public function __construct(
         private readonly TicketLookupTokenRepositoryInterface $ticketLookupTokenRepository,
         private readonly OrderRepositoryInterface $orderRepository,
+        private readonly DatabaseManager $databaseManager,
     ) {
     }
 
@@ -72,7 +75,16 @@ class GetOrdersByLookupTokenHandler
      */
     private function getOrdersForEmail(string $email): Collection
     {
-        return $this->orderRepository
+        $attendeeMatchedOrderIds = $this->databaseManager
+            ->table('attendees')
+            ->where('email', $email)
+            ->where('status', AttendeeStatus::ACTIVE->name)
+            ->whereNull('deleted_at')
+            ->pluck('order_id')
+            ->unique()
+            ->all();
+
+        $repository = $this->orderRepository
             ->loadRelation(new Relationship(
                 domainObject: AttendeeDomainObject::class,
                 nested: [
@@ -102,15 +114,72 @@ class GetOrdersByLookupTokenHandler
                     )
                 ],
                 name: EventDomainObjectAbstract::SINGULAR_NAME
-            ))
-            ->findWhere(
+            ));
+
+        $purchaserMatches = $repository->findWhere(
+            [
+                [OrderDomainObjectAbstract::EMAIL, '=', $email],
+                [OrderDomainObjectAbstract::STATUS, '=', OrderStatus::COMPLETED->name],
+            ],
+            orderAndDirections: [
+                new OrderAndDirection(OrderDomainObjectAbstract::CREATED_AT, 'desc'),
+            ],
+        );
+
+        $attendeeMatches = empty($attendeeMatchedOrderIds)
+            ? new Collection()
+            : $repository->findWhere(
                 [
-                    [OrderDomainObjectAbstract::EMAIL, '=', $email],
+                    [OrderDomainObjectAbstract::ID, 'in', $attendeeMatchedOrderIds],
                     [OrderDomainObjectAbstract::STATUS, '=', OrderStatus::COMPLETED->name],
                 ],
                 orderAndDirections: [
                     new OrderAndDirection(OrderDomainObjectAbstract::CREATED_AT, 'desc'),
                 ],
             );
+
+        $merged = $purchaserMatches
+            ->merge($attendeeMatches)
+            ->keyBy(fn (OrderDomainObject $o) => $o->getId())
+            ->values();
+
+        // Apply attendee-scoped privacy masking per order:
+        return $merged->map(function (OrderDomainObject $order) use ($email) {
+            return $this->applyPrivacyScope($order, $email);
+        });
+    }
+
+    /**
+     * If the lookup email does NOT match the purchaser's email, mask purchaser
+     * PII and filter the attendees collection to only those whose email matches
+     * the lookup email.
+     */
+    private function applyPrivacyScope(OrderDomainObject $order, string $lookupEmail): OrderDomainObject
+    {
+        $purchaserEmail = strtolower((string) $order->getEmail());
+
+        if ($purchaserEmail === $lookupEmail) {
+            // Full purchaser view — leave the order untouched.
+            $order->isAttendeeScope = false;
+            return $order;
+        }
+
+        $order->isAttendeeScope = true;
+
+        // Filter attendees down to only those whose email matches the lookup.
+        if ($order->getAttendees() !== null) {
+            $scoped = $order->getAttendees()->filter(function (AttendeeDomainObject $attendee) use ($lookupEmail) {
+                return strtolower((string) $attendee->getEmail()) === $lookupEmail;
+            })->values();
+            $order->setAttendees($scoped);
+        }
+
+        // Mask purchaser-PII fields so we don't leak the purchaser's identity.
+        $order->setFirstName('');
+        $order->setLastName('');
+        $order->setEmail(null);
+        $order->setAddress(null);
+
+        return $order;
     }
 }

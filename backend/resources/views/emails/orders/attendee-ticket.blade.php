@@ -7,10 +7,18 @@
 @php /** @var \HiEvents\DomainObjects\OrderDomainObject $order */ @endphp
 
 @php /** @var string $ticketUrl */ @endphp
+@php /** @var bool $isReminder */ @endphp
+@php /** @var string $qrPng */ @endphp
+@php /** @var string $qrFilename */ @endphp
+@php /** @var string|null $googleWalletUrl */ @endphp
 @php /** @see \HiEvents\Mail\Attendee\AttendeeTicketMail */ @endphp
 
 <x-mail::message>
+@if(!empty($isReminder))
+# {{ __('Your event is coming up!') }} 🎟️
+@else
 # {{ __('You\'re going to') }} {{ $event->getTitle() }}! 🎉
+@endif
 <br>
 <br>
 @if($order->isOrderAwaitingOfflinePayment())
@@ -21,7 +29,36 @@
 </div>
 @endif
 
+@if(!empty($qrPng))
+<div style="text-align: center; margin: 1.5rem 0;">
+<img src="{{ $message->embedData($qrPng, $qrFilename, 'image/png') }}" alt="{{ __('Your ticket QR code') }}" width="280" height="280" style="display: inline-block; max-width: 100%; height: auto;">
+</div>
+@endif
+
+@if($eventSettings->getWalletPassesEnabled() && (config('wallet.apple.pass_type_id') || !empty($googleWalletUrl)))
+<div style="text-align: center; margin: 1rem 0 1.5rem 0;">
+@if(config('wallet.apple.pass_type_id'))
+<a href="{{ url('/public/attendee/' . $event->getId() . '/' . $attendee->getShortId() . '/apple-pass') }}" style="text-decoration: none; display: inline-block; margin: 0 6px;">
+<img src="https://developer.apple.com/wallet/add-to-apple-wallet-guidelines/images/add-to-apple-wallet/Add_to_Apple_Wallet_rgb_US-UK.png" alt="{{ __('Add to Apple Wallet') }}" height="48" style="height: 48px; width: auto; border: 0;">
+</a>
+@endif
+@if(!empty($googleWalletUrl))
+<a href="{{ $googleWalletUrl }}" style="text-decoration: none; display: inline-block; margin: 0 6px;">
+<img src="https://developers.google.com/wallet/static/images/branding/Add-to-Google-Wallet-button.png" alt="{{ __('Add to Google Wallet') }}" height="48" style="height: 48px; width: auto; border: 0;">
+</a>
+@endif
+</div>
+@endif
+
+@if(!empty($isReminder))
+{{ __('Your event is coming up! Save this email — your QR works offline once opened. The PDF is attached as a backup.') }}
+@else
 {{ __('Please find your ticket details below.') }}
+@endif
+
+<p style="text-align: center; font-size: 0.9em; color: #555;">
+{{ __('PDF attached as backup — open this email at the gate, your QR works offline.') }}
+</p>
 
 <x-mail::button :url="$ticketUrl">
 {{ __('View Ticket') }}

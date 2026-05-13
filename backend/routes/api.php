@@ -194,6 +194,8 @@ use HiEvents\Http\Actions\Admin\Users\StartImpersonationAction;
 use HiEvents\Http\Actions\Admin\Users\StopImpersonationAction;
 use HiEvents\Http\Actions\TicketLookup\GetOrdersByLookupTokenAction;
 use HiEvents\Http\Actions\TicketLookup\SendTicketLookupEmailAction;
+use HiEvents\Http\Actions\Wallet\DownloadApplePassAction;
+use HiEvents\Http\Actions\Wallet\GetGoogleWalletLinkAction;
 use HiEvents\Http\Actions\Webhooks\CreateWebhookAction;
 use HiEvents\Http\Actions\Webhooks\DeleteWebhookAction;
 use HiEvents\Http\Actions\Webhooks\EditWebhookAction;
@@ -481,6 +483,12 @@ $router->prefix('/public')->group(
 
         // Attendees
         $router->get('/events/{event_id}/attendees/{attendee_short_id}', GetAttendeeActionPublic::class);
+
+        // Apple Wallet pass download (public — short_id acts as unguessable token)
+        $router->get('/attendee/{event_id}/{attendee_short_id}/apple-pass', DownloadApplePassAction::class);
+
+        // Google Wallet "Save to phone" link (public — short_id acts as unguessable token)
+        $router->get('/attendee/{event_id}/{attendee_short_id}/google-pass-link', GetGoogleWalletLinkAction::class);
 
         // Promo codes
         $router->get('/events/{event_id}/promo-codes/{promo_code}', GetPromoCodePublic::class);

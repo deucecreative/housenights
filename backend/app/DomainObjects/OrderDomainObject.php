@@ -38,6 +38,13 @@ class OrderDomainObject extends Generated\OrderDomainObjectAbstract implements I
 
     public ?AffiliateDomainObject $affiliate = null;
 
+    /**
+     * Transient flag, set when the order is being returned in attendee-scoped
+     * privacy mode (e.g. an attendee looked up the order with their own email
+     * which differs from the purchaser's). Not persisted.
+     */
+    public bool $isAttendeeScope = false;
+
     public static function getAllowedFilterFields(): array
     {
         return [

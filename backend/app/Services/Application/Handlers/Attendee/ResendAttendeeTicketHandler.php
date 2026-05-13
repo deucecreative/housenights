@@ -6,6 +6,7 @@ use HiEvents\DomainObjects\EventSettingDomainObject;
 use HiEvents\DomainObjects\OrderDomainObject;
 use HiEvents\DomainObjects\OrderItemDomainObject;
 use HiEvents\DomainObjects\OrganizerDomainObject;
+use HiEvents\DomainObjects\ProductDomainObject;
 use HiEvents\DomainObjects\Status\AttendeeStatus;
 use HiEvents\Exceptions\ResourceConflictException;
 use HiEvents\Repository\Eloquent\Value\Relationship;
@@ -36,6 +37,7 @@ readonly class ResendAttendeeTicketHandler
             ->loadRelation(new Relationship(OrderDomainObject::class, nested: [
                 new Relationship(OrderItemDomainObject::class),
             ], name: 'order'))
+            ->loadRelation(new Relationship(ProductDomainObject::class, name: 'product'))
             ->findFirstWhere([
                 'id' => $resendAttendeeProductDTO->attendeeId,
                 'event_id' => $resendAttendeeProductDTO->eventId,

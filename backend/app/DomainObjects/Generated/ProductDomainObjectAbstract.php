@@ -26,7 +26,6 @@ abstract class ProductDomainObjectAbstract extends \HiEvents\DomainObjects\Abstr
     final public const HIDE_WHEN_SOLD_OUT = 'hide_when_sold_out';
     final public const SHOW_QUANTITY_REMAINING = 'show_quantity_remaining';
     final public const IS_HIDDEN_WITHOUT_PROMO_CODE = 'is_hidden_without_promo_code';
-    final public const AFFILIATE_LINK_VISIBILITY = 'affiliate_link_visibility';
     final public const ORDER = 'order';
     final public const CREATED_AT = 'created_at';
     final public const UPDATED_AT = 'updated_at';
@@ -38,6 +37,7 @@ abstract class ProductDomainObjectAbstract extends \HiEvents\DomainObjects\Abstr
     final public const IS_HIGHLIGHTED = 'is_highlighted';
     final public const HIGHLIGHT_MESSAGE = 'highlight_message';
     final public const TICKETS_PER_GROUP = 'tickets_per_group';
+    final public const AFFILIATE_LINK_VISIBILITY = 'affiliate_link_visibility';
 
     protected int $id;
     protected int $event_id;
@@ -55,7 +55,6 @@ abstract class ProductDomainObjectAbstract extends \HiEvents\DomainObjects\Abstr
     protected bool $hide_when_sold_out = false;
     protected bool $show_quantity_remaining = false;
     protected bool $is_hidden_without_promo_code = false;
-    protected string $affiliate_link_visibility = 'SHOW_ALWAYS';
     protected int $order;
     protected string $created_at;
     protected ?string $updated_at = null;
@@ -67,6 +66,7 @@ abstract class ProductDomainObjectAbstract extends \HiEvents\DomainObjects\Abstr
     protected bool $is_highlighted = false;
     protected ?string $highlight_message = null;
     protected ?int $tickets_per_group = null;
+    protected string $affiliate_link_visibility = 'SHOW_ALWAYS';
 
     public function toArray(): array
     {
@@ -87,7 +87,6 @@ abstract class ProductDomainObjectAbstract extends \HiEvents\DomainObjects\Abstr
                     'hide_when_sold_out' => $this->hide_when_sold_out ?? null,
                     'show_quantity_remaining' => $this->show_quantity_remaining ?? null,
                     'is_hidden_without_promo_code' => $this->is_hidden_without_promo_code ?? null,
-                    'affiliate_link_visibility' => $this->affiliate_link_visibility ?? null,
                     'order' => $this->order ?? null,
                     'created_at' => $this->created_at ?? null,
                     'updated_at' => $this->updated_at ?? null,
@@ -99,6 +98,7 @@ abstract class ProductDomainObjectAbstract extends \HiEvents\DomainObjects\Abstr
                     'is_highlighted' => $this->is_highlighted ?? null,
                     'highlight_message' => $this->highlight_message ?? null,
                     'tickets_per_group' => $this->tickets_per_group ?? null,
+                    'affiliate_link_visibility' => $this->affiliate_link_visibility ?? null,
                 ];
     }
 
@@ -278,17 +278,6 @@ abstract class ProductDomainObjectAbstract extends \HiEvents\DomainObjects\Abstr
         return $this->is_hidden_without_promo_code;
     }
 
-    public function setAffiliateLinkVisibility(string $affiliate_link_visibility): self
-    {
-        $this->affiliate_link_visibility = $affiliate_link_visibility;
-        return $this;
-    }
-
-    public function getAffiliateLinkVisibility(): string
-    {
-        return $this->affiliate_link_visibility;
-    }
-
     public function setOrder(int $order): self
     {
         $this->order = $order;
@@ -408,5 +397,16 @@ abstract class ProductDomainObjectAbstract extends \HiEvents\DomainObjects\Abstr
     public function getTicketsPerGroup(): ?int
     {
         return $this->tickets_per_group;
+    }
+
+    public function setAffiliateLinkVisibility(string $affiliate_link_visibility): self
+    {
+        $this->affiliate_link_visibility = $affiliate_link_visibility;
+        return $this;
+    }
+
+    public function getAffiliateLinkVisibility(): string
+    {
+        return $this->affiliate_link_visibility;
     }
 }

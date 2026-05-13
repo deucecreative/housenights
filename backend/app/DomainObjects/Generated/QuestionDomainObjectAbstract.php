@@ -56,7 +56,7 @@ abstract class QuestionDomainObjectAbstract extends \HiEvents\DomainObjects\Abst
                     'order' => $this->order ?? null,
                     'is_hidden' => $this->is_hidden ?? null,
                     'description' => $this->description ?? null,
-                    'show_description_as_placeholder' => $this->show_description_as_placeholder ?? false,
+                    'show_description_as_placeholder' => $this->show_description_as_placeholder ?? null,
                 ];
     }
 

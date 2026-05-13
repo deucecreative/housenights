@@ -105,6 +105,13 @@ class UpdateEventSettingsRequest extends BaseRequest
             // Tracking settings
             'meta_pixel_id' => ['string', 'nullable', 'max:255'],
             'meta_conversions_api_access_token' => ['string', 'nullable', 'max:1000'],
+
+            // Pre-event reminder settings
+            'pre_event_reminder_enabled' => ['sometimes', 'boolean'],
+            'pre_event_reminder_hours' => ['sometimes', 'integer', 'min:1', 'max:168'],
+
+            // Wallet pass settings
+            'wallet_passes_enabled' => ['sometimes', 'boolean'],
         ];
     }
 

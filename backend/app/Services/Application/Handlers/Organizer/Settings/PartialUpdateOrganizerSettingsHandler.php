@@ -62,6 +62,11 @@ class PartialUpdateOrganizerSettingsHandler
                 $organizerSettings->getDefaultAllowAttendeeSelfEdit()
             ),
 
+            'default_wallet_passes_enabled' => $dto->getProvided(
+                'defaultWalletPassesEnabled',
+                $organizerSettings->getDefaultWalletPassesEnabled()
+            ),
+
             'affiliate_term' => $dto->getProvided(
                 'affiliateTerm',
                 $organizerSettings->getAffiliateTerm()

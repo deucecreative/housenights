@@ -4,6 +4,7 @@ namespace HiEvents\Services\Application\Handlers\TicketLookup;
 
 use Carbon\Carbon;
 use HiEvents\DomainObjects\Generated\OrderDomainObjectAbstract;
+use HiEvents\DomainObjects\Status\AttendeeStatus;
 use HiEvents\DomainObjects\Status\OrderStatus;
 use HiEvents\Mail\TicketLookup\TicketLookupEmail;
 use HiEvents\Repository\Interfaces\OrderRepositoryInterface;
@@ -56,12 +57,39 @@ class SendTicketLookupEmailHandler
 
     private function findOrdersByEmail(string $email): Collection
     {
-        return $this->orderRepository->findWhere(
+        // Orders where the purchaser email matches:
+        $purchaserMatches = $this->orderRepository->findWhere(
             [
                 [OrderDomainObjectAbstract::EMAIL, '=', $email],
                 [OrderDomainObjectAbstract::STATUS, '=', OrderStatus::COMPLETED->name],
             ],
         );
+
+        // Order IDs where at least one ACTIVE attendee has the lookup email:
+        $attendeeMatchedOrderIds = $this->databaseManager
+            ->table('attendees')
+            ->where('email', $email)
+            ->where('status', AttendeeStatus::ACTIVE->name)
+            ->whereNull('deleted_at')
+            ->pluck('order_id')
+            ->unique();
+
+        if ($attendeeMatchedOrderIds->isEmpty()) {
+            return $purchaserMatches;
+        }
+
+        $attendeeMatches = $this->orderRepository->findWhere(
+            [
+                [OrderDomainObjectAbstract::ID, 'in', $attendeeMatchedOrderIds->all()],
+                [OrderDomainObjectAbstract::STATUS, '=', OrderStatus::COMPLETED->name],
+            ],
+        );
+
+        // Dedup by order id:
+        return $purchaserMatches
+            ->merge($attendeeMatches)
+            ->keyBy(fn ($o) => $o->getId())
+            ->values();
     }
 
     private function generateAndSaveToken(string $email): string

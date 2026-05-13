@@ -10,6 +10,7 @@ use HiEvents\DomainObjects\InvoiceDomainObject;
 use HiEvents\DomainObjects\OrderDomainObject;
 use HiEvents\DomainObjects\OrderItemDomainObject;
 use HiEvents\DomainObjects\OrganizerDomainObject;
+use HiEvents\DomainObjects\ProductDomainObject;
 use HiEvents\Repository\Eloquent\Value\Relationship;
 use HiEvents\Repository\Interfaces\AttendeeRepositoryInterface;
 use HiEvents\Repository\Interfaces\EventRepositoryInterface;
@@ -75,7 +76,7 @@ class SelfServiceResendEmailServiceTest extends TestCase
 
         $this->attendeeRepository
             ->shouldReceive('loadRelation')
-            ->once()
+            ->twice()
             ->with(Mockery::type(Relationship::class))
             ->andReturnSelf();
 
@@ -191,6 +192,10 @@ class SelfServiceResendEmailServiceTest extends TestCase
                     && $inv === $invoice;
             });
 
+        $this->sendOrderDetailsService
+            ->shouldReceive('sendOrderTicketsToPurchaser')
+            ->once();
+
         $this->orderAuditLogService
             ->shouldReceive('logEmailResent')
             ->once()
@@ -236,6 +241,16 @@ class SelfServiceResendEmailServiceTest extends TestCase
                 return $relationship instanceof Relationship
                     && $relationship->getDomainObject() === OrderDomainObject::class
                     && $relationship->getName() === 'order';
+            }))
+            ->andReturnSelf();
+
+        $this->attendeeRepository
+            ->shouldReceive('loadRelation')
+            ->once()
+            ->with(Mockery::on(function ($relationship) {
+                return $relationship instanceof Relationship
+                    && $relationship->getDomainObject() === ProductDomainObject::class
+                    && $relationship->getName() === 'product';
             }))
             ->andReturnSelf();
 
@@ -302,13 +317,16 @@ class SelfServiceResendEmailServiceTest extends TestCase
         $this->orderRepository
             ->shouldReceive('loadRelation')
             ->times(3)
-            ->with(Mockery::on(function ($domainObject) use (&$loadRelationCallCount) {
+            ->with(Mockery::on(function ($arg) use (&$loadRelationCallCount) {
                 $loadRelationCallCount++;
-                return in_array($domainObject, [
-                    OrderItemDomainObject::class,
-                    AttendeeDomainObject::class,
-                    InvoiceDomainObject::class,
-                ]);
+                if (is_string($arg)) {
+                    return in_array($arg, [
+                        OrderItemDomainObject::class,
+                        InvoiceDomainObject::class,
+                    ]);
+                }
+                return $arg instanceof Relationship
+                    && $arg->getDomainObject() === AttendeeDomainObject::class;
             }))
             ->andReturnSelf();
 
@@ -329,6 +347,10 @@ class SelfServiceResendEmailServiceTest extends TestCase
 
         $this->sendOrderDetailsService
             ->shouldReceive('sendCustomerOrderSummary')
+            ->once();
+
+        $this->sendOrderDetailsService
+            ->shouldReceive('sendOrderTicketsToPurchaser')
             ->once();
 
         $this->orderAuditLogService

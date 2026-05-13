@@ -66,6 +66,9 @@ abstract class EventSettingDomainObjectAbstract extends \HiEvents\DomainObjects\
     final public const ALLOW_ATTENDEE_SELF_EDIT = 'allow_attendee_self_edit';
     final public const META_PIXEL_ID = 'meta_pixel_id';
     final public const META_CONVERSIONS_API_ACCESS_TOKEN = 'meta_conversions_api_access_token';
+    final public const PRE_EVENT_REMINDER_ENABLED = 'pre_event_reminder_enabled';
+    final public const PRE_EVENT_REMINDER_HOURS = 'pre_event_reminder_hours';
+    final public const WALLET_PASSES_ENABLED = 'wallet_passes_enabled';
 
     protected int $id;
     protected int $event_id;
@@ -123,6 +126,9 @@ abstract class EventSettingDomainObjectAbstract extends \HiEvents\DomainObjects\
     protected bool $allow_attendee_self_edit = true;
     protected ?string $meta_pixel_id = null;
     protected ?string $meta_conversions_api_access_token = null;
+    protected bool $pre_event_reminder_enabled = true;
+    protected int $pre_event_reminder_hours = 24;
+    protected bool $wallet_passes_enabled = false;
 
     public function toArray(): array
     {
@@ -183,6 +189,9 @@ abstract class EventSettingDomainObjectAbstract extends \HiEvents\DomainObjects\
                     'allow_attendee_self_edit' => $this->allow_attendee_self_edit ?? null,
                     'meta_pixel_id' => $this->meta_pixel_id ?? null,
                     'meta_conversions_api_access_token' => $this->meta_conversions_api_access_token ?? null,
+                    'pre_event_reminder_enabled' => $this->pre_event_reminder_enabled ?? null,
+                    'pre_event_reminder_hours' => $this->pre_event_reminder_hours ?? null,
+                    'wallet_passes_enabled' => $this->wallet_passes_enabled ?? null,
                 ];
     }
 
@@ -801,5 +810,38 @@ abstract class EventSettingDomainObjectAbstract extends \HiEvents\DomainObjects\
     public function getMetaConversionsApiAccessToken(): ?string
     {
         return $this->meta_conversions_api_access_token;
+    }
+
+    public function setPreEventReminderEnabled(bool $pre_event_reminder_enabled): self
+    {
+        $this->pre_event_reminder_enabled = $pre_event_reminder_enabled;
+        return $this;
+    }
+
+    public function getPreEventReminderEnabled(): bool
+    {
+        return $this->pre_event_reminder_enabled;
+    }
+
+    public function setPreEventReminderHours(int $pre_event_reminder_hours): self
+    {
+        $this->pre_event_reminder_hours = $pre_event_reminder_hours;
+        return $this;
+    }
+
+    public function getPreEventReminderHours(): int
+    {
+        return $this->pre_event_reminder_hours;
+    }
+
+    public function setWalletPassesEnabled(bool $wallet_passes_enabled): self
+    {
+        $this->wallet_passes_enabled = $wallet_passes_enabled;
+        return $this;
+    }
+
+    public function getWalletPassesEnabled(): bool
+    {
+        return $this->wallet_passes_enabled;
     }
 }

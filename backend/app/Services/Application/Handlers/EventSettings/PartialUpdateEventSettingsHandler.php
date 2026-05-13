@@ -145,6 +145,16 @@ class PartialUpdateEventSettingsHandler
                 'meta_conversions_api_access_token' => array_key_exists('meta_conversions_api_access_token', $eventSettingsDTO->settings)
                     ? $eventSettingsDTO->settings['meta_conversions_api_access_token']
                     : $existingSettings->getMetaConversionsApiAccessToken(),
+
+                // Pre-event reminder settings
+                'pre_event_reminder_enabled' => $eventSettingsDTO->settings['pre_event_reminder_enabled']
+                    ?? $existingSettings->getPreEventReminderEnabled(),
+                'pre_event_reminder_hours' => $eventSettingsDTO->settings['pre_event_reminder_hours']
+                    ?? $existingSettings->getPreEventReminderHours(),
+
+                // Wallet pass settings
+                'wallet_passes_enabled' => $eventSettingsDTO->settings['wallet_passes_enabled']
+                    ?? $existingSettings->getWalletPassesEnabled(),
             ]),
         );
     }

@@ -1,10 +1,11 @@
 import {t} from "@lingui/macro";
 import {NavLink, useParams} from "react-router";
-import {Badge, Button, Group, SimpleGrid, Text, TextInput} from "@mantine/core";
+import {Alert, Badge, Button, Group, SimpleGrid, Text, TextInput} from "@mantine/core";
 import {
     IconCalendar,
     IconCalendarEvent,
     IconExternalLink,
+    IconInfoCircle,
     IconMapPin,
     IconPrinter,
     IconTicket,
@@ -41,6 +42,7 @@ const OrderCard = ({order}: { order: Order }) => {
     const ticketCount = order.attendees?.length || 0;
     const orderUrl = `/checkout/${event?.id}/${order.short_id}/summary`;
     const printUrl = `/order/${event?.id}/${order.short_id}/print`;
+    const isAttendeeScope = !!order.is_attendee_scope;
 
     return (
         <Card className={classes.orderCard}>
@@ -99,16 +101,18 @@ const OrderCard = ({order}: { order: Order }) => {
             </SimpleGrid>
 
             <Group gap="sm" mt="md" wrap="wrap">
-                <Button
-                    component={NavLink}
-                    to={orderUrl}
-                    variant="gradient"
-                    gradient={{ from: 'grape', to: 'pink', deg: 90 }}
-                    size="sm"
-                    leftSection={<IconExternalLink size={16}/>}
-                >
-                    {t`View Order`}
-                </Button>
+                {!isAttendeeScope && (
+                    <Button
+                        component={NavLink}
+                        to={orderUrl}
+                        variant="gradient"
+                        gradient={{ from: 'grape', to: 'pink', deg: 90 }}
+                        size="sm"
+                        leftSection={<IconExternalLink size={16}/>}
+                    >
+                        {t`View Order`}
+                    </Button>
+                )}
                 {ticketCount > 0 && (
                     <Button
                         variant="subtle"
@@ -228,6 +232,8 @@ export const MyTickets = () => {
         );
     }
 
+    const hasAttendeeScope = orders.some((order) => order.is_attendee_scope);
+
     return (
         <CheckoutContent>
             <div className={classes.container}>
@@ -238,6 +244,17 @@ export const MyTickets = () => {
                         {t`Here are all the tickets associated with your email address.`}
                     </p>
                 </div>
+
+                {hasAttendeeScope && (
+                    <Alert
+                        icon={<IconInfoCircle size={18}/>}
+                        color="blue"
+                        variant="light"
+                        mb="md"
+                    >
+                        {t`Showing tickets matching your email. Other tickets on this order belong to the purchaser.`}
+                    </Alert>
+                )}
 
                 <div className={classes.ordersList}>
                     {orders.map((order) => (

@@ -19,6 +19,7 @@ class OrganizerSettingsResource extends BaseResource
             'default_show_marketing_opt_in' => $this->getDefaultShowMarketingOptIn(),
             'default_pass_platform_fee_to_buyer' => $this->getDefaultPassPlatformFeeToBuyer(),
             'default_allow_attendee_self_edit' => $this->getDefaultAllowAttendeeSelfEdit(),
+            'default_wallet_passes_enabled' => $this->getDefaultWalletPassesEnabled(),
             'social_media_handles' => $this->getSocialMediaHandles(),
             'homepage_theme_settings' => $this->getHomepageThemeSettings(),
             'homepage_visibility' => $this->getHomepageVisibility(),
