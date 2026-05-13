@@ -9,6 +9,8 @@ import {Address, Attendee, Event, Product} from "../../../types.ts";
 import classes from './AttendeeTicket.module.scss';
 import {imageUrl} from "../../../utilites/urlHelper.ts";
 import {formatAddress} from "../../../utilites/addressUtilities.ts";
+import {isIOS} from "../../../utilites/userAgent.ts";
+import {getConfig} from "../../../utilites/config.ts";
 import {PoweredByFooter} from "../PoweredByFooter";
 
 interface AttendeeTicketProps {
@@ -171,6 +173,26 @@ export const AttendeeTicket = ({
                                 style={{color: accentColor}}
                             >{attendee.public_id}</div>
                         </div>
+
+                        {!isCancelled && !isAwaitingPayment && isIOS() && (
+                            <a
+                                href={`${getConfig('VITE_API_URL_CLIENT')}/public/attendee/${event.id}/${attendee.short_id}/apple-pass`}
+                                style={{
+                                    display: 'inline-block',
+                                    marginTop: '12px',
+                                    textDecoration: 'none',
+                                    lineHeight: 0,
+                                }}
+                                aria-label={t`Add to Apple Wallet`}
+                            >
+                                {/* TODO: replace with local SVG once frontend/src/assets/wallet/apple-add-to-wallet.svg is committed */}
+                                <img
+                                    src="https://developer.apple.com/wallet/add-to-apple-wallet-guidelines/images/add-to-apple-wallet/Add_to_Apple_Wallet_rgb_US-UK.png"
+                                    alt={t`Add to Apple Wallet`}
+                                    style={{height: '44px', width: 'auto', display: 'block'}}
+                                />
+                            </a>
+                        )}
                     </div>
                 </div>
             </div>

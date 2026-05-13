@@ -43,6 +43,14 @@
 </div>
 @endif
 
+@if(config('wallet.apple.pass_type_id'))
+<div style="text-align: center; margin: 0.5rem 0 1rem 0;">
+<a href="{{ url('/public/attendee/' . $event->getId() . '/' . $attendee->getShortId() . '/apple-pass') }}" style="text-decoration: none;">
+<img src="https://developer.apple.com/wallet/add-to-apple-wallet-guidelines/images/add-to-apple-wallet/Add_to_Apple_Wallet_rgb_US-UK.png" alt="{{ __('Add to Apple Wallet') }}" height="44" style="height: 44px; width: auto; border: 0;">
+</a>
+</div>
+@endif
+
 <x-mail::button :url="$attendeeTicketUrls[$attendee->getId()]">
 {{ __('View Ticket') }}
 </x-mail::button>
