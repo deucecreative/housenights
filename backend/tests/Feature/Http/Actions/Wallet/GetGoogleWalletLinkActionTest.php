@@ -38,7 +38,7 @@ class GetGoogleWalletLinkActionTest extends TestCase
 
     public function test_returns_save_link_for_active_attendee(): void
     {
-        $ctx = $this->seedAttendee(AttendeeStatus::ACTIVE->name);
+        $ctx = $this->seedAttendee(AttendeeStatus::ACTIVE->name, walletPassesEnabled: true);
 
         $response = $this->get('/public/attendee/' . $ctx['event_id'] . '/' . $ctx['short_id'] . '/google-pass-link');
 
@@ -53,7 +53,7 @@ class GetGoogleWalletLinkActionTest extends TestCase
 
     public function test_returns_404_for_cancelled_attendee(): void
     {
-        $ctx = $this->seedAttendee(AttendeeStatus::CANCELLED->name);
+        $ctx = $this->seedAttendee(AttendeeStatus::CANCELLED->name, walletPassesEnabled: true);
 
         $response = $this->get('/public/attendee/' . $ctx['event_id'] . '/' . $ctx['short_id'] . '/google-pass-link');
 
@@ -62,9 +62,18 @@ class GetGoogleWalletLinkActionTest extends TestCase
 
     public function test_returns_404_for_unknown_short_id(): void
     {
-        $ctx = $this->seedAttendee(AttendeeStatus::ACTIVE->name);
+        $ctx = $this->seedAttendee(AttendeeStatus::ACTIVE->name, walletPassesEnabled: true);
 
         $response = $this->get('/public/attendee/' . $ctx['event_id'] . '/totally-bogus-short-id/google-pass-link');
+
+        $response->assertStatus(404);
+    }
+
+    public function test_returns_404_when_wallet_disabled_for_event(): void
+    {
+        $ctx = $this->seedAttendee(AttendeeStatus::ACTIVE->name, walletPassesEnabled: false);
+
+        $response = $this->get('/public/attendee/' . $ctx['event_id'] . '/' . $ctx['short_id'] . '/google-pass-link');
 
         $response->assertStatus(404);
     }
@@ -72,10 +81,10 @@ class GetGoogleWalletLinkActionTest extends TestCase
     /**
      * @return array{event_id:int, short_id:string}
      */
-    private function seedAttendee(string $status): array
+    private function seedAttendee(string $status, bool $walletPassesEnabled = false): array
     {
         $user = User::factory()->withAccount()->create();
-        $this->actingAs($user);
+        $this->actingAs($user); // for Event::creating hook only — logged out before HTTP call
         /** @var Account $account */
         $account = $user->accounts()->first();
 
@@ -101,6 +110,7 @@ class GetGoogleWalletLinkActionTest extends TestCase
         $eventSetting = new EventSetting();
         $eventSetting->event_id = $event->id;
         $eventSetting->support_email = 'support@example.com';
+        $eventSetting->wallet_passes_enabled = $walletPassesEnabled;
         $eventSetting->save();
 
         $product = new Product();
@@ -140,6 +150,8 @@ class GetGoogleWalletLinkActionTest extends TestCase
         $attendee->short_id = $shortId;
         $attendee->public_id = 'pub-gwal-' . $event->id;
         $attendee->save();
+
+        auth()->logout();
 
         return [
             'event_id' => (int)$event->id,

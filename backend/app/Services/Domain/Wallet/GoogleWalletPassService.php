@@ -137,6 +137,19 @@ class GoogleWalletPassService
             'hexBackgroundColor' => $this->deriveHexBackgroundColor($eventSettings),
         ];
 
+        $logoUri = $this->resolveLogoUri();
+        if ($logoUri !== null) {
+            $class['logo'] = [
+                'sourceUri' => ['uri' => $logoUri],
+                'contentDescription' => [
+                    'defaultValue' => [
+                        'language' => 'en-US',
+                        'value' => $organizer->getName() ?: 'Organizer logo',
+                    ],
+                ],
+            ];
+        }
+
         $startIso = $this->safeIso($event->getStartDate(), $event->getTimezone());
         $endIso = $this->safeIso($event->getEndDate(), $event->getTimezone());
 
@@ -211,7 +224,28 @@ class GoogleWalletPassService
             }
         }
 
-        return '#14141e';
+        // House Nights brand purple — used when the event hasn't set a ticket
+        // design accent color.
+        return '#57398e';
+    }
+
+    /**
+     * Resolve the logo URL Google should fetch when rendering the pass.
+     * Falls back to a known asset under APP_URL when no explicit URL is set.
+     */
+    private function resolveLogoUri(): ?string
+    {
+        $configured = (string)$this->config->get('wallet.google.logo_uri');
+        if ($configured !== '') {
+            return $configured;
+        }
+
+        $appUrl = rtrim((string)$this->config->get('app.url'), '/');
+        if ($appUrl === '') {
+            return null;
+        }
+
+        return $appUrl . '/wallet/google-wallet-logo.png';
     }
 
     private function safeIso(?string $date, ?string $timezone): ?string

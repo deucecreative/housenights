@@ -87,6 +87,10 @@ class DownloadApplePassActionTest extends TestCase
     private function seedAttendee(string $status, bool $walletPassesEnabled = false): array
     {
         $user = User::factory()->withAccount()->create();
+        // actingAs for seed phase only — Event::creating hook reads auth()->user()->id.
+        // We log out before the HTTP request because the wallet endpoints are PUBLIC
+        // and SetAccountContext middleware blows up parsing a non-existent JWT token
+        // when a Laravel session user is set without a corresponding JWT.
         $this->actingAs($user);
         /** @var Account $account */
         $account = $user->accounts()->first();
@@ -153,6 +157,9 @@ class DownloadApplePassActionTest extends TestCase
         $attendee->short_id = $shortId;
         $attendee->public_id = 'pub-wal-' . $event->id;
         $attendee->save();
+
+        // Log out before HTTP request to mimic an unauthenticated public visitor.
+        auth()->logout();
 
         return [
             'event_id' => (int)$event->id,

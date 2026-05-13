@@ -21,5 +21,8 @@ return [
         'service_account_b64' => env('GOOGLE_WALLET_SERVICE_ACCOUNT_B64'),
         // Google requires saving origins to be on a verified list during issuer review.
         'origin' => env('APP_URL'),
+        // Public URL to the issuer logo PNG. Google fetches this when rendering
+        // the pass. Defaults to {APP_URL}/wallet/google-wallet-logo.png.
+        'logo_uri' => env('GOOGLE_WALLET_LOGO_URI'),
     ],
 ];

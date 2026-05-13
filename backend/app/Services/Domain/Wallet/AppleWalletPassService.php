@@ -241,7 +241,9 @@ class AppleWalletPassService
             }
         }
 
-        return 'rgb(20, 20, 30)';
+        // House Nights brand purple — used when the event hasn't set a ticket
+        // design accent color.
+        return 'rgb(87, 57, 142)';
     }
 
     /**
