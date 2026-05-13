@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "c2d4e29872cb8638ce69cdf0c00e0acc",
+    "content-hash": "a700f217162da39fabbbc83abb0a8315",
     "packages": [
         {
             "name": "amphp/amp",
@@ -10705,58 +10705,6 @@
                 }
             ],
             "time": "2025-09-11T10:12:26+00:00"
-        },
-        {
-            "name": "thenextweb/passgenerator",
-            "version": "v0.1.2",
-            "source": {
-                "type": "git",
-                "url": "https://github.com/thenextweb/passgenerator.git",
-                "reference": "1290b737b9412a7425996fe82101f7419d29ba7f"
-            },
-            "dist": {
-                "type": "zip",
-                "url": "https://api.github.com/repos/thenextweb/passgenerator/zipball/1290b737b9412a7425996fe82101f7419d29ba7f",
-                "reference": "1290b737b9412a7425996fe82101f7419d29ba7f",
-                "shasum": ""
-            },
-            "require": {
-                "ext-zip": "*",
-                "php": ">=5.5.9"
-            },
-            "require-dev": {
-                "orchestra/testbench": "~3.1",
-                "phpspec/phpspec": "~2.1",
-                "phpunit/phpunit": "4.*"
-            },
-            "type": "library",
-            "autoload": {
-                "psr-4": {
-                    "Thenextweb\\": "src"
-                }
-            },
-            "notification-url": "https://packagist.org/downloads/",
-            "license": [
-                "GPLv3"
-            ],
-            "authors": [
-                {
-                    "name": "The Next Web BV",
-                    "email": "support@thenextweb.com"
-                }
-            ],
-            "description": "A Laravel package to create Apple Wallet (old Passbook) compatible tickets.",
-            "keywords": [
-                "apple",
-                "laravel",
-                "passbook",
-                "php"
-            ],
-            "support": {
-                "issues": "https://github.com/thenextweb/passgenerator/issues",
-                "source": "https://github.com/thenextweb/passgenerator/tree/master"
-            },
-            "time": "2016-09-15T15:27:06+00:00"
         },
         {
             "name": "tijsverkoyen/css-to-inline-styles",

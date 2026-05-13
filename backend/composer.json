@@ -31,8 +31,7 @@
         "spatie/laravel-webhook-server": "^3.8",
         "stripe/stripe-php": "^17.0",
         "symfony/http-client": "^7.4",
-        "symfony/postmark-mailer": "^7.4",
-        "thenextweb/passgenerator": "^0.1.2"
+        "symfony/postmark-mailer": "^7.4"
     },
     "suggest": {
         "ext-imagick": "Required for image dimension extraction and LQIP generation"

@@ -17,12 +17,23 @@ use ZipArchive;
  * Generates a signed Apple Wallet (.pkpass) bundle for a ticket.
  *
  * Why this is a hand-rolled service instead of using
- * thenextweb/passgenerator directly: that library uses Flysystem v1
- * APIs (`getDriver()->getAdapter()->getPathPrefix()`) that no longer
- * exist on Laravel 12 / Flysystem v3, AND it relies on PHP's native
- * `openssl_pkcs12_read` which refuses modern macOS Keychain-exported
- * p12 files under OpenSSL 3 ("unsupported" / RC2-40). We shell out to
- * `openssl` with `-legacy` to side-step both issues.
+ * thenextweb/passgenerator: that library uses Flysystem v1 APIs
+ * (`getDriver()->getAdapter()->getPathPrefix()`) that no longer exist on
+ * Laravel 12 / Flysystem v3. We shell out to `openssl` for the PKCS#12
+ * extract + PKCS#7 detached signature so the pipeline works on any host
+ * that ships an `openssl` binary (Railway included).
+ *
+ * The .p12 must use modern crypto (AES-256-CBC, PBKDF2). macOS Keychain
+ * exports default to RC2-40 + legacy MAC which require OpenSSL's legacy
+ * provider — Railway's minimal image doesn't load it. Re-encrypt locally
+ * with `openssl pkcs12 -export -keypbe AES-256-CBC -certpbe AES-256-CBC
+ * -macalg sha256` before deploying.
+ *
+ * Cert + WWDR may be supplied either as filesystem paths
+ * (`APPLE_WALLET_CERT_PATH` / `APPLE_WALLET_WWDR_PATH`) for local dev,
+ * or as base64-encoded env vars (`APPLE_WALLET_CERT_B64` /
+ * `APPLE_WALLET_WWDR_B64`) for serverless-style hosting. Base64 wins
+ * when both are set.
  */
 class AppleWalletPassService
 {
@@ -274,32 +285,39 @@ class AppleWalletPassService
 
     private function signManifest(string $manifestPath, string $signaturePath): void
     {
-        $certPath = $this->resolveCertPath((string)$this->config->get('wallet.apple.cert_path'));
-        $wwdrPath = $this->resolveCertPath((string)$this->config->get('wallet.apple.wwdr_path'));
         $certPassword = (string)$this->config->get('wallet.apple.cert_password');
 
-        if (!is_file($certPath)) {
-            throw new RuntimeException('Apple Wallet pass certificate not found at ' . $certPath);
-        }
-        if (!is_file($wwdrPath)) {
-            throw new RuntimeException('Apple Wallet WWDR certificate not found at ' . $wwdrPath);
-        }
-
-        // Extract cert.pem and key.pem from the .p12 using openssl CLI with
-        // -legacy so we can read RC2-40-encrypted (macOS Keychain default) p12s
-        // under OpenSSL 3.
+        // Materialize cert + WWDR to disk — either by decoding a base64 env var
+        // or by using the configured filesystem path. The base64 form is for
+        // Railway / serverless deploys where secrets live in env vars.
         $tmpDir = $this->makeTempDir();
         try {
+            $certPath = $this->materializeSecret(
+                b64Value: (string)$this->config->get('wallet.apple.cert_b64'),
+                filePath: (string)$this->config->get('wallet.apple.cert_path'),
+                targetPath: $tmpDir . '/pass-cert.p12',
+                friendlyName: 'Apple Wallet pass certificate',
+            );
+
+            $wwdrPath = $this->materializeSecret(
+                b64Value: (string)$this->config->get('wallet.apple.wwdr_b64'),
+                filePath: (string)$this->config->get('wallet.apple.wwdr_path'),
+                targetPath: $tmpDir . '/wwdr.pem',
+                friendlyName: 'Apple WWDR certificate',
+            );
+
             $certPemPath = $tmpDir . '/cert.pem';
             $keyPemPath = $tmpDir . '/key.pem';
 
+            // The .p12 must use modern ciphers (no -legacy here). If you see
+            // "unsupported" errors here in production, the .p12 was likely
+            // exported from macOS Keychain — re-encrypt with AES-256-CBC.
             $this->runOpenSsl(
                 [
                     'pkcs12',
                     '-in', $certPath,
                     '-passin', 'pass:' . $certPassword,
                     '-nokeys',
-                    '-legacy',
                     '-out', $certPemPath,
                 ],
                 'extract certificate from p12'
@@ -312,7 +330,6 @@ class AppleWalletPassService
                     '-passin', 'pass:' . $certPassword,
                     '-passout', 'pass:' . $certPassword,
                     '-nocerts',
-                    '-legacy',
                     '-out', $keyPemPath,
                 ],
                 'extract private key from p12'
@@ -337,6 +354,39 @@ class AppleWalletPassService
         } finally {
             $this->rrmdir($tmpDir);
         }
+    }
+
+    /**
+     * Resolve a cert secret from either a base64 env var (preferred) or a
+     * filesystem path, materializing it to $targetPath so openssl can read it.
+     */
+    private function materializeSecret(
+        string $b64Value,
+        string $filePath,
+        string $targetPath,
+        string $friendlyName,
+    ): string {
+        if ($b64Value !== '') {
+            $bytes = base64_decode($b64Value, true);
+            if ($bytes === false || $bytes === '') {
+                throw new RuntimeException($friendlyName . ' base64 env var is invalid');
+            }
+            if (file_put_contents($targetPath, $bytes, LOCK_EX) === false) {
+                throw new RuntimeException('Failed to write ' . $friendlyName . ' to ' . $targetPath);
+            }
+            chmod($targetPath, 0600);
+            return $targetPath;
+        }
+
+        if ($filePath === '') {
+            throw new RuntimeException($friendlyName . ' is not configured (set CERT_B64 or CERT_PATH)');
+        }
+
+        $resolved = $this->resolveCertPath($filePath);
+        if (!is_file($resolved)) {
+            throw new RuntimeException($friendlyName . ' not found at ' . $resolved);
+        }
+        return $resolved;
     }
 
     /**
