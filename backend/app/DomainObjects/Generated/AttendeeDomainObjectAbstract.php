@@ -29,6 +29,7 @@ abstract class AttendeeDomainObjectAbstract extends \HiEvents\DomainObjects\Abst
     final public const DELETED_AT = 'deleted_at';
     final public const LOCALE = 'locale';
     final public const NOTES = 'notes';
+    final public const REMINDER_SENT_AT = 'reminder_sent_at';
 
     protected int $id;
     protected int $order_id;
@@ -49,6 +50,7 @@ abstract class AttendeeDomainObjectAbstract extends \HiEvents\DomainObjects\Abst
     protected ?string $deleted_at = null;
     protected string $locale = 'en';
     protected ?string $notes = null;
+    protected ?string $reminder_sent_at = null;
 
     public function toArray(): array
     {
@@ -72,6 +74,7 @@ abstract class AttendeeDomainObjectAbstract extends \HiEvents\DomainObjects\Abst
                     'deleted_at' => $this->deleted_at ?? null,
                     'locale' => $this->locale ?? null,
                     'notes' => $this->notes ?? null,
+                    'reminder_sent_at' => $this->reminder_sent_at ?? null,
                 ];
     }
 
@@ -282,5 +285,16 @@ abstract class AttendeeDomainObjectAbstract extends \HiEvents\DomainObjects\Abst
     public function getNotes(): ?string
     {
         return $this->notes;
+    }
+
+    public function setReminderSentAt(?string $reminder_sent_at): self
+    {
+        $this->reminder_sent_at = $reminder_sent_at;
+        return $this;
+    }
+
+    public function getReminderSentAt(): ?string
+    {
+        return $this->reminder_sent_at;
     }
 }
