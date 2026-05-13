@@ -14,6 +14,7 @@ use HiEvents\Mail\BaseMail;
 use HiEvents\Services\Domain\Attendee\GenerateAttendeeTicketPDFService;
 use HiEvents\Services\Domain\Email\DTO\RenderedEmailTemplateDTO;
 use HiEvents\Services\Domain\QrCode\QrCodeService;
+use HiEvents\Services\Domain\Wallet\GoogleWalletPassService;
 use Illuminate\Mail\Mailables\Attachment;
 use Illuminate\Mail\Mailables\Content;
 use Illuminate\Mail\Mailables\Envelope;
@@ -87,6 +88,7 @@ class AttendeeTicketMail extends BaseMail
                 'qrCid' => 'attendee-qr.png',
                 'qrFilename' => 'attendee-qr.png',
                 'qrPng' => $this->generateQrPng(),
+                'googleWalletUrl' => $this->generateGoogleWalletUrl(),
                 'ticketUrl' => sprintf(
                     Url::getFrontEndUrlFromConfig(Url::ATTENDEE_TICKET),
                     $this->event->getId(),
@@ -94,6 +96,29 @@ class AttendeeTicketMail extends BaseMail
                 )
             ]
         );
+    }
+
+    /**
+     * Build a "Save to Google Wallet" URL. Returns null when Google Wallet
+     * isn't configured for this install or when signing fails — the blade
+     * conditionally hides the button.
+     */
+    private function generateGoogleWalletUrl(): ?string
+    {
+        if (!config('wallet.google.issuer_id')) {
+            return null;
+        }
+
+        try {
+            return app(GoogleWalletPassService::class)->generateSaveLink(
+                $this->attendee,
+                $this->event,
+                $this->organizer,
+                $this->eventSettings,
+            );
+        } catch (Throwable) {
+            return null;
+        }
     }
 
     public function attachments(): array

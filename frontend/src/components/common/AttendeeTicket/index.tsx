@@ -9,7 +9,7 @@ import {Address, Attendee, Event, Product} from "../../../types.ts";
 import classes from './AttendeeTicket.module.scss';
 import {imageUrl} from "../../../utilites/urlHelper.ts";
 import {formatAddress} from "../../../utilites/addressUtilities.ts";
-import {isIOS} from "../../../utilites/userAgent.ts";
+import {isAndroid, isIOS} from "../../../utilites/userAgent.ts";
 import {getConfig} from "../../../utilites/config.ts";
 import {PoweredByFooter} from "../PoweredByFooter";
 
@@ -192,6 +192,44 @@ export const AttendeeTicket = ({
                                     style={{height: '44px', width: 'auto', display: 'block'}}
                                 />
                             </a>
+                        )}
+
+                        {!isCancelled && !isAwaitingPayment && !isIOS() && (isAndroid() || typeof window !== 'undefined') && (
+                            <button
+                                type="button"
+                                onClick={async () => {
+                                    try {
+                                        const res = await fetch(
+                                            `${getConfig('VITE_API_URL_CLIENT')}/public/attendee/${event.id}/${attendee.short_id}/google-pass-link`,
+                                        );
+                                        if (!res.ok) {
+                                            return;
+                                        }
+                                        const data = await res.json() as { url?: string };
+                                        if (data?.url) {
+                                            window.location.href = data.url;
+                                        }
+                                    } catch {
+                                        // Silently fail — the button just doesn't navigate.
+                                    }
+                                }}
+                                style={{
+                                    display: 'inline-block',
+                                    marginTop: '12px',
+                                    padding: 0,
+                                    border: 0,
+                                    background: 'transparent',
+                                    cursor: 'pointer',
+                                    lineHeight: 0,
+                                }}
+                                aria-label={t`Add to Google Wallet`}
+                            >
+                                <img
+                                    src="https://developers.google.com/wallet/static/images/branding/Add-to-Google-Wallet-button.png"
+                                    alt={t`Add to Google Wallet`}
+                                    style={{height: '44px', width: 'auto', display: 'block'}}
+                                />
+                            </button>
                         )}
                     </div>
                 </div>

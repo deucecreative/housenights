@@ -22,3 +22,20 @@ export const isIOS = (): boolean => {
 
     return /iPhone|iPad|iPod/i.test(ua) || iPadOS13Up;
 };
+
+/**
+ * Returns true when the current user agent looks like Android, which is
+ * where the "Save to Google Wallet" flow is most useful (saves directly
+ * into the Wallet app). Google Wallet links also work on desktop
+ * browsers — callers decide whether to surface the button there too.
+ *
+ * SSR-safe: returns false when `navigator` is unavailable.
+ */
+export const isAndroid = (): boolean => {
+    if (typeof navigator === "undefined") {
+        return false;
+    }
+
+    const ua = navigator.userAgent || "";
+    return /Android/i.test(ua);
+};

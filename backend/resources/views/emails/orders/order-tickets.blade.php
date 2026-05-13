@@ -6,6 +6,7 @@
 @php /** @var array<int,string> $qrPngs */ @endphp
 @php /** @var array<int,string> $qrFilenames */ @endphp
 @php /** @var array<int,string> $attendeeTicketUrls */ @endphp
+@php /** @var array<int,string> $googleWalletUrls */ @endphp
 @php /** @var bool $isReminder */ @endphp
 @php /** @see \HiEvents\Mail\Order\OrderTicketsMail */ @endphp
 
@@ -43,11 +44,19 @@
 </div>
 @endif
 
-@if(config('wallet.apple.pass_type_id'))
+@php $googleWalletUrlForAttendee = $googleWalletUrls[$attendee->getId()] ?? null; @endphp
+@if(config('wallet.apple.pass_type_id') || !empty($googleWalletUrlForAttendee))
 <div style="text-align: center; margin: 0.5rem 0 1rem 0;">
-<a href="{{ url('/public/attendee/' . $event->getId() . '/' . $attendee->getShortId() . '/apple-pass') }}" style="text-decoration: none;">
+@if(config('wallet.apple.pass_type_id'))
+<a href="{{ url('/public/attendee/' . $event->getId() . '/' . $attendee->getShortId() . '/apple-pass') }}" style="text-decoration: none; display: inline-block; margin: 0 6px;">
 <img src="https://developer.apple.com/wallet/add-to-apple-wallet-guidelines/images/add-to-apple-wallet/Add_to_Apple_Wallet_rgb_US-UK.png" alt="{{ __('Add to Apple Wallet') }}" height="44" style="height: 44px; width: auto; border: 0;">
 </a>
+@endif
+@if(!empty($googleWalletUrlForAttendee))
+<a href="{{ $googleWalletUrlForAttendee }}" style="text-decoration: none; display: inline-block; margin: 0 6px;">
+<img src="https://developers.google.com/wallet/static/images/branding/Add-to-Google-Wallet-button.png" alt="{{ __('Add to Google Wallet') }}" height="44" style="height: 44px; width: auto; border: 0;">
+</a>
+@endif
 </div>
 @endif
 

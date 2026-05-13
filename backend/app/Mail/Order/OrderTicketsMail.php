@@ -12,6 +12,7 @@ use HiEvents\Helper\Url;
 use HiEvents\Mail\BaseMail;
 use HiEvents\Services\Domain\Order\GenerateOrderTicketsPDFService;
 use HiEvents\Services\Domain\QrCode\QrCodeService;
+use HiEvents\Services\Domain\Wallet\GoogleWalletPassService;
 use Illuminate\Mail\Mailables\Attachment;
 use Illuminate\Mail\Mailables\Content;
 use Illuminate\Mail\Mailables\Envelope;
@@ -63,6 +64,10 @@ class OrderTicketsMail extends BaseMail
         $qrPngs = [];
         $qrFilenames = [];
         $attendeeTicketUrls = [];
+        $googleWalletUrls = [];
+
+        $googleWalletEnabled = (bool)config('wallet.google.issuer_id');
+        $googleWalletService = $googleWalletEnabled ? app(GoogleWalletPassService::class) : null;
 
         foreach ($activeAttendees as $attendee) {
             $attendeeId = $attendee->getId();
@@ -74,6 +79,19 @@ class OrderTicketsMail extends BaseMail
                 $this->event->getId(),
                 $attendee->getShortId(),
             );
+
+            if ($googleWalletService !== null) {
+                try {
+                    $googleWalletUrls[$attendeeId] = $googleWalletService->generateSaveLink(
+                        $attendee,
+                        $this->event,
+                        $this->organizer,
+                        $this->eventSettings,
+                    );
+                } catch (Throwable) {
+                    // Skip on failure — blade hides the button when URL is absent.
+                }
+            }
         }
 
         return new Content(
@@ -87,6 +105,7 @@ class OrderTicketsMail extends BaseMail
                 'qrPngs' => $qrPngs,
                 'qrFilenames' => $qrFilenames,
                 'attendeeTicketUrls' => $attendeeTicketUrls,
+                'googleWalletUrls' => $googleWalletUrls,
                 'isReminder' => $this->isReminder,
             ],
         );

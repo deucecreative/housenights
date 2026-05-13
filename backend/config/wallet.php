@@ -13,10 +13,13 @@ return [
         'wwdr_b64' => env('APPLE_WALLET_WWDR_B64'),
     ],
 
-    // Placeholder for Task 10 (Google Wallet)
     'google' => [
         'issuer_id' => env('GOOGLE_WALLET_ISSUER_ID'),
+        // Either a filesystem path (local/dev) OR a base64-encoded blob (Railway/prod).
+        // The base64 form takes precedence when both are set.
         'service_account_path' => env('GOOGLE_WALLET_SERVICE_ACCOUNT_PATH'),
         'service_account_b64' => env('GOOGLE_WALLET_SERVICE_ACCOUNT_B64'),
+        // Google requires saving origins to be on a verified list during issuer review.
+        'origin' => env('APP_URL'),
     ],
 ];
