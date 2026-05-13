@@ -7,10 +7,17 @@
 @php /** @var \HiEvents\DomainObjects\OrderDomainObject $order */ @endphp
 
 @php /** @var string $ticketUrl */ @endphp
+@php /** @var bool $isReminder */ @endphp
+@php /** @var string $qrPng */ @endphp
+@php /** @var string $qrFilename */ @endphp
 @php /** @see \HiEvents\Mail\Attendee\AttendeeTicketMail */ @endphp
 
 <x-mail::message>
+@if(!empty($isReminder))
+# {{ __('Your event is coming up!') }} 🎟️
+@else
 # {{ __('You\'re going to') }} {{ $event->getTitle() }}! 🎉
+@endif
 <br>
 <br>
 @if($order->isOrderAwaitingOfflinePayment())
@@ -21,7 +28,21 @@
 </div>
 @endif
 
+@if(!empty($qrPng))
+<div style="text-align: center; margin: 1.5rem 0;">
+<img src="{{ $message->embedData($qrPng, $qrFilename, 'image/png') }}" alt="{{ __('Your ticket QR code') }}" width="280" height="280" style="display: inline-block; max-width: 100%; height: auto;">
+</div>
+@endif
+
+@if(!empty($isReminder))
+{{ __('Your event is coming up! Save this email — your QR works offline once opened. The PDF is attached as a backup.') }}
+@else
 {{ __('Please find your ticket details below.') }}
+@endif
+
+<p style="text-align: center; font-size: 0.9em; color: #555;">
+{{ __('PDF attached as backup — open this email at the gate, your QR works offline.') }}
+</p>
 
 <x-mail::button :url="$ticketUrl">
 {{ __('View Ticket') }}
