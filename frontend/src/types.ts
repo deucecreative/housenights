@@ -659,6 +659,10 @@ export interface Order {
         name: string;
     };
     affiliate_code?: string;
+    // When true, this order is returned in privacy-scoped mode (the lookup
+    // email belongs to an attendee, not the purchaser). Purchaser PII is
+    // masked and the attendees array is filtered to the lookup email only.
+    is_attendee_scope?: boolean;
 }
 
 export interface Invoice {
