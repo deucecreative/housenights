@@ -87,6 +87,10 @@ class UpdateEventSettingsDTO extends BaseDTO
         // Tracking settings
         public readonly ?string                 $meta_pixel_id = null,
         public readonly ?string                 $meta_conversions_api_access_token = null,
+
+        // Pre-event reminder settings
+        public readonly bool                    $pre_event_reminder_enabled = true,
+        public readonly int                     $pre_event_reminder_hours = 24,
     )
     {
     }
@@ -173,6 +177,10 @@ class UpdateEventSettingsDTO extends BaseDTO
             // Tracking defaults
             meta_pixel_id: null,
             meta_conversions_api_access_token: null,
+
+            // Pre-event reminder defaults
+            pre_event_reminder_enabled: true,
+            pre_event_reminder_hours: 24,
         );
     }
 }

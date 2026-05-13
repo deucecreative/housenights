@@ -83,6 +83,10 @@ class EventSettingsResource extends JsonResource
             // Tracking settings
             'meta_pixel_id' => $this->getMetaPixelId(),
             'meta_conversions_api_access_token' => $this->getMetaConversionsApiAccessToken(),
+
+            // Pre-event reminder settings
+            'pre_event_reminder_enabled' => $this->getPreEventReminderEnabled(),
+            'pre_event_reminder_hours' => $this->getPreEventReminderHours(),
         ];
     }
 }

@@ -1,5 +1,5 @@
 import {t} from "@lingui/macro";
-import {Button, Switch, TextInput} from "@mantine/core";
+import {Button, NumberInput, Switch, TextInput} from "@mantine/core";
 import {useForm} from "@mantine/form";
 import {useParams} from "react-router";
 import {useEffect} from "react";
@@ -21,6 +21,8 @@ export const GeneralEmailSettings = () => {
             support_email: '',
             email_footer_message: '',
             notify_organizer_of_new_orders: true,
+            pre_event_reminder_enabled: true,
+            pre_event_reminder_hours: 24,
         }
     });
     const formErrorHandle = useFormErrorResponseHandler();
@@ -31,6 +33,8 @@ export const GeneralEmailSettings = () => {
                 support_email: eventSettingsQuery.data.support_email,
                 email_footer_message: eventSettingsQuery.data.email_footer_message,
                 notify_organizer_of_new_orders: eventSettingsQuery.data.notify_organizer_of_new_orders,
+                pre_event_reminder_enabled: eventSettingsQuery.data.pre_event_reminder_enabled ?? true,
+                pre_event_reminder_hours: eventSettingsQuery.data.pre_event_reminder_hours ?? 24,
             });
         }
     }, [eventSettingsQuery.isFetched]);
@@ -76,6 +80,22 @@ export const GeneralEmailSettings = () => {
                         label={t`Notify organizer of new orders`}
                         description={t`If enabled, the organizer will receive an email notification when a new order is placed`}
                     />
+
+                    <h3>{t`Reminders`}</h3>
+                    <Switch
+                        {...form.getInputProps('pre_event_reminder_enabled', {type: 'checkbox'})}
+                        label={t`Send pre-event reminder email to ticket-holders`}
+                        description={t`Sends each attendee their QR code and a printable PDF of their ticket so they can scan at the gate even offline.`}
+                    />
+                    {form.values.pre_event_reminder_enabled && (
+                        <NumberInput
+                            {...form.getInputProps('pre_event_reminder_hours')}
+                            label={t`Hours before event start`}
+                            description={t`How many hours before the event starts the reminder email is sent.`}
+                            min={1}
+                            max={168}
+                        />
+                    )}
 
                     <Button loading={updateMutation.isPending} type={'submit'}>
                         {t`Save`}

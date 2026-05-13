@@ -257,6 +257,10 @@ export interface EventSettings {
 
     // Simplified homepage theme settings (new 2-color + mode system)
     homepage_theme_settings?: HomepageThemeSettings;
+
+    // Pre-event reminder settings
+    pre_event_reminder_enabled?: boolean;
+    pre_event_reminder_hours?: number;
 }
 
 export interface VenueAddress {
