@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace HiEvents\Services\Domain\QrCode;
 
 use BaconQrCode\Common\ErrorCorrectionLevel;
-use BaconQrCode\Encoder\Encoder;
 use BaconQrCode\Renderer\GDLibRenderer;
 use BaconQrCode\Renderer\Image\ImagickImageBackEnd;
 use BaconQrCode\Renderer\ImageRenderer;
@@ -28,7 +27,7 @@ class QrCodeService
 
         return $writer->writeString(
             $data,
-            Encoder::DEFAULT_BYTE_MODE_ENCODING,
+            'UTF-8',
             ErrorCorrectionLevel::M(),
         );
     }
