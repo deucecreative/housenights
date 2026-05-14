@@ -256,7 +256,10 @@ class GoogleWalletPassService
             return null;
         }
         try {
-            return Carbon::parse($date, $timezone ?: 'UTC')->toIso8601String();
+            // Convert to UTC and emit with explicit Z suffix — strict ISO 8601
+            // validators (Apple Wallet, some Google clients) accept Z but can
+            // reject the equivalent +00:00 form.
+            return Carbon::parse($date, $timezone ?: 'UTC')->utc()->format('Y-m-d\TH:i:s\Z');
         } catch (Throwable) {
             return null;
         }

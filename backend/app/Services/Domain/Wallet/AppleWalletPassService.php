@@ -104,7 +104,10 @@ class AppleWalletPassService
         if ($startDate) {
             $tz = $event->getTimezone() ?: 'UTC';
             try {
-                $startIso = Carbon::parse($startDate, $tz)->toIso8601String();
+                // Apple's pass validator is strict about ISO 8601: it accepts the
+                // Z suffix for UTC reliably but can reject the equivalent +00:00 form.
+                // Convert to UTC and emit with explicit Z.
+                $startIso = Carbon::parse($startDate, $tz)->utc()->format('Y-m-d\TH:i:s\Z');
             } catch (\Throwable) {
                 $startIso = null;
             }
@@ -337,10 +340,15 @@ class AppleWalletPassService
                 'extract private key from p12'
             );
 
-            // Sign manifest.json — DER-encoded detached PKCS#7
+            // Sign manifest.json — DER-encoded detached CMS SignedData v3.
+            // We use `openssl cms` (not `openssl smime`) because the legacy
+            // smime command produces PKCS#7 SignedData v1, which iOS Wallet
+            // silently rejects on iOS 14+. CMS v3 is the modern format Apple
+            // requires for .pkpass signatures. Explicitly request SHA-256
+            // digest (modern default; SHA-1 is deprecated).
             $this->runOpenSsl(
                 [
-                    'smime',
+                    'cms',
                     '-binary',
                     '-sign',
                     '-certfile', $wwdrPath,
@@ -350,6 +358,7 @@ class AppleWalletPassService
                     '-out', $signaturePath,
                     '-outform', 'DER',
                     '-passin', 'pass:' . $certPassword,
+                    '-md', 'sha256',
                 ],
                 'sign manifest.json'
             );
