@@ -176,7 +176,7 @@ export const AttendeeTicket = ({
 
                         {!isCancelled && !isAwaitingPayment && event?.settings?.wallet_passes_enabled && isIOS() && (
                             <a
-                                href={`${getConfig('VITE_API_URL_CLIENT')}/public/attendee/${event.id}/${attendee.short_id}/apple-pass`}
+                                href={`${getConfig('VITE_API_URL_CLIENT')}/public/attendee/${event.id}/${attendee.short_id}/apple-pass.pkpass`}
                                 style={{
                                     display: 'inline-block',
                                     marginTop: '12px',

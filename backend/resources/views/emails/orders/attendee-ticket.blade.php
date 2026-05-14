@@ -39,7 +39,7 @@
 @if($eventSettings->getWalletPassesEnabled() && (config('wallet.apple.pass_type_id') || !empty($googleWalletUrl)))
 <div style="text-align: center; margin: 1rem 0 1.5rem 0;">
 @if(config('wallet.apple.pass_type_id'))
-<a href="{{ url('/public/attendee/' . $event->getId() . '/' . $attendee->getShortId() . '/apple-pass') }}" style="text-decoration: none; display: inline-block; margin: 0 6px;">
+<a href="{{ url('/public/attendee/' . $event->getId() . '/' . $attendee->getShortId() . '/apple-pass.pkpass') }}" style="text-decoration: none; display: inline-block; margin: 0 6px;">
 <img src="{{ $frontendUrl }}/wallet/add-to-apple-wallet.png" alt="{{ __('Add to Apple Wallet') }}" height="48" style="height: 48px; width: auto; border: 0;">
 </a>
 @endif

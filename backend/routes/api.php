@@ -484,7 +484,12 @@ $router->prefix('/public')->group(
         // Attendees
         $router->get('/events/{event_id}/attendees/{attendee_short_id}', GetAttendeeActionPublic::class);
 
-        // Apple Wallet pass download (public — short_id acts as unguessable token)
+        // Apple Wallet pass download (public — short_id acts as unguessable token).
+        // The .pkpass suffix on the path matters: iOS Safari + some email-app
+        // browsers won't trigger the Wallet handoff if the URL doesn't end in
+        // .pkpass, even when the Content-Type is application/vnd.apple.pkpass.
+        // The shorter /apple-pass alias is kept for any older emails in the wild.
+        $router->get('/attendee/{event_id}/{attendee_short_id}/apple-pass.pkpass', DownloadApplePassAction::class);
         $router->get('/attendee/{event_id}/{attendee_short_id}/apple-pass', DownloadApplePassAction::class);
 
         // Google Wallet "Save to phone" link (public — short_id acts as unguessable token)
