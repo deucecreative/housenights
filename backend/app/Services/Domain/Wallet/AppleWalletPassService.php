@@ -101,6 +101,7 @@ class AppleWalletPassService
 
         $startDate = $event->getStartDate();
         $startIso = null;
+        $expirationIso = null;
         if ($startDate) {
             $tz = $event->getTimezone() ?: 'UTC';
             try {
@@ -108,8 +109,20 @@ class AppleWalletPassService
                 // Z suffix for UTC reliably but can reject the equivalent +00:00 form.
                 // Convert to UTC and emit with explicit Z.
                 $startIso = Carbon::parse($startDate, $tz)->utc()->format('Y-m-d\TH:i:s\Z');
+
+                // Compute expirationDate so iOS auto-moves the pass to the
+                // "Expired" section after the event. Prefer the event's end
+                // date + a generous buffer (events run late); fall back to
+                // start + 12h if no end date is set.
+                $endDate = $event->getEndDate();
+                if ($endDate) {
+                    $expirationIso = Carbon::parse($endDate, $tz)->utc()->addHours(6)->format('Y-m-d\TH:i:s\Z');
+                } else {
+                    $expirationIso = Carbon::parse($startDate, $tz)->utc()->addHours(12)->format('Y-m-d\TH:i:s\Z');
+                }
             } catch (\Throwable) {
                 $startIso = null;
+                $expirationIso = null;
             }
         }
 
@@ -209,6 +222,10 @@ class AppleWalletPassService
 
         if ($startIso) {
             $pass['relevantDate'] = $startIso;
+        }
+
+        if ($expirationIso) {
+            $pass['expirationDate'] = $expirationIso;
         }
 
         // Locations (lock-screen relevance) — optional
