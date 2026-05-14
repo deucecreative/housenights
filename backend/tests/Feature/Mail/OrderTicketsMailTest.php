@@ -75,6 +75,40 @@ class OrderTicketsMailTest extends TestCase
         $this->assertStringNotContainsString('/apple-pass', $rendered);
     }
 
+    /**
+     * Regression for production crash where the queue worker rehydrated the
+     * mailable, called attachments(), and the PDF service blew up because it
+     * tried to read $order->getEvent() on an order whose event relation was
+     * never eager-loaded. Mimics ResendOrderConfirmationAction's call shape:
+     * order has NO event linked, event is passed as a separate constructor arg.
+     */
+    public function test_survives_queue_serialize_unserialize_with_no_event_on_order(): void
+    {
+        [$order, $event, $eventSettings, $organizer] = $this->buildFixtures(includeCancelledAttendee: false);
+        // Production shape: order is loaded without the event relation.
+        $order->setEvent(null);
+
+        $mail = new OrderTicketsMail(
+            order: $order,
+            event: $event,
+            eventSettings: $eventSettings,
+            organizer: $organizer,
+        );
+
+        // Simulate exactly what the queue worker does: serialize the mailable,
+        // then rehydrate it before invoking attachments().
+        /** @var OrderTicketsMail $rehydrated */
+        $rehydrated = unserialize(serialize($mail));
+
+        $attachments = $rehydrated->attachments();
+        $pdfAttachment = $this->findAttachmentByName($attachments, 'tickets.pdf');
+        $this->assertNotNull($pdfAttachment, 'Expected a tickets.pdf attachment');
+
+        $bytes = $this->resolveAttachmentBytes($pdfAttachment);
+        $this->assertNotEmpty($bytes, 'PDF bytes should not be empty after queue rehydrate');
+        $this->assertSame('%PDF-', substr($bytes, 0, 5), 'PDF should start with %PDF- header');
+    }
+
     private function buildMail(
         bool $isReminder = false,
         bool $includeCancelledAttendee = false,
