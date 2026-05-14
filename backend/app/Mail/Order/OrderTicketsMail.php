@@ -116,7 +116,7 @@ class OrderTicketsMail extends BaseMail
     {
         return [
             Attachment::fromData(
-                fn() => app(GenerateOrderTicketsPDFService::class)->generate($this->order),
+                fn() => app(GenerateOrderTicketsPDFService::class)->generate($this->order, $this->event),
                 'tickets.pdf',
             )->withMime('application/pdf'),
         ];

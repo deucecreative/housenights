@@ -6,6 +6,7 @@ namespace HiEvents\Services\Domain\Order;
 
 use Barryvdh\DomPDF\Facade\Pdf;
 use HiEvents\DomainObjects\AttendeeDomainObject;
+use HiEvents\DomainObjects\EventDomainObject;
 use HiEvents\DomainObjects\OrderDomainObject;
 use HiEvents\DomainObjects\Status\AttendeeStatus;
 use HiEvents\Services\Domain\QrCode\QrCodeService;
@@ -25,12 +26,16 @@ class GenerateOrderTicketsPDFService
      *
      * Caller MUST eager-load:
      *   - $order->getAttendees() with each attendee's Product
-     *   - $order->getEvent() with Organizer + EventSettings
+     *   - $event with Organizer + EventSettings
+     *
+     * The event is passed explicitly because callers typically load it
+     * separately from the order (e.g. ResendOrderConfirmationAction does
+     * not nest the event relation under the order).
      *
      * @return string Raw PDF bytes (begins with `%PDF-`).
      * @throws ResourceNotFoundException When the order has no ACTIVE attendees to generate tickets for.
      */
-    public function generate(OrderDomainObject $order): string
+    public function generate(OrderDomainObject $order, EventDomainObject $event): string
     {
         $attendees = $order->getAttendees() ?? new Collection();
 
@@ -49,13 +54,11 @@ class GenerateOrderTicketsPDFService
             );
         }
 
-        $event = $order->getEvent();
-
         return Pdf::loadView('tickets', [
             'attendees' => $activeAttendees,
             'event' => $event,
-            'organizer' => $event?->getOrganizer(),
-            'eventSettings' => $event?->getEventSettings(),
+            'organizer' => $event->getOrganizer(),
+            'eventSettings' => $event->getEventSettings(),
             'qrCodes' => $qrCodes,
         ])->output();
     }

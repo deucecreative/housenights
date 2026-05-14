@@ -34,7 +34,7 @@ class GenerateOrderTicketsPDFServiceTest extends TestCase
             ['Bob', 'Active', AttendeeStatus::ACTIVE->name],
         ]);
 
-        $pdf = $this->service->generate($order);
+        $pdf = $this->service->generate($order, $order->getEvent());
 
         $this->assertSame('%PDF-', substr($pdf, 0, 5));
         $this->assertGreaterThan(5000, strlen($pdf), 'A multi-attendee PDF should have a non-trivial size');
@@ -51,8 +51,8 @@ class GenerateOrderTicketsPDFServiceTest extends TestCase
             ['Carla', 'Cancelled', AttendeeStatus::CANCELLED->name],
         ]);
 
-        $pdfTwoActive = $this->service->generate($orderTwoActive);
-        $pdfOneActive = $this->service->generate($orderOneActive);
+        $pdfTwoActive = $this->service->generate($orderTwoActive, $orderTwoActive->getEvent());
+        $pdfOneActive = $this->service->generate($orderOneActive, $orderOneActive->getEvent());
 
         $this->assertSame('%PDF-', substr($pdfOneActive, 0, 5));
         // The single-active PDF should be meaningfully smaller than the two-active one,
@@ -73,7 +73,24 @@ class GenerateOrderTicketsPDFServiceTest extends TestCase
         $this->expectException(ResourceNotFoundException::class);
         $this->expectExceptionMessage('No active attendees to generate tickets for');
 
-        $this->service->generate($order);
+        $this->service->generate($order, $order->getEvent());
+    }
+
+    public function test_works_when_order_does_not_have_event_relation_loaded(): void
+    {
+        // Regression: production callers (ResendOrderConfirmationAction,
+        // SendOrderDetailsService) load the event separately from the order
+        // and pass it as a parameter. Confirm the service does NOT depend on
+        // $order->getEvent() being populated.
+        $order = $this->buildOrder([
+            ['Alice', 'Active', AttendeeStatus::ACTIVE->name],
+        ]);
+        $event = $order->getEvent();
+        $order->setEvent(null);
+
+        $pdf = $this->service->generate($order, $event);
+
+        $this->assertSame('%PDF-', substr($pdf, 0, 5));
     }
 
     /**
