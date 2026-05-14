@@ -358,11 +358,16 @@ class AppleWalletPassService
             );
 
             // Sign manifest.json — DER-encoded detached CMS SignedData v3.
-            // We use `openssl cms` (not `openssl smime`) because the legacy
-            // smime command produces PKCS#7 SignedData v1, which iOS Wallet
-            // silently rejects on iOS 14+. CMS v3 is the modern format Apple
-            // requires for .pkpass signatures. Explicitly request SHA-256
-            // digest (modern default; SHA-1 is deprecated).
+            // Two flags are critical to produce a signature iOS Wallet accepts:
+            //   - openssl `cms` (not `smime`) — gives us the CMS code path
+            //   - `-keyid` — forces SubjectKeyIdentifier as the SignerIdentifier
+            //     instead of IssuerAndSerialNumber. WITHOUT -keyid, both cms and
+            //     smime produce SignedData v1, which modern iOS Wallet silently
+            //     rejects despite the signature being cryptographically valid.
+            //     WITH -keyid we get SignerInfo v3 → SignedData v3, matching
+            //     what real production passes use (verified by comparing against
+            //     a working EventsAir pass).
+            // SHA-256 digest is modern default; SHA-1 is deprecated.
             $this->runOpenSsl(
                 [
                     'cms',
@@ -376,6 +381,7 @@ class AppleWalletPassService
                     '-outform', 'DER',
                     '-passin', 'pass:' . $certPassword,
                     '-md', 'sha256',
+                    '-keyid',
                 ],
                 'sign manifest.json'
             );
