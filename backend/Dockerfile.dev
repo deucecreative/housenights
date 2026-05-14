@@ -12,7 +12,7 @@ COPY --chown=www-data:www-data . /var/www/html
 
 # Switch to root user to install PHP extensions
 USER root
-RUN install-php-extensions intl imagick
+RUN install-php-extensions intl imagick gd
 USER www-data
 
 RUN chmod -R 755 /var/www/html/storage \
