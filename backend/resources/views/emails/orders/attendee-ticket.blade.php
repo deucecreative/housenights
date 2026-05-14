@@ -35,16 +35,17 @@
 </div>
 @endif
 
+@php $frontendUrl = rtrim(config('app.frontend_url') ?? '', '/'); @endphp
 @if($eventSettings->getWalletPassesEnabled() && (config('wallet.apple.pass_type_id') || !empty($googleWalletUrl)))
 <div style="text-align: center; margin: 1rem 0 1.5rem 0;">
 @if(config('wallet.apple.pass_type_id'))
 <a href="{{ url('/public/attendee/' . $event->getId() . '/' . $attendee->getShortId() . '/apple-pass') }}" style="text-decoration: none; display: inline-block; margin: 0 6px;">
-<img src="https://developer.apple.com/wallet/add-to-apple-wallet-guidelines/images/add-to-apple-wallet/Add_to_Apple_Wallet_rgb_US-UK.png" alt="{{ __('Add to Apple Wallet') }}" height="48" style="height: 48px; width: auto; border: 0;">
+<img src="{{ $frontendUrl }}/wallet/add-to-apple-wallet.png" alt="{{ __('Add to Apple Wallet') }}" height="48" style="height: 48px; width: auto; border: 0;">
 </a>
 @endif
 @if(!empty($googleWalletUrl))
 <a href="{{ $googleWalletUrl }}" style="text-decoration: none; display: inline-block; margin: 0 6px;">
-<img src="https://developers.google.com/wallet/static/images/branding/Add-to-Google-Wallet-button.png" alt="{{ __('Add to Google Wallet') }}" height="48" style="height: 48px; width: auto; border: 0;">
+<img src="{{ $frontendUrl }}/wallet/save-to-google-wallet.png" alt="{{ __('Save to Google Wallet') }}" height="48" style="height: 48px; width: auto; border: 0;">
 </a>
 @endif
 </div>
