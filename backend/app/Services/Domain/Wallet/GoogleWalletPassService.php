@@ -5,33 +5,25 @@ declare(strict_types=1);
 namespace HiEvents\Services\Domain\Wallet;
 
 use Carbon\Carbon;
-use Firebase\JWT\JWT;
 use HiEvents\DomainObjects\AttendeeDomainObject;
 use HiEvents\DomainObjects\EventDomainObject;
 use HiEvents\DomainObjects\EventSettingDomainObject;
 use HiEvents\DomainObjects\OrganizerDomainObject;
 use Illuminate\Contracts\Config\Repository as ConfigRepository;
 use RuntimeException;
+use Spatie\LaravelMobilePass\Support\Google\GoogleJwtSigner;
 use Throwable;
 
 /**
  * Generates "Save to Google Wallet" links for attendee tickets.
  *
- * Unlike Apple Wallet (downloadable .pkpass file), Google Wallet uses a
- * signed JWT redirect flow: we build an EventTicketClass + EventTicketObject,
- * embed both inline in a JWT, RS256-sign with the service account's private
- * key, and hand back a URL like
- *   https://pay.google.com/gp/v/save/{jwt}
+ * We build an EventTicketClass + EventTicketObject inline (no pre-created
+ * classes via the Wallet API needed), then hand the payload to
+ * spatie/laravel-mobile-pass's GoogleJwtSigner which signs RS256 using
+ * the service account credentials loaded from config/mobile-pass.php.
  *
- * The "inline class" approach means we never have to call the Wallet API
- * to pre-create classes — Google dedupes by class ID on the fly. That
- * lets us skip `google/apiclient` and ship a much smaller dependency
- * footprint (just `firebase/php-jwt`).
- *
- * Service account JSON may be supplied either as a filesystem path
- * (`GOOGLE_WALLET_SERVICE_ACCOUNT_PATH`) for local dev, or as a base64
- * env var (`GOOGLE_WALLET_SERVICE_ACCOUNT_B64`) for Railway / serverless
- * deploys. Base64 wins when both are set.
+ * Credentials are bridged to the library via config/mobile-pass.php from
+ * our standard GOOGLE_WALLET_* env vars.
  */
 class GoogleWalletPassService
 {
@@ -39,6 +31,7 @@ class GoogleWalletPassService
 
     public function __construct(
         private readonly ConfigRepository $config,
+        private readonly GoogleJwtSigner $jwtSigner,
     ) {
     }
 
@@ -51,44 +44,31 @@ class GoogleWalletPassService
         OrganizerDomainObject $organizer,
         EventSettingDomainObject $eventSettings,
     ): string {
-        $issuerId = (string)$this->config->get('wallet.google.issuer_id');
+        $issuerId = (string)$this->config->get('mobile-pass.google.issuer_id');
         if ($issuerId === '') {
             throw new RuntimeException('Google Wallet issuer ID is not configured');
-        }
-
-        $serviceAccount = $this->loadServiceAccount();
-        $privateKey = $serviceAccount['private_key'] ?? null;
-        $clientEmail = $serviceAccount['client_email'] ?? null;
-
-        if (!is_string($privateKey) || $privateKey === '') {
-            throw new RuntimeException('Google service account JSON is missing "private_key"');
-        }
-        if (!is_string($clientEmail) || $clientEmail === '') {
-            throw new RuntimeException('Google service account JSON is missing "client_email"');
         }
 
         $classId = $this->buildClassId($issuerId, $event);
         $objectId = $this->buildObjectId($issuerId, $attendee, $event);
 
-        $class = $this->buildEventTicketClass($classId, $event, $organizer, $eventSettings);
-        $object = $this->buildEventTicketObject($objectId, $classId, $attendee);
-
-        $origin = (string)$this->config->get('wallet.google.origin');
-        $origins = $origin !== '' ? [$origin] : [];
-
         $payload = [
-            'iss' => $clientEmail,
-            'aud' => 'google',
-            'typ' => 'savetowallet',
-            'iat' => time(),
-            'origins' => $origins,
-            'payload' => [
-                'eventTicketClasses' => [$class],
-                'eventTicketObjects' => [$object],
+            'eventTicketClasses' => [
+                $this->buildEventTicketClass($classId, $event, $organizer, $eventSettings),
+            ],
+            'eventTicketObjects' => [
+                $this->buildEventTicketObject($objectId, $classId, $attendee),
             ],
         ];
 
-        $jwt = JWT::encode($payload, $privateKey, 'RS256');
+        try {
+            $jwt = $this->jwtSigner->signSaveUrlJwt($payload);
+        } catch (Throwable $exception) {
+            throw new RuntimeException(
+                'Failed to sign Google Wallet save URL: ' . $exception->getMessage(),
+                previous: $exception,
+            );
+        }
 
         return self::SAVE_URL_PREFIX . $jwt;
     }
@@ -131,8 +111,6 @@ class GoogleWalletPassService
                 ],
             ],
             'eventId' => 'evt-' . $event->getId(),
-            // UNDER_REVIEW lets the JWT sign + UI load even before the
-            // class has been promoted to APPROVED via the business console.
             'reviewStatus' => 'UNDER_REVIEW',
             'hexBackgroundColor' => $this->deriveHexBackgroundColor($eventSettings),
         ];
@@ -208,8 +186,7 @@ class GoogleWalletPassService
     }
 
     /**
-     * Google expects a `#RRGGBB` hex string (no `rgb()` form). Mirrors the
-     * Apple service's accent-color derivation but in hex.
+     * Google expects a `#RRGGBB` hex string (no `rgb()` form).
      */
     private function deriveHexBackgroundColor(EventSettingDomainObject $eventSettings): string
     {
@@ -219,21 +196,18 @@ class GoogleWalletPassService
 
         if (is_array($design)) {
             $accent = $design['accent_color'] ?? null;
-            if (is_string($accent) && preg_match('/^#?([0-9a-fA-F]{6})$/', $accent, $m)) {
-                return '#' . strtolower($m[1]);
+            if (is_string($accent) && preg_match('/^#?([0-9a-fA-F]{6})$/', $accent, $matches)) {
+                return '#' . strtolower($matches[1]);
             }
         }
 
-        // House Nights brand purple — used when the event hasn't set a ticket
-        // design accent color.
+        // House Nights brand purple
         return '#57398e';
     }
 
     /**
      * Resolve the logo URL Google should fetch when rendering the pass.
-     * Falls back to a known asset under APP_FRONTEND_URL (where public
-     * static assets are served from `frontend/public/`) unless an explicit
-     * GOOGLE_WALLET_LOGO_URI override is configured.
+     * Falls back to a known asset under APP_FRONTEND_URL.
      */
     private function resolveLogoUri(): ?string
     {
@@ -256,69 +230,9 @@ class GoogleWalletPassService
             return null;
         }
         try {
-            // Convert to UTC and emit with explicit Z suffix — strict ISO 8601
-            // validators (Apple Wallet, some Google clients) accept Z but can
-            // reject the equivalent +00:00 form.
             return Carbon::parse($date, $timezone ?: 'UTC')->utc()->format('Y-m-d\TH:i:s\Z');
         } catch (Throwable) {
             return null;
         }
-    }
-
-    /**
-     * @return array<string,mixed>
-     */
-    private function loadServiceAccount(): array
-    {
-        $b64 = (string)$this->config->get('wallet.google.service_account_b64');
-        $path = (string)$this->config->get('wallet.google.service_account_path');
-
-        $json = $this->materializeSecret(
-            b64Value: $b64,
-            filePath: $path,
-            friendlyName: 'Google Wallet service account JSON',
-        );
-
-        $decoded = json_decode($json, true);
-        if (!is_array($decoded)) {
-            throw new RuntimeException('Google service account JSON could not be decoded');
-        }
-
-        return $decoded;
-    }
-
-    /**
-     * Resolve service-account JSON contents from either a base64 env var
-     * (preferred for serverless) or a filesystem path (local dev).
-     */
-    private function materializeSecret(
-        string $b64Value,
-        string $filePath,
-        string $friendlyName,
-    ): string {
-        if ($b64Value !== '') {
-            $bytes = base64_decode($b64Value, true);
-            if ($bytes === false || $bytes === '') {
-                throw new RuntimeException($friendlyName . ' base64 env var is invalid');
-            }
-            return $bytes;
-        }
-
-        if ($filePath === '') {
-            throw new RuntimeException(
-                $friendlyName . ' is not configured (set GOOGLE_WALLET_SERVICE_ACCOUNT_B64 or GOOGLE_WALLET_SERVICE_ACCOUNT_PATH)'
-            );
-        }
-
-        $resolved = str_starts_with($filePath, '/') ? $filePath : base_path($filePath);
-        if (!is_file($resolved)) {
-            throw new RuntimeException($friendlyName . ' not found at ' . $resolved);
-        }
-
-        $contents = file_get_contents($resolved);
-        if ($contents === false || $contents === '') {
-            throw new RuntimeException('Failed to read ' . $friendlyName . ' from ' . $resolved);
-        }
-        return $contents;
     }
 }

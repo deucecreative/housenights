@@ -169,17 +169,30 @@ class DownloadApplePassActionTest extends TestCase
 
     private function walletConfigured(): bool
     {
-        $certPath = (string)config('wallet.apple.cert_path');
-        $wwdrPath = (string)config('wallet.apple.wwdr_path');
-        $passType = (string)config('wallet.apple.pass_type_id');
-
-        if ($certPath === '' || $wwdrPath === '' || $passType === '') {
+        $passType = (string)config('mobile-pass.apple.type_identifier');
+        if ($passType === '') {
             return false;
         }
 
-        $certResolved = str_starts_with($certPath, '/') ? $certPath : base_path($certPath);
-        $wwdrResolved = str_starts_with($wwdrPath, '/') ? $wwdrPath : base_path($wwdrPath);
+        $b64 = (string)config('mobile-pass.apple.certificate');
+        $certPath = (string)config('mobile-pass.apple.certificate_path');
+        $password = (string)config('mobile-pass.apple.certificate_password');
 
-        return is_file($certResolved) && is_file($wwdrResolved);
+        if ($b64 !== '') {
+            $certBytes = base64_decode($b64, true);
+        } elseif ($certPath !== '') {
+            $resolved = str_starts_with($certPath, '/') ? $certPath : base_path($certPath);
+            $certBytes = is_file($resolved) ? file_get_contents($resolved) : false;
+        } else {
+            return false;
+        }
+
+        if ($certBytes === false) {
+            return false;
+        }
+
+        // Verify the password actually matches the .p12 (skip rather than fail
+        // when local .env has a rotated password mismatch).
+        return (bool)@openssl_pkcs12_read($certBytes, $unused, $password);
     }
 }
