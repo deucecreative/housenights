@@ -196,6 +196,21 @@ class AppleWalletPassService
                 is_file($logo3x) ? $logo3x : null,
             );
         }
+
+        // Strip image: wide banner across the top of the pass face. Replaces
+        // background+thumbnail visual area on eventTicket (we don't set those).
+        // Logo still renders top-left alongside the strip.
+        $stripBase = $imagesDir . '/strip.png';
+        $strip2x = $imagesDir . '/strip@2x.png';
+        $strip3x = $imagesDir . '/strip@3x.png';
+
+        if (is_file($stripBase)) {
+            $builder->setStripImage(
+                $stripBase,
+                is_file($strip2x) ? $strip2x : null,
+                is_file($strip3x) ? $strip3x : null,
+            );
+        }
     }
 
     private function attachLocation(EventTicketPassBuilder $builder, EventSettingDomainObject $eventSettings): void
