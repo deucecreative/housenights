@@ -80,38 +80,51 @@ class AppleWalletPassService
             ->setBackgroundColor($this->deriveBackgroundColor($eventSettings))
             ->setForegroundColor('#ffffff')
             ->setLabelColor('#ffffff')
-            ->setBarcode(BarcodeType::Qr, $publicId, $publicId)
+            ->setBarcode(BarcodeType::Qr, $publicId, $publicId);
+
+        // Header fields (top-right of pass): time + date, matching the
+        // compact two-line layout used by Skiddle/Eventbrite-style passes.
+        // Pre-formatted plain strings (no dateStyle/timeStyle) so we get
+        // exactly the "2:00pm" / "9th Nov 2024" form we want; Apple's
+        // built-in date formatting can't produce ordinal day suffixes.
+        $startLocal = $this->localStart($event->getStartDate(), $event->getTimezone());
+        if ($startLocal !== null) {
+            $builder
+                ->addHeaderField(
+                    key: 'time',
+                    value: $startLocal->format('g:ia'),
+                    label: '',
+                )
+                ->addHeaderField(
+                    key: 'date',
+                    value: $startLocal->format('jS M Y'),
+                    label: '',
+                );
+            $builder->setRelevantDate($startLocal->copy()->utc());
+        }
+
+        $builder
             ->addField(
                 key: 'event',
                 value: $event->getTitle(),
                 type: FieldType::Primary,
                 label: (string)__('Event'),
             )
-            ->addSecondaryField(
-                key: 'name',
-                value: $fullName ?: ($attendee->getEmail() ?: 'Attendee'),
-                label: (string)__('Name'),
-            )
             ->addAuxiliaryField(
                 key: 'ticket',
                 value: $productTitle,
-                label: (string)__('Ticket'),
+                label: (string)__('Ticket type'),
             )
             ->addAuxiliaryField(
                 key: 'venue',
                 value: $venue,
                 label: (string)__('Venue'),
+            )
+            ->addBackField(
+                key: 'attendee_name',
+                value: $fullName ?: ($attendee->getEmail() ?: 'Attendee'),
+                label: (string)__('Name'),
             );
-
-        $startIso = $this->convertEventDate($event->getStartDate(), $event->getTimezone());
-        if ($startIso !== null) {
-            $builder->addSecondaryField(
-                key: 'date',
-                value: $startIso,
-                label: (string)__('Date'),
-            );
-            $builder->setRelevantDate(Carbon::parse($startIso));
-        }
 
         // Back of pass: order number, attendee email, support email.
         $orderPublicId = $attendee->getOrder()?->getPublicId();
@@ -231,17 +244,18 @@ class AppleWalletPassService
         }
     }
 
-    private function convertEventDate(?string $date, ?string $timezone): ?string
+    /**
+     * Return a Carbon instance representing the event's start time in the
+     * event's local timezone (so format() output reads naturally for the
+     * audience). Falls back to UTC if the timezone is missing/invalid.
+     */
+    private function localStart(?string $date, ?string $timezone): ?Carbon
     {
         if (!$date) {
             return null;
         }
         try {
-            // Convert from UTC storage to event-local tz, emit ISO 8601 with Z
-            // for UTC strictness.
-            return Carbon::parse(DateHelper::convertFromUTC($date, $timezone ?: 'UTC'))
-                ->utc()
-                ->format('Y-m-d\TH:i:s\Z');
+            return Carbon::parse(DateHelper::convertFromUTC($date, $timezone ?: 'UTC'));
         } catch (Throwable) {
             return null;
         }
