@@ -82,24 +82,17 @@ class AppleWalletPassService
             ->setLabelColor('#ffffff')
             ->setBarcode(BarcodeType::Qr, $publicId, $publicId);
 
-        // Header fields (top-right of pass): time + date, matching the
-        // compact two-line layout used by Skiddle/Eventbrite-style passes.
-        // Pre-formatted plain strings (no dateStyle/timeStyle) so we get
-        // exactly the "2:00pm" / "9th Nov 2024" form we want; Apple's
-        // built-in date formatting can't produce ordinal day suffixes.
+        // Header field (top-right of pass): single field with label-on-top,
+        // value-below to give us two stacked lines (Skiddle-style). Apple
+        // renders the label smaller above the value, so date (label) sits
+        // above time (value).
         $startLocal = $this->localStart($event->getStartDate(), $event->getTimezone());
         if ($startLocal !== null) {
-            $builder
-                ->addHeaderField(
-                    key: 'time',
-                    value: $startLocal->format('g:ia'),
-                    label: '',
-                )
-                ->addHeaderField(
-                    key: 'date',
-                    value: $startLocal->format('jS M Y'),
-                    label: '',
-                );
+            $builder->addHeaderField(
+                key: 'when',
+                value: $startLocal->format('jS M Y'),
+                label: $startLocal->format('g:ia'),
+            );
             $builder->setRelevantDate($startLocal->copy()->utc());
         }
 
@@ -110,9 +103,10 @@ class AppleWalletPassService
                 type: FieldType::Primary,
                 label: (string)__('Event'),
             )
-            ->addAuxiliaryField(
+            ->addField(
                 key: 'ticket',
                 value: $productTitle,
+                type: FieldType::Secondary,
                 label: (string)__('Ticket type'),
             )
             ->addAuxiliaryField(
