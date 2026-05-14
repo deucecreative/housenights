@@ -73,6 +73,44 @@ class GoogleWalletPassServiceTest extends TestCase
         $this->assertStringContainsString('event-7', $object['classId']);
     }
 
+    public function test_class_logo_uri_uses_frontend_url(): void
+    {
+        // Regression: the logo URI must point to the frontend (where the asset
+        // is actually served from), not the backend.
+        config()->set('app.frontend_url', 'https://frontend.example.test');
+        config()->set('wallet.google.logo_uri', null);
+
+        $url = $this->generate();
+        $jwt = substr($url, strlen('https://pay.google.com/gp/v/save/'));
+        $segments = explode('.', $jwt);
+        $payload = json_decode($this->b64UrlDecode($segments[1]), true);
+
+        $class = $payload['payload']['eventTicketClasses'][0] ?? null;
+        $this->assertIsArray($class);
+        $this->assertArrayHasKey('logo', $class, 'Class should include a logo');
+        $this->assertSame(
+            'https://frontend.example.test/wallet/google-wallet-logo.png',
+            $class['logo']['sourceUri']['uri'] ?? null,
+        );
+    }
+
+    public function test_explicit_logo_uri_override_wins(): void
+    {
+        // When GOOGLE_WALLET_LOGO_URI is configured, it should override the
+        // frontend-derived default.
+        config()->set('wallet.google.logo_uri', 'https://cdn.example.test/custom-logo.png');
+
+        $url = $this->generate();
+        $jwt = substr($url, strlen('https://pay.google.com/gp/v/save/'));
+        $segments = explode('.', $jwt);
+        $payload = json_decode($this->b64UrlDecode($segments[1]), true);
+
+        $this->assertSame(
+            'https://cdn.example.test/custom-logo.png',
+            $payload['payload']['eventTicketClasses'][0]['logo']['sourceUri']['uri'] ?? null,
+        );
+    }
+
     public function test_jwt_is_rs256_signed(): void
     {
         $url = $this->generate();

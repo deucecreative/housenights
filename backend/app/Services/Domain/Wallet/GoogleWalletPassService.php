@@ -231,7 +231,9 @@ class GoogleWalletPassService
 
     /**
      * Resolve the logo URL Google should fetch when rendering the pass.
-     * Falls back to a known asset under APP_URL when no explicit URL is set.
+     * Falls back to a known asset under APP_FRONTEND_URL (where public
+     * static assets are served from `frontend/public/`) unless an explicit
+     * GOOGLE_WALLET_LOGO_URI override is configured.
      */
     private function resolveLogoUri(): ?string
     {
@@ -240,12 +242,12 @@ class GoogleWalletPassService
             return $configured;
         }
 
-        $appUrl = rtrim((string)$this->config->get('app.url'), '/');
-        if ($appUrl === '') {
+        $frontendUrl = rtrim((string)$this->config->get('app.frontend_url'), '/');
+        if ($frontendUrl === '') {
             return null;
         }
 
-        return $appUrl . '/wallet/google-wallet-logo.png';
+        return $frontendUrl . '/wallet/google-wallet-logo.png';
     }
 
     private function safeIso(?string $date, ?string $timezone): ?string
