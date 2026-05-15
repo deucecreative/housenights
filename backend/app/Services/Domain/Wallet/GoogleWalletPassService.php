@@ -230,7 +230,7 @@ class GoogleWalletPassService
             return null;
         }
         try {
-            return Carbon::parse($date, $timezone ?: 'UTC')->utc()->format('Y-m-d\TH:i:s\Z');
+            return Carbon::parse($date, $timezone ?: 'UTC')->format('Y-m-d\TH:i:sP');
         } catch (Throwable) {
             return null;
         }
