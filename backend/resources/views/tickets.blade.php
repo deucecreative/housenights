@@ -84,6 +84,13 @@
             line-height: 1.5;
             color: #1a1a1a;
             padding: 30px 35px;
+            /*
+              DOMPDF can pick up surprising letter-spacing from font metrics
+              if it isn't explicitly reset, which has clipped the order ref
+              and footer text mid-word in the past. Pin spacing to normal.
+            */
+            letter-spacing: normal;
+            word-wrap: break-word;
         }
 
         .ticket-page {
@@ -185,6 +192,13 @@
             font-size: 11px;
             color: #888;
             margin-top: 4px;
+            white-space: nowrap;
+        }
+
+        .ticket-footer-text {
+            display: block;
+            max-width: 480px;
+            margin: 0 auto;
         }
 
         .qr-section {
@@ -231,7 +245,7 @@
     <div class="ticket-page {{ $isLast ? '' : 'has-break' }}">
         <table class="header-table">
             <tr>
-                <td style="width: 60%;">
+                <td style="width: 55%;">
                     <h1 class="event-title">{{ $event->getTitle() }}</h1>
                     <div class="event-meta">
                         @if($startDateText)
@@ -245,7 +259,7 @@
                         @endforeach
                     </div>
                 </td>
-                <td class="organizer-block">
+                <td class="organizer-block" style="width: 45%;">
                     @if($organizerLogo)
                         <div><img class="organizer-logo" src="{{ $organizerLogo }}" alt=""></div>
                     @endif
@@ -253,7 +267,7 @@
                         <div class="organizer-name">{{ $organizer->getName() }}</div>
                     @endif
                     @if($order)
-                        <div class="order-ref">{{ __('Order') }} #{{ $order->getPublicId() }}</div>
+                        <div class="order-ref">#{{ $order->getPublicId() }}</div>
                     @endif
                 </td>
             </tr>
@@ -286,7 +300,7 @@
         </div>
 
         <div class="ticket-footer">
-            {{ __('Please present this ticket at the door. Each QR code is unique to one attendee.') }}
+            <span class="ticket-footer-text">{{ __('Please present this ticket at the door. Each QR code is unique to one attendee.') }}</span>
         </div>
     </div>
 @endforeach
