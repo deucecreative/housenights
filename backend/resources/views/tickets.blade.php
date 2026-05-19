@@ -50,7 +50,7 @@
         }
 
         body {
-            font-family: 'DejaVu Sans', Arial, sans-serif;
+            font-family: 'outfit', Arial, sans-serif;
             font-size: 12px;
             line-height: 1.5;
             color: #1a1a1a;
@@ -76,7 +76,7 @@
         }
 
         .event-title {
-            font-family: 'DejaVu Sans', Arial, sans-serif;
+            font-family: 'outfit', Arial, sans-serif;
             font-size: 26px;
             font-weight: 700;
             color: #1a1a1a;
@@ -85,7 +85,7 @@
         }
 
         .event-meta {
-            font-family: 'DejaVu Sans', Arial, sans-serif;
+            font-family: 'outfit', Arial, sans-serif;
             font-size: 12px;
             color: #555;
             line-height: 1.6;
@@ -137,6 +137,7 @@
         }
 
         .info-value {
+            font-family: 'outfit', Arial, sans-serif;
             font-size: 14px;
             font-weight: 500;
             color: #1a1a1a;
@@ -154,7 +155,7 @@
 
         .short-id {
             margin-top: 12px;
-            font-family: 'DejaVu Sans', Arial, sans-serif;
+            font-family: 'outfit', Arial, sans-serif;
             font-size: 13px;
             letter-spacing: 1.5px;
             color: #555;
