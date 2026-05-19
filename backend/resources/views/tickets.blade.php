@@ -3,58 +3,29 @@
 @php /** @var \HiEvents\DomainObjects\EventDomainObject $event */ @endphp
 @php /** @var \HiEvents\DomainObjects\OrganizerDomainObject|null $organizer */ @endphp
 @php /** @var \HiEvents\DomainObjects\EventSettingDomainObject|null $eventSettings */ @endphp
-@php /** @var \HiEvents\DomainObjects\OrderDomainObject|null $order */ @endphp
 @php /** @var array<int, string> $qrCodes */ @endphp
 
 @php
-    $order = $order ?? null;
     $attendeeList = is_array($attendees) ? $attendees : $attendees->all();
     $attendeeCount = count($attendeeList);
-
-    $venueLines = [];
+    $venueText = '';
     if ($eventSettings) {
         if ($eventSettings->getIsOnlineEvent()) {
-            $venueLines = [__('Online Event')];
+            $venueText = __('Online Event');
         } else {
-            $location = $eventSettings->getLocationDetails() ?? [];
-            if (!empty($location['venue_name'])) {
-                $venueLines[] = $location['venue_name'];
-            }
-            $street = trim(($location['address_line_1'] ?? '') . ' ' . ($location['address_line_2'] ?? ''));
-            if ($street !== '') {
-                $venueLines[] = $street;
-            }
-            $cityPostcode = trim(($location['city'] ?? '') . ' ' . ($location['zip_or_postal_code'] ?? ''));
-            if ($cityPostcode !== '') {
-                $venueLines[] = $cityPostcode;
-            }
-            if (!empty($location['country'])) {
-                $venueLines[] = $location['country'];
-            }
-            // Fallback to single-line address if nothing matched.
-            if (empty($venueLines)) {
-                $single = $eventSettings->getAddressString();
-                if ($single !== '') {
-                    $venueLines[] = $single;
-                }
-            }
+            $venueText = $eventSettings->getAddressString();
         }
     }
-
-    $formatEventDate = static function (?string $utc, ?string $timezone): ?string {
-        if (!$utc) {
-            return null;
-        }
+    $startDateText = null;
+    if ($event->getStartDate()) {
         try {
-            return Carbon::parse(DateHelper::convertFromUTC($utc, $timezone ?? 'UTC'))
-                ->format('l, jS F Y · g:i A');
-        } catch (\Throwable) {
-            return null;
+            $startDateText = Carbon::parse(
+                DateHelper::convertFromUTC($event->getStartDate(), $event->getTimezone())
+            )->format('l, jS F Y · g:i A');
+        } catch (\Throwable $e) {
+            $startDateText = null;
         }
-    };
-    $startDateText = $formatEventDate($event->getStartDate(), $event->getTimezone());
-    $endDateText = $formatEventDate($event->getEndDate(), $event->getTimezone());
-
+    }
     $organizerLogo = null;
     if ($organizer && method_exists($organizer, 'getImages') && $organizer->getImages()) {
         $logo = $organizer->getImages()->first(
@@ -172,28 +143,6 @@
             color: #1a1a1a;
         }
 
-        .info-sub {
-            font-family: 'outfit', Arial, sans-serif;
-            font-size: 11px;
-            color: #888;
-            display: block;
-            margin-top: 2px;
-        }
-
-        .order-ref {
-            font-family: 'outfit', Arial, sans-serif;
-            font-size: 11px;
-            color: #888;
-            margin-top: 4px;
-            white-space: nowrap;
-        }
-
-        .ticket-footer-text {
-            display: block;
-            max-width: 480px;
-            margin: 0 auto;
-        }
-
         .qr-section {
             margin-top: 24px;
             text-align: center;
@@ -230,37 +179,29 @@
         $isLast = $index === $attendeeCount - 1;
         $product = $attendee->getProduct();
         $productTitle = $product ? $product->getTitle() : '';
-        $attendeeName = trim($attendee->getFirstName() . ' ' . $attendee->getLastName());
-        $attendeeEmail = method_exists($attendee, 'getEmail') ? $attendee->getEmail() : null;
         $attendeeId = $attendee->getId();
         $qr = $qrCodes[$attendeeId] ?? null;
     @endphp
     <div class="ticket-page {{ $isLast ? '' : 'has-break' }}">
         <table class="header-table">
             <tr>
-                <td style="width: 55%;">
+                <td style="width: 60%;">
                     <h1 class="event-title">{{ $event->getTitle() }}</h1>
                     <div class="event-meta">
                         @if($startDateText)
                             <div>{{ $startDateText }}</div>
                         @endif
-                        @if($endDateText && $endDateText !== $startDateText)
-                            <div>{{ __('Ends') }} {{ $endDateText }}</div>
+                        @if($venueText)
+                            <div>{{ $venueText }}</div>
                         @endif
-                        @foreach($venueLines as $line)
-                            <div>{{ $line }}</div>
-                        @endforeach
                     </div>
                 </td>
-                <td class="organizer-block" style="width: 45%;">
+                <td class="organizer-block">
                     @if($organizerLogo)
                         <div><img class="organizer-logo" src="{{ $organizerLogo }}" alt=""></div>
                     @endif
                     @if($organizer)
                         <div class="organizer-name">{{ $organizer->getName() }}</div>
-                    @endif
-                    @if($order)
-                        <div class="order-ref">#{{ $order->getPublicId() }}</div>
                     @endif
                 </td>
             </tr>
@@ -272,15 +213,11 @@
             <tr>
                 <td style="width: 50%;">
                     <span class="info-label">{{ __('Attendee') }}</span>
-                    <span class="info-value">{{ $attendeeName !== '' ? $attendeeName : '—' }}</span>
-                    @if($attendeeEmail)
-                        <span class="info-sub">{{ $attendeeEmail }}</span>
-                    @endif
+                    <span class="info-value">{{ trim($attendee->getFirstName() . ' ' . $attendee->getLastName()) }}</span>
                 </td>
                 <td style="width: 50%;">
                     <span class="info-label">{{ __('Ticket') }}</span>
-                    <span class="info-value">{{ $productTitle !== '' ? $productTitle : '—' }}</span>
-                    <span class="info-sub">{{ __('Ticket ID') }} {{ $attendee->getPublicId() }}</span>
+                    <span class="info-value">{{ $productTitle }}</span>
                 </td>
             </tr>
         </table>
@@ -293,7 +230,7 @@
         </div>
 
         <div class="ticket-footer">
-            <span class="ticket-footer-text">{{ __('Please present this ticket at the door. Each QR code is unique to one attendee.') }}</span>
+            {{ __('Please present this ticket at the door. Each QR code is unique to one attendee.') }}
         </div>
     </div>
 @endforeach
