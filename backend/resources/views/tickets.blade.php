@@ -84,13 +84,6 @@
             line-height: 1.5;
             color: #1a1a1a;
             padding: 30px 35px;
-            /*
-              DOMPDF can pick up surprising letter-spacing from font metrics
-              if it isn't explicitly reset, which has clipped the order ref
-              and footer text mid-word in the past. Pin spacing to normal.
-            */
-            letter-spacing: normal;
-            word-wrap: break-word;
         }
 
         .ticket-page {
