@@ -6,6 +6,8 @@ interface EventDateRangeProps {
 }
 
 export const EventDateRange = ({ event }: EventDateRangeProps) => {
+    if (!event?.start_date) return null;
+
     const isSameDay = event.end_date && event.start_date.substring(0, 10) === event.end_date.substring(0, 10);
     const timezone = formatDateWithLocale(event.start_date, "timezone", event.timezone);
 

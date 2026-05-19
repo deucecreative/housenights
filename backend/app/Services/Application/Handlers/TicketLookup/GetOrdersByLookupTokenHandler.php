@@ -75,16 +75,39 @@ class GetOrdersByLookupTokenHandler
      */
     private function getOrdersForEmail(string $email): Collection
     {
+        // Union the two ID sets up front so a single hydrated query can fetch
+        // them all — running two findWhere calls against the shared repository
+        // loses eager loads on the second call (BaseRepository::findWhere calls
+        // resetModel() but does not re-apply $this->eagerLoads to the new
+        // query), which previously stripped event/attendees/order_items from
+        // orders matched via the attendee path.
+        $purchaserMatchedOrderIds = $this->databaseManager
+            ->table('orders')
+            ->where('email', $email)
+            ->where('status', OrderStatus::COMPLETED->name)
+            ->whereNull('deleted_at')
+            ->pluck('id')
+            ->all();
+
         $attendeeMatchedOrderIds = $this->databaseManager
             ->table('attendees')
             ->where('email', $email)
             ->where('status', AttendeeStatus::ACTIVE->name)
             ->whereNull('deleted_at')
             ->pluck('order_id')
-            ->unique()
             ->all();
 
-        $repository = $this->orderRepository
+        $allOrderIds = collect($purchaserMatchedOrderIds)
+            ->merge($attendeeMatchedOrderIds)
+            ->unique()
+            ->values()
+            ->all();
+
+        if (empty($allOrderIds)) {
+            return new Collection();
+        }
+
+        $orders = $this->orderRepository
             ->loadRelation(new Relationship(
                 domainObject: AttendeeDomainObject::class,
                 nested: [
@@ -114,23 +137,10 @@ class GetOrdersByLookupTokenHandler
                     )
                 ],
                 name: EventDomainObjectAbstract::SINGULAR_NAME
-            ));
-
-        $purchaserMatches = $repository->findWhere(
-            [
-                [OrderDomainObjectAbstract::EMAIL, '=', $email],
-                [OrderDomainObjectAbstract::STATUS, '=', OrderStatus::COMPLETED->name],
-            ],
-            orderAndDirections: [
-                new OrderAndDirection(OrderDomainObjectAbstract::CREATED_AT, 'desc'),
-            ],
-        );
-
-        $attendeeMatches = empty($attendeeMatchedOrderIds)
-            ? new Collection()
-            : $repository->findWhere(
+            ))
+            ->findWhere(
                 [
-                    [OrderDomainObjectAbstract::ID, 'in', $attendeeMatchedOrderIds],
+                    [OrderDomainObjectAbstract::ID, 'in', $allOrderIds],
                     [OrderDomainObjectAbstract::STATUS, '=', OrderStatus::COMPLETED->name],
                 ],
                 orderAndDirections: [
@@ -138,13 +148,8 @@ class GetOrdersByLookupTokenHandler
                 ],
             );
 
-        $merged = $purchaserMatches
-            ->merge($attendeeMatches)
-            ->keyBy(fn (OrderDomainObject $o) => $o->getId())
-            ->values();
-
         // Apply attendee-scoped privacy masking per order:
-        return $merged->map(function (OrderDomainObject $order) use ($email) {
+        return $orders->map(function (OrderDomainObject $order) use ($email) {
             return $this->applyPrivacyScope($order, $email);
         });
     }

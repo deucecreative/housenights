@@ -27,7 +27,7 @@ import {PoweredByFooter} from "../../common/PoweredByFooter";
 import {EventDateRange} from "../../common/EventDateRange";
 import {CheckoutContent} from "../../layouts/Checkout/CheckoutContent";
 
-import {Event, Order} from "../../../types.ts";
+import {Order} from "../../../types.ts";
 import classes from './MyTickets.module.scss';
 
 const OrderStatusBadge = () => (
@@ -37,18 +37,20 @@ const OrderStatusBadge = () => (
 );
 
 const OrderCard = ({order}: { order: Order }) => {
-    const event = order.event as Event;
-    const location = event?.settings?.location_details ? formatAddress(event.settings.location_details) : null;
+    const event = order.event;
+    if (!event) return null;
+
+    const location = event.settings?.location_details ? formatAddress(event.settings.location_details) : null;
     const ticketCount = order.attendees?.length || 0;
-    const orderUrl = `/checkout/${event?.id}/${order.short_id}/summary`;
-    const printUrl = `/order/${event?.id}/${order.short_id}/print`;
+    const orderUrl = `/checkout/${event.id}/${order.short_id}/summary`;
+    const printUrl = `/order/${event.id}/${order.short_id}/print`;
     const isAttendeeScope = !!order.is_attendee_scope;
 
     return (
         <Card className={classes.orderCard}>
             <div className={classes.orderHeader}>
                 <div className={classes.eventInfo}>
-                    <h3 className={classes.eventTitle}>{event?.title}</h3>
+                    <h3 className={classes.eventTitle}>{event.title}</h3>
                     <OrderStatusBadge/>
                 </div>
                 <Text size="xs" c="dimmed">
@@ -94,7 +96,7 @@ const OrderCard = ({order}: { order: Order }) => {
                         <IconCalendar size={18} style={{color: 'var(--mantine-color-gray-6)'}}/>
                         <div>
                             <Text size="xs" c="dimmed">{t`Purchased`}</Text>
-                            <Text size="sm">{event && dateToBrowserTz(order.created_at, event.timezone)}</Text>
+                            <Text size="sm">{dateToBrowserTz(order.created_at, event.timezone)}</Text>
                         </div>
                     </Group>
                 </div>

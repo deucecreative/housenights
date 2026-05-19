@@ -6,6 +6,7 @@ use Carbon\Carbon;
 use HiEvents\DomainObjects\AttendeeDomainObject;
 use HiEvents\DomainObjects\OrderDomainObject;
 use HiEvents\DomainObjects\Status\AttendeeStatus;
+use HiEvents\DomainObjects\Status\OrderStatus;
 use HiEvents\DomainObjects\TicketLookupTokenDomainObject;
 use HiEvents\Exceptions\InvalidTicketLookupTokenException;
 use HiEvents\Repository\Interfaces\OrderRepositoryInterface;
@@ -39,18 +40,28 @@ class GetOrdersByLookupTokenHandlerTest extends TestCase
         );
     }
 
-    private function stubAttendeeLookup(string $email, array $orderIds): void
+    private function stubLookups(string $email, array $purchaserOrderIds, array $attendeeOrderIds): void
     {
-        $query = m::mock();
-        $query->shouldReceive('where')->with('email', $email)->andReturnSelf();
-        $query->shouldReceive('where')->with('status', AttendeeStatus::ACTIVE->name)->andReturnSelf();
-        $query->shouldReceive('whereNull')->with('deleted_at')->andReturnSelf();
-        $query->shouldReceive('pluck')->with('order_id')->andReturn(new Collection($orderIds));
+        $ordersQuery = m::mock();
+        $ordersQuery->shouldReceive('where')->with('email', $email)->andReturnSelf();
+        $ordersQuery->shouldReceive('where')->with('status', OrderStatus::COMPLETED->name)->andReturnSelf();
+        $ordersQuery->shouldReceive('whereNull')->with('deleted_at')->andReturnSelf();
+        $ordersQuery->shouldReceive('pluck')->with('id')->andReturn(new Collection($purchaserOrderIds));
+
+        $attendeesQuery = m::mock();
+        $attendeesQuery->shouldReceive('where')->with('email', $email)->andReturnSelf();
+        $attendeesQuery->shouldReceive('where')->with('status', AttendeeStatus::ACTIVE->name)->andReturnSelf();
+        $attendeesQuery->shouldReceive('whereNull')->with('deleted_at')->andReturnSelf();
+        $attendeesQuery->shouldReceive('pluck')->with('order_id')->andReturn(new Collection($attendeeOrderIds));
 
         $this->databaseManager
             ->shouldReceive('table')
+            ->with('orders')
+            ->andReturn($ordersQuery);
+        $this->databaseManager
+            ->shouldReceive('table')
             ->with('attendees')
-            ->andReturn($query);
+            ->andReturn($attendeesQuery);
     }
 
     public function testHandleSuccessfullyReturnsOrdersWhenTokenIsValid(): void
@@ -78,7 +89,7 @@ class GetOrdersByLookupTokenHandlerTest extends TestCase
             ->with(['token' => $token])
             ->andReturn($tokenRecord);
 
-        $this->stubAttendeeLookup($email, []);
+        $this->stubLookups($email, [1], []);
 
         $this->orderRepository
             ->shouldReceive('loadRelation')
@@ -141,6 +152,32 @@ class GetOrdersByLookupTokenHandlerTest extends TestCase
         $this->handler->handle($dto);
     }
 
+    public function testHandleReturnsEmptyCollectionWhenNoOrdersMatch(): void
+    {
+        $token = 'tl_noorders';
+        $email = 'orphan@example.com';
+        $dto = new GetOrdersByLookupTokenDTO(token: $token);
+
+        $tokenRecord = m::mock(TicketLookupTokenDomainObject::class);
+        $tokenRecord->shouldReceive('getExpiresAt')
+            ->andReturn(Carbon::now()->addHour()->toDateTimeString());
+        $tokenRecord->shouldReceive('getEmail')->andReturn($email);
+
+        $this->ticketLookupTokenRepository
+            ->shouldReceive('findFirstWhere')->andReturn($tokenRecord);
+
+        $this->stubLookups($email, [], []);
+
+        // Should short-circuit before hitting the repository at all.
+        $this->orderRepository->shouldNotReceive('loadRelation');
+        $this->orderRepository->shouldNotReceive('findWhere');
+
+        $result = $this->handler->handle($dto);
+
+        $this->assertInstanceOf(Collection::class, $result);
+        $this->assertCount(0, $result);
+    }
+
     public function testPurchaserSeesFullOrderWithAllAttendees(): void
     {
         $email = 'purchaser@example.com';
@@ -172,7 +209,7 @@ class GetOrdersByLookupTokenHandlerTest extends TestCase
         $this->ticketLookupTokenRepository
             ->shouldReceive('findFirstWhere')->andReturn($tokenRecord);
 
-        $this->stubAttendeeLookup($email, []);
+        $this->stubLookups($email, [101], []);
 
         $this->orderRepository->shouldReceive('loadRelation')->andReturnSelf();
         $this->orderRepository
@@ -228,25 +265,16 @@ class GetOrdersByLookupTokenHandlerTest extends TestCase
         $this->ticketLookupTokenRepository
             ->shouldReceive('findFirstWhere')->andReturn($tokenRecord);
 
-        $this->stubAttendeeLookup($lookupEmail, [202]);
+        $this->stubLookups($lookupEmail, [], [202]);
 
         $this->orderRepository->shouldReceive('loadRelation')->andReturnSelf();
-        // No purchaser-email match:
-        $this->orderRepository
-            ->shouldReceive('findWhere')
-            ->once()
-            ->withArgs(function ($conditions, $columns = ['*'], $orderAndDirections = []) use ($lookupEmail) {
-                return is_array($conditions)
-                    && $conditions[0][0] === 'email'
-                    && $conditions[0][2] === $lookupEmail;
-            })
-            ->andReturn(new Collection());
-        // Attendee-id match returns this order:
         $this->orderRepository
             ->shouldReceive('findWhere')
             ->once()
             ->withArgs(function ($conditions, $columns = ['*'], $orderAndDirections = []) {
-                return is_array($conditions) && $conditions[0][1] === 'in';
+                return is_array($conditions)
+                    && $conditions[0][1] === 'in'
+                    && in_array(202, $conditions[0][2], true);
             })
             ->andReturn(new Collection([$order]));
 
@@ -256,6 +284,57 @@ class GetOrdersByLookupTokenHandlerTest extends TestCase
         $this->assertTrue($result->first()->isAttendeeScope);
         $this->assertNotNull($capturedScopedAttendees);
         $this->assertCount(1, $capturedScopedAttendees);
+    }
+
+    public function testOrderMatchedAsBothPurchaserAndAttendeeIsReturnedOnceAsPurchaser(): void
+    {
+        // Regression test: solo bookings where purchaser email equals one of
+        // the attendee emails used to be returned twice (once per match path)
+        // and the merge would silently keep the un-hydrated attendee copy.
+        $email = 'solo@example.com';
+        $token = 'tl_solo';
+        $dto = new GetOrdersByLookupTokenDTO(token: $token);
+
+        $tokenRecord = m::mock(TicketLookupTokenDomainObject::class);
+        $tokenRecord->shouldReceive('getExpiresAt')->andReturn(Carbon::now()->addHour()->toDateTimeString());
+        $tokenRecord->shouldReceive('getEmail')->andReturn($email);
+
+        $attendee = m::mock(AttendeeDomainObject::class);
+        $attendee->shouldReceive('getEmail')->andReturn($email);
+
+        $order = m::mock(OrderDomainObject::class);
+        $order->shouldReceive('getId')->andReturn(303);
+        $order->shouldReceive('getEmail')->andReturn($email);
+        $order->shouldReceive('getAttendees')->andReturn(new Collection([$attendee]));
+        // Purchaser scope: PII must not be masked.
+        $order->shouldNotReceive('setAttendees');
+        $order->shouldNotReceive('setFirstName');
+        $order->shouldNotReceive('setLastName');
+        $order->shouldNotReceive('setEmail');
+        $order->shouldNotReceive('setAddress');
+
+        $this->ticketLookupTokenRepository
+            ->shouldReceive('findFirstWhere')->andReturn($tokenRecord);
+
+        // Same order id appears in both lookups.
+        $this->stubLookups($email, [303], [303]);
+
+        $this->orderRepository->shouldReceive('loadRelation')->andReturnSelf();
+        // Critical: only one findWhere call, and it receives a de-duplicated id list.
+        $this->orderRepository
+            ->shouldReceive('findWhere')
+            ->once()
+            ->withArgs(function ($conditions, $columns = ['*'], $orderAndDirections = []) {
+                return is_array($conditions)
+                    && $conditions[0][1] === 'in'
+                    && $conditions[0][2] === [303];
+            })
+            ->andReturn(new Collection([$order]));
+
+        $result = $this->handler->handle($dto);
+
+        $this->assertCount(1, $result);
+        $this->assertFalse($result->first()->isAttendeeScope);
     }
 
     protected function tearDown(): void
