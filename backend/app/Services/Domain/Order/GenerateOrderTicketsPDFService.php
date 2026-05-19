@@ -59,6 +59,7 @@ class GenerateOrderTicketsPDFService
             'event' => $event,
             'organizer' => $event->getOrganizer(),
             'eventSettings' => $event->getEventSettings(),
+            'order' => $order,
             'qrCodes' => $qrCodes,
         ])->output();
     }

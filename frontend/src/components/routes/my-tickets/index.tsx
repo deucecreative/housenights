@@ -56,7 +56,7 @@ const AttendeeTicketRow = ({event, attendee}: { event: Event; attendee: Attendee
                 )}
             </div>
             <div className={classes.attendeeActions}>
-                <TicketWalletButtons event={event} attendee={attendee} height={36}/>
+                <TicketWalletButtons event={event} attendee={attendee}/>
                 <Tooltip label={t`Download PDF`}>
                     <ActionIcon
                         component="a"

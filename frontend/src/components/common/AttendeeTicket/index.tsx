@@ -9,7 +9,6 @@ import {Address, Attendee, Event, Product} from "../../../types.ts";
 import classes from './AttendeeTicket.module.scss';
 import {imageUrl} from "../../../utilites/urlHelper.ts";
 import {formatAddress} from "../../../utilites/addressUtilities.ts";
-import {isAndroid, isIOS} from "../../../utilites/userAgent.ts";
 import {getConfig} from "../../../utilites/config.ts";
 import {PoweredByFooter} from "../PoweredByFooter";
 
@@ -174,62 +173,54 @@ export const AttendeeTicket = ({
                             >{attendee.public_id}</div>
                         </div>
 
-                        {!isCancelled && !isAwaitingPayment && event?.settings?.wallet_passes_enabled && isIOS() && (
-                            <a
-                                href={`${getConfig('VITE_API_URL_CLIENT')}/public/attendee/${event.id}/${attendee.short_id}/apple-pass.pkpass`}
-                                style={{
-                                    display: 'inline-block',
-                                    marginTop: '12px',
-                                    textDecoration: 'none',
-                                    lineHeight: 0,
-                                }}
-                                aria-label={t`Add to Apple Wallet`}
-                            >
-                                {/* TODO: replace with local SVG once frontend/src/assets/wallet/apple-add-to-wallet.svg is committed */}
-                                <img
-                                    src="https://developer.apple.com/wallet/add-to-apple-wallet-guidelines/images/add-to-apple-wallet/Add_to_Apple_Wallet_rgb_US-UK.png"
-                                    alt={t`Add to Apple Wallet`}
-                                    style={{height: '44px', width: 'auto', display: 'block'}}
-                                />
-                            </a>
-                        )}
-
-                        {!isCancelled && !isAwaitingPayment && event?.settings?.wallet_passes_enabled && !isIOS() && (isAndroid() || typeof window !== 'undefined') && (
-                            <button
-                                type="button"
-                                onClick={async () => {
-                                    try {
-                                        const res = await fetch(
-                                            `${getConfig('VITE_API_URL_CLIENT')}/public/attendee/${event.id}/${attendee.short_id}/google-pass-link`,
-                                        );
-                                        if (!res.ok) {
-                                            return;
+                        {!hideButtons && !isCancelled && !isAwaitingPayment && event?.settings?.wallet_passes_enabled && (
+                            <div style={{display: 'flex', flexWrap: 'wrap', gap: '8px', marginTop: '12px'}}>
+                                <a
+                                    href={`${getConfig('VITE_API_URL_CLIENT')}/public/attendee/${event.id}/${attendee.short_id}/apple-pass.pkpass`}
+                                    style={{display: 'inline-block', textDecoration: 'none', lineHeight: 0}}
+                                    aria-label={t`Add to Apple Wallet`}
+                                >
+                                    <img
+                                        src="/wallet/add-to-apple-wallet.svg"
+                                        alt={t`Add to Apple Wallet`}
+                                        style={{height: '44px', width: 'auto', display: 'block'}}
+                                    />
+                                </a>
+                                <button
+                                    type="button"
+                                    onClick={async () => {
+                                        try {
+                                            const res = await fetch(
+                                                `${getConfig('VITE_API_URL_CLIENT')}/public/attendee/${event.id}/${attendee.short_id}/google-pass-link`,
+                                            );
+                                            if (!res.ok) {
+                                                return;
+                                            }
+                                            const data = await res.json() as { url?: string };
+                                            if (data?.url) {
+                                                window.location.href = data.url;
+                                            }
+                                        } catch {
+                                            // Silently fail — the button just doesn't navigate.
                                         }
-                                        const data = await res.json() as { url?: string };
-                                        if (data?.url) {
-                                            window.location.href = data.url;
-                                        }
-                                    } catch {
-                                        // Silently fail — the button just doesn't navigate.
-                                    }
-                                }}
-                                style={{
-                                    display: 'inline-block',
-                                    marginTop: '12px',
-                                    padding: 0,
-                                    border: 0,
-                                    background: 'transparent',
-                                    cursor: 'pointer',
-                                    lineHeight: 0,
-                                }}
-                                aria-label={t`Add to Google Wallet`}
-                            >
-                                <img
-                                    src="https://developers.google.com/wallet/static/images/branding/Add-to-Google-Wallet-button.png"
-                                    alt={t`Add to Google Wallet`}
-                                    style={{height: '44px', width: 'auto', display: 'block'}}
-                                />
-                            </button>
+                                    }}
+                                    style={{
+                                        display: 'inline-block',
+                                        padding: 0,
+                                        border: 0,
+                                        background: 'transparent',
+                                        cursor: 'pointer',
+                                        lineHeight: 0,
+                                    }}
+                                    aria-label={t`Add to Google Wallet`}
+                                >
+                                    <img
+                                        src="/wallet/save-to-google-wallet.svg"
+                                        alt={t`Add to Google Wallet`}
+                                        style={{height: '44px', width: 'auto', display: 'block'}}
+                                    />
+                                </button>
+                            </div>
                         )}
                     </div>
                 </div>

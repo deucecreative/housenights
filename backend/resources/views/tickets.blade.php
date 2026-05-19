@@ -3,29 +3,58 @@
 @php /** @var \HiEvents\DomainObjects\EventDomainObject $event */ @endphp
 @php /** @var \HiEvents\DomainObjects\OrganizerDomainObject|null $organizer */ @endphp
 @php /** @var \HiEvents\DomainObjects\EventSettingDomainObject|null $eventSettings */ @endphp
+@php /** @var \HiEvents\DomainObjects\OrderDomainObject|null $order */ @endphp
 @php /** @var array<int, string> $qrCodes */ @endphp
 
 @php
+    $order = $order ?? null;
     $attendeeList = is_array($attendees) ? $attendees : $attendees->all();
     $attendeeCount = count($attendeeList);
-    $venueText = '';
+
+    $venueLines = [];
     if ($eventSettings) {
         if ($eventSettings->getIsOnlineEvent()) {
-            $venueText = __('Online Event');
+            $venueLines = [__('Online Event')];
         } else {
-            $venueText = $eventSettings->getAddressString();
+            $location = $eventSettings->getLocationDetails() ?? [];
+            if (!empty($location['venue_name'])) {
+                $venueLines[] = $location['venue_name'];
+            }
+            $street = trim(($location['address_line_1'] ?? '') . ' ' . ($location['address_line_2'] ?? ''));
+            if ($street !== '') {
+                $venueLines[] = $street;
+            }
+            $cityPostcode = trim(($location['city'] ?? '') . ' ' . ($location['zip_or_postal_code'] ?? ''));
+            if ($cityPostcode !== '') {
+                $venueLines[] = $cityPostcode;
+            }
+            if (!empty($location['country'])) {
+                $venueLines[] = $location['country'];
+            }
+            // Fallback to single-line address if nothing matched.
+            if (empty($venueLines)) {
+                $single = $eventSettings->getAddressString();
+                if ($single !== '') {
+                    $venueLines[] = $single;
+                }
+            }
         }
     }
-    $startDateText = null;
-    if ($event->getStartDate()) {
+
+    $formatEventDate = static function (?string $utc, ?string $timezone): ?string {
+        if (!$utc) {
+            return null;
+        }
         try {
-            $startDateText = Carbon::parse(
-                DateHelper::convertFromUTC($event->getStartDate(), $event->getTimezone())
-            )->format('l, jS F Y · g:i A');
-        } catch (\Throwable $e) {
-            $startDateText = null;
+            return Carbon::parse(DateHelper::convertFromUTC($utc, $timezone ?? 'UTC'))
+                ->format('l, jS F Y · g:i A');
+        } catch (\Throwable) {
+            return null;
         }
-    }
+    };
+    $startDateText = $formatEventDate($event->getStartDate(), $event->getTimezone());
+    $endDateText = $formatEventDate($event->getEndDate(), $event->getTimezone());
+
     $organizerLogo = null;
     if ($organizer && method_exists($organizer, 'getImages') && $organizer->getImages()) {
         $logo = $organizer->getImages()->first(
@@ -143,6 +172,21 @@
             color: #1a1a1a;
         }
 
+        .info-sub {
+            font-family: 'outfit', Arial, sans-serif;
+            font-size: 11px;
+            color: #888;
+            display: block;
+            margin-top: 2px;
+        }
+
+        .order-ref {
+            font-family: 'outfit', Arial, sans-serif;
+            font-size: 11px;
+            color: #888;
+            margin-top: 4px;
+        }
+
         .qr-section {
             margin-top: 24px;
             text-align: center;
@@ -179,6 +223,8 @@
         $isLast = $index === $attendeeCount - 1;
         $product = $attendee->getProduct();
         $productTitle = $product ? $product->getTitle() : '';
+        $attendeeName = trim($attendee->getFirstName() . ' ' . $attendee->getLastName());
+        $attendeeEmail = method_exists($attendee, 'getEmail') ? $attendee->getEmail() : null;
         $attendeeId = $attendee->getId();
         $qr = $qrCodes[$attendeeId] ?? null;
     @endphp
@@ -191,9 +237,12 @@
                         @if($startDateText)
                             <div>{{ $startDateText }}</div>
                         @endif
-                        @if($venueText)
-                            <div>{{ $venueText }}</div>
+                        @if($endDateText && $endDateText !== $startDateText)
+                            <div>{{ __('Ends') }} {{ $endDateText }}</div>
                         @endif
+                        @foreach($venueLines as $line)
+                            <div>{{ $line }}</div>
+                        @endforeach
                     </div>
                 </td>
                 <td class="organizer-block">
@@ -202,6 +251,9 @@
                     @endif
                     @if($organizer)
                         <div class="organizer-name">{{ $organizer->getName() }}</div>
+                    @endif
+                    @if($order)
+                        <div class="order-ref">{{ __('Order') }} #{{ $order->getPublicId() }}</div>
                     @endif
                 </td>
             </tr>
@@ -213,11 +265,15 @@
             <tr>
                 <td style="width: 50%;">
                     <span class="info-label">{{ __('Attendee') }}</span>
-                    <span class="info-value">{{ trim($attendee->getFirstName() . ' ' . $attendee->getLastName()) }}</span>
+                    <span class="info-value">{{ $attendeeName !== '' ? $attendeeName : '—' }}</span>
+                    @if($attendeeEmail)
+                        <span class="info-sub">{{ $attendeeEmail }}</span>
+                    @endif
                 </td>
                 <td style="width: 50%;">
                     <span class="info-label">{{ __('Ticket') }}</span>
-                    <span class="info-value">{{ $productTitle }}</span>
+                    <span class="info-value">{{ $productTitle !== '' ? $productTitle : '—' }}</span>
+                    <span class="info-sub">{{ __('Ticket ID') }} {{ $attendee->getPublicId() }}</span>
                 </td>
             </tr>
         </table>

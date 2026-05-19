@@ -105,7 +105,7 @@ const GuestListItem = ({
             </div>
             <div className={classes.guestActions}>
                 {!isCancelled && (
-                    <TicketWalletButtons event={event} attendee={attendee} height={32}/>
+                    <TicketWalletButtons event={event} attendee={attendee}/>
                 )}
                 <Tooltip label={t`View Ticket`}>
                     <ActionIcon
