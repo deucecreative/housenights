@@ -49,8 +49,54 @@ class InstallOutfitFontCommand extends Command
             }
         }
 
+        // DOMPDF writes installed-fonts.json with whatever path was passed
+        // to registerFont() — for us that's an absolute path. Absolute paths
+        // baked into a committed JSON file break on every other machine.
+        // Strip the storage/fonts prefix so the entries are relative
+        // basenames, which DOMPDF resolves against `font_dir` at load time.
+        $this->normalizeInstalledFontsJson($fontsDir);
+
         $this->newLine();
         $this->info('Outfit font installed. Commit the new files under storage/fonts/.');
         return self::SUCCESS;
+    }
+
+    private function normalizeInstalledFontsJson(string $fontsDir): void
+    {
+        $jsonPath = $fontsDir . DIRECTORY_SEPARATOR . 'installed-fonts.json';
+        if (!is_file($jsonPath)) {
+            return;
+        }
+
+        $contents = file_get_contents($jsonPath);
+        if ($contents === false) {
+            return;
+        }
+
+        $data = json_decode($contents, true);
+        if (!is_array($data)) {
+            return;
+        }
+
+        $prefix = $fontsDir . DIRECTORY_SEPARATOR;
+        $changed = false;
+        foreach ($data as $family => $weights) {
+            if (!is_array($weights)) {
+                continue;
+            }
+            foreach ($weights as $weight => $path) {
+                if (is_string($path) && str_starts_with($path, $prefix)) {
+                    $data[$family][$weight] = substr($path, strlen($prefix));
+                    $changed = true;
+                }
+            }
+        }
+
+        if ($changed) {
+            file_put_contents(
+                $jsonPath,
+                json_encode($data, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES) . "\n",
+            );
+        }
     }
 }
