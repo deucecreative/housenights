@@ -142,6 +142,60 @@
   }
 }
 
+.attendeeList {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 16px;
+  padding-top: 16px;
+  border-top: 1px solid var(--mantine-color-gray-2);
+
+  @media (prefers-color-scheme: dark) {
+    border-color: var(--mantine-color-dark-4);
+  }
+}
+
+.attendeeRow {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 8px 0;
+
+  &:not(:last-child) {
+    border-bottom: 1px dashed var(--mantine-color-gray-2);
+
+    @media (prefers-color-scheme: dark) {
+      border-color: var(--mantine-color-dark-4);
+    }
+  }
+}
+
+.attendeeIdentity {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  flex: 1 1 200px;
+}
+
+.attendeeName {
+  font-weight: 500;
+  color: var(--mantine-color-text);
+}
+
+.attendeeProduct {
+  font-size: 0.8125rem;
+  color: var(--mantine-color-dimmed);
+}
+
+.attendeeActions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
 .headerIconError {
   color: var(--mantine-color-red-6);
   padding: 16px;

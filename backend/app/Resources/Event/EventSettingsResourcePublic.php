@@ -86,6 +86,9 @@ class EventSettingsResourcePublic extends JsonResource
             // Self-service settings
             'allow_attendee_self_edit' => $this->getAllowAttendeeSelfEdit(),
 
+            // Wallet pass settings — frontend gates Apple/Google Wallet buttons on this flag.
+            'wallet_passes_enabled' => $this->getWalletPassesEnabled(),
+
             // Tracking settings (only pixel ID is public)
             'meta_pixel_id' => $this->getMetaPixelId(),
         ];

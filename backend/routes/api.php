@@ -97,7 +97,9 @@ use HiEvents\Http\Actions\Orders\Payment\Stripe\GetPaymentIntentActionPublic;
 use HiEvents\Http\Actions\Orders\Public\AbandonOrderActionPublic;
 use HiEvents\Http\Actions\Orders\Public\CompleteOrderActionPublic;
 use HiEvents\Http\Actions\Orders\Public\CreateOrderActionPublic;
+use HiEvents\Http\Actions\Attendee\Public\DownloadAttendeeTicketPublicAction;
 use HiEvents\Http\Actions\Orders\Public\DownloadOrderInvoicePublicAction;
+use HiEvents\Http\Actions\Orders\Public\DownloadOrderTicketsPublicAction;
 use HiEvents\Http\Actions\Orders\Public\GetOrderActionPublic;
 use HiEvents\Http\Actions\Orders\Public\TransitionOrderToOfflinePaymentPublicAction;
 use HiEvents\Http\Actions\Orders\ResendOrderConfirmationAction;
@@ -480,9 +482,15 @@ $router->prefix('/public')->group(
         $router->post('/events/{event_id}/order/{order_short_id}/abandon', AbandonOrderActionPublic::class);
         $router->post('/events/{event_id}/order/{order_short_id}/await-offline-payment', TransitionOrderToOfflinePaymentPublicAction::class);
         $router->get('/events/{event_id}/order/{order_short_id}/invoice', DownloadOrderInvoicePublicAction::class);
+        // Per-order ticket PDF download. .pdf suffix is intentional so mail
+        // clients / browsers infer the right handler (same precedent as
+        // .pkpass on the Wallet routes below).
+        $router->get('/events/{event_id}/order/{order_short_id}/tickets.pdf', DownloadOrderTicketsPublicAction::class);
 
         // Attendees
         $router->get('/events/{event_id}/attendees/{attendee_short_id}', GetAttendeeActionPublic::class);
+        // Per-attendee ticket PDF download (public — short_id acts as unguessable token).
+        $router->get('/events/{event_id}/attendees/{attendee_short_id}/ticket.pdf', DownloadAttendeeTicketPublicAction::class);
 
         // Apple Wallet pass download (public — short_id acts as unguessable token).
         // The .pkpass suffix on the path matters: iOS Safari + some email-app

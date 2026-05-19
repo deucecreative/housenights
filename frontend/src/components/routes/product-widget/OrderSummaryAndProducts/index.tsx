@@ -8,6 +8,7 @@ import {
     IconCash,
     IconCheck,
     IconClock,
+    IconDownload,
     IconEdit,
     IconExternalLink,
     IconId,
@@ -37,7 +38,9 @@ import {EventDateRange} from "../../../common/EventDateRange";
 import {OnlineEventDetails} from "../../../common/OnlineEventDetails";
 import {AddToCalendarCTA} from "../../../common/AddToCalendarCTA";
 import {InlineOrderSummary} from "../../../common/InlineOrderSummary";
+import {TicketWalletButtons} from "../../../common/TicketWalletButtons";
 import {CheckoutContent} from "../../../layouts/Checkout/CheckoutContent";
+import {getConfig} from "../../../../utilites/config.ts";
 import {EditAttendeeModal} from "./EditAttendeeModal";
 import {EditOrderModal} from "./EditOrderModal";
 
@@ -101,6 +104,9 @@ const GuestListItem = ({
                 </div>
             </div>
             <div className={classes.guestActions}>
+                {!isCancelled && (
+                    <TicketWalletButtons event={event} attendee={attendee} height={32}/>
+                )}
                 <Tooltip label={t`View Ticket`}>
                     <ActionIcon
                         variant="subtle"
@@ -109,6 +115,18 @@ const GuestListItem = ({
                         <IconExternalLink size={18}/>
                     </ActionIcon>
                 </Tooltip>
+                {!isCancelled && (
+                    <Tooltip label={t`Download PDF`}>
+                        <ActionIcon
+                            component="a"
+                            href={`${getConfig('VITE_API_URL_CLIENT') ?? ''}/public/events/${event.id}/attendees/${attendee.short_id}/ticket.pdf`}
+                            variant="subtle"
+                            aria-label={t`Download PDF ticket`}
+                        >
+                            <IconDownload size={18}/>
+                        </ActionIcon>
+                    </Tooltip>
+                )}
                 <Tooltip label={t`Print Ticket`}>
                     <ActionIcon
                         variant="subtle"

@@ -1,9 +1,10 @@
 import {t} from "@lingui/macro";
 import {NavLink, useParams} from "react-router";
-import {Alert, Badge, Button, Group, SimpleGrid, Text, TextInput} from "@mantine/core";
+import {ActionIcon, Alert, Badge, Button, Group, SimpleGrid, Text, TextInput, Tooltip} from "@mantine/core";
 import {
     IconCalendar,
     IconCalendarEvent,
+    IconDownload,
     IconExternalLink,
     IconInfoCircle,
     IconMapPin,
@@ -25,9 +26,11 @@ import {Card} from "../../common/Card";
 import {LoadingMask} from "../../common/LoadingMask";
 import {PoweredByFooter} from "../../common/PoweredByFooter";
 import {EventDateRange} from "../../common/EventDateRange";
+import {TicketWalletButtons} from "../../common/TicketWalletButtons";
 import {CheckoutContent} from "../../layouts/Checkout/CheckoutContent";
 
-import {Order} from "../../../types.ts";
+import {Attendee, Event, Order} from "../../../types.ts";
+import {getConfig} from "../../../utilites/config.ts";
 import classes from './MyTickets.module.scss';
 
 const OrderStatusBadge = () => (
@@ -35,6 +38,51 @@ const OrderStatusBadge = () => (
         {t`Completed`}
     </Badge>
 );
+
+const AttendeeTicketRow = ({event, attendee}: { event: Event; attendee: Attendee }) => {
+    const apiBase = getConfig('VITE_API_URL_CLIENT') ?? '';
+    const pdfUrl = `${apiBase}/public/events/${event.id}/attendees/${attendee.short_id}/ticket.pdf`;
+    const viewUrl = `/product/${event.id}/${attendee.short_id}`;
+    const productTitle = (attendee.product as { title?: string } | undefined)?.title;
+
+    return (
+        <div className={classes.attendeeRow}>
+            <div className={classes.attendeeIdentity}>
+                <span className={classes.attendeeName}>
+                    {attendee.first_name} {attendee.last_name}
+                </span>
+                {productTitle && (
+                    <span className={classes.attendeeProduct}>{productTitle}</span>
+                )}
+            </div>
+            <div className={classes.attendeeActions}>
+                <TicketWalletButtons event={event} attendee={attendee} height={36}/>
+                <Tooltip label={t`Download PDF`}>
+                    <ActionIcon
+                        component="a"
+                        href={pdfUrl}
+                        variant="subtle"
+                        aria-label={t`Download PDF ticket`}
+                    >
+                        <IconDownload size={18}/>
+                    </ActionIcon>
+                </Tooltip>
+                <Tooltip label={t`View Ticket`}>
+                    <ActionIcon
+                        component="a"
+                        href={viewUrl}
+                        target="_blank"
+                        rel="noreferrer"
+                        variant="subtle"
+                        aria-label={t`Open ticket in new tab`}
+                    >
+                        <IconExternalLink size={18}/>
+                    </ActionIcon>
+                </Tooltip>
+            </div>
+        </div>
+    );
+};
 
 const OrderCard = ({order}: { order: Order }) => {
     const event = order.event;
@@ -45,6 +93,7 @@ const OrderCard = ({order}: { order: Order }) => {
     const orderUrl = `/checkout/${event.id}/${order.short_id}/summary`;
     const printUrl = `/order/${event.id}/${order.short_id}/print`;
     const isAttendeeScope = !!order.is_attendee_scope;
+    const activeAttendees = order.attendees?.filter((a) => a.status !== 'CANCELLED') ?? [];
 
     return (
         <Card className={classes.orderCard}>
@@ -102,6 +151,14 @@ const OrderCard = ({order}: { order: Order }) => {
                 </div>
             </SimpleGrid>
 
+            {activeAttendees.length > 0 && (
+                <div className={classes.attendeeList}>
+                    {activeAttendees.map((attendee) => (
+                        <AttendeeTicketRow key={attendee.id} event={event} attendee={attendee}/>
+                    ))}
+                </div>
+            )}
+
             <Group gap="sm" mt="md" wrap="wrap">
                 {!isAttendeeScope && (
                     <Button
@@ -115,7 +172,12 @@ const OrderCard = ({order}: { order: Order }) => {
                         {t`View Order`}
                     </Button>
                 )}
-                {ticketCount > 0 && (
+                {/*
+                  Order-level "Print Tickets" leaks attendee data for other
+                  guests on the order, so only expose it to the purchaser scope.
+                  Attendee-scoped lookups use the per-attendee actions above.
+                */}
+                {!isAttendeeScope && ticketCount > 0 && (
                     <Button
                         variant="subtle"
                         size="sm"
