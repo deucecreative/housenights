@@ -159,7 +159,7 @@ class AttendeeTicketMail extends BaseMail
                 ->withMime('text/calendar'),
             Attachment::fromData(
                 fn () => app(GenerateAttendeeTicketPDFService::class)
-                    ->generate($this->attendee, $this->resolveEventForPdf()),
+                    ->generate($this->attendee, $this->resolveEventForPdf(), $this->order),
                 'ticket.pdf'
             )->withMime('application/pdf'),
         ];
