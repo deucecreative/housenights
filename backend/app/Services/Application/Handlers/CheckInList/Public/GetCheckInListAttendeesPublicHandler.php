@@ -29,7 +29,7 @@ class GetCheckInListAttendeesPublicHandler
     /**
      * @throws CannotCheckInException
      */
-    public function handle(string $shortId, QueryParamsDTO $queryParams): Paginator
+    public function handle(string $shortId, QueryParamsDTO $queryParams, bool $enforceActive = true): Paginator
     {
         $checkInList = $this->checkInListRepository
             ->loadRelation(ProductDomainObject::class)
@@ -42,7 +42,9 @@ class GetCheckInListAttendeesPublicHandler
             throw new ResourceNotFoundException(__('Check-in list not found'));
         }
 
-        $this->validateCheckInListIsActive($checkInList);
+        if ($enforceActive) {
+            $this->validateCheckInListIsActive($checkInList);
+        }
 
         $attendees = $this->attendeeRepository
             ->loadRelation(new Relationship(ProductDomainObject::class, name: 'product'))

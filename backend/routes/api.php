@@ -41,6 +41,8 @@ use HiEvents\Http\Actions\CapacityAssignments\UpdateCapacityAssignmentAction;
 use HiEvents\Http\Actions\CheckInLists\CreateCheckInListAction;
 use HiEvents\Http\Actions\CheckInLists\DeleteCheckInListAction;
 use HiEvents\Http\Actions\CheckInLists\GetCheckInListAction;
+use HiEvents\Http\Actions\CheckInLists\GetCheckInListAttendeesByShortIdAction;
+use HiEvents\Http\Actions\CheckInLists\GetCheckInListByShortIdAction;
 use HiEvents\Http\Actions\CheckInLists\GetCheckInListsAction;
 use HiEvents\Http\Actions\CheckInLists\Public\CreateAttendeeCheckInPublicAction;
 use HiEvents\Http\Actions\CheckInLists\Public\DeleteAttendeeCheckInPublicAction;
@@ -403,6 +405,11 @@ $router->middleware(['auth:api'])->group(
         $router->get('/events/{event_id}/check-in-lists/{check_in_list_id}', GetCheckInListAction::class);
         $router->put('/events/{event_id}/check-in-lists/{check_in_list_id}', UpdateCheckInListAction::class);
         $router->delete('/events/{event_id}/check-in-lists/{check_in_list_id}', DeleteCheckInListAction::class);
+
+        // Authenticated read access to check-in lists by short_id — used by Doorman fallback
+        // for expired lists and re-sync after disconnect. Gated by event access, not list-active state.
+        $router->get('/check-in-lists/{check_in_list_short_id}', GetCheckInListByShortIdAction::class);
+        $router->get('/check-in-lists/{check_in_list_short_id}/attendees', GetCheckInListAttendeesByShortIdAction::class);
 
         // Webhooks
         $router->post('/events/{event_id}/webhooks', CreateWebhookAction::class);
