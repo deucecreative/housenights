@@ -22,6 +22,7 @@ import {formatCurrency} from "../../../utilites/currency.ts";
 import {formatNumber} from "../../../utilites/helpers.ts";
 import {formatDateWithLocale, relativeDate} from "../../../utilites/dates.ts";
 import {Card} from "../Card";
+import {useIsCurrentUserAdmin} from "../../../hooks/useIsCurrentUserAdmin.ts";
 
 const placeholderGradients = [
     'linear-gradient(135deg, var(--mantine-color-violet-5) 0%, var(--mantine-color-indigo-5) 100%)',
@@ -43,6 +44,7 @@ export function EventCard({event}: EventCardProps) {
     const [isDuplicateModalOpen, duplicateModal] = useDisclosure(false);
     const [eventId, setEventId] = useState<IdParam>();
     const statusToggleMutation = useUpdateEventStatus();
+    const isAdmin = useIsCurrentUserAdmin();
 
     const coverImage = event.images?.find(img => img.type === 'EVENT_COVER');
     const gradientIndex = event.id ? Number(event.id) % placeholderGradients.length : 0;
@@ -159,6 +161,9 @@ export function EventCard({event}: EventCardProps) {
 
     const revenue = event?.statistics?.sales_total_gross || 0;
     const attendees = event?.statistics?.attendees_registered || 0;
+    const taxes = event?.statistics?.total_tax || 0;
+    const fees = event?.statistics?.total_fee || 0;
+    const netRevenue = event?.statistics?.sales_total_before_additions || 0;
 
     const statusConfig = getStatusConfig();
     const ticketAvailability = getTicketAvailability();
@@ -235,6 +240,34 @@ export function EventCard({event}: EventCardProps) {
                                     <span className={classes.statLabel}>{t`Revenue`}</span>
                                 </div>
                             </Tooltip>
+                            {isAdmin && (
+                                <>
+                                    <Tooltip label={t`Taxes collected`} withArrow position="top">
+                                        <div className={classes.stat}>
+                                            <span className={classes.statValue}>
+                                                {formatCurrency(taxes, event?.currency)}
+                                            </span>
+                                            <span className={classes.statLabel}>{t`Taxes`}</span>
+                                        </div>
+                                    </Tooltip>
+                                    <Tooltip label={t`Fees collected`} withArrow position="top">
+                                        <div className={classes.stat}>
+                                            <span className={classes.statValue}>
+                                                {formatCurrency(fees, event?.currency)}
+                                            </span>
+                                            <span className={classes.statLabel}>{t`Fees`}</span>
+                                        </div>
+                                    </Tooltip>
+                                    <Tooltip label={t`Net revenue (excluding taxes & fees)`} withArrow position="top">
+                                        <div className={classes.stat}>
+                                            <span className={classes.statValue}>
+                                                {formatCurrency(netRevenue, event?.currency)}
+                                            </span>
+                                            <span className={classes.statLabel}>{t`Net`}</span>
+                                        </div>
+                                    </Tooltip>
+                                </>
+                            )}
                         </div>
 
                         <div className={classes.menuButton} onClick={(e) => e.preventDefault()}>

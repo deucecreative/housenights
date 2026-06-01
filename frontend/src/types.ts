@@ -362,6 +362,14 @@ export interface CheckInStats {
     total_attendees: number;
 }
 
+export interface TaxFeeBreakdownItem {
+    kind: 'TAX' | 'FEE';
+    name: string;
+    rate: number;
+    total_collected: number;
+    order_count: number;
+}
+
 export interface EventStats {
     daily_stats: EventDailyStats[];
     start_date: string;
@@ -378,6 +386,8 @@ export interface EventStats {
     total_fees: number;
     total_views: number;
     total_refunded: number;
+    // Admin-only: per-name breakdown of each distinct tax and fee. Absent for organisers.
+    taxes_and_fees_breakdown?: TaxFeeBreakdownItem[] | null;
 }
 
 export interface OrganizerStats {

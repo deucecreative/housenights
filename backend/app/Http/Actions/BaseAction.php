@@ -233,6 +233,21 @@ abstract class BaseAction extends Controller
         $authService->validateUserRole($minimumRole, $this->getAuthenticatedUser());
     }
 
+    /**
+     * Whether the authenticated user is an admin, based on their effective role on the
+     * current account (the DB account_user record), not the JWT role claim.
+     *
+     * This intentionally reflects the *effective* role: while an admin impersonates an
+     * organiser, this returns false (the impersonation token carries no role claim and
+     * the current account_user is the organiser). It never throws on a missing claim.
+     */
+    protected function isAuthenticatedUserAdmin(): bool
+    {
+        $role = $this->getAuthenticatedUser()->getCurrentAccountUser()?->getRole();
+
+        return in_array($role, [Role::ADMIN->value, Role::SUPERADMIN->value], true);
+    }
+
     public function getClientIp(Request $request): ?string
     {
         // If the request is coming from a DigitalOcean load balancer, use the connecting IP

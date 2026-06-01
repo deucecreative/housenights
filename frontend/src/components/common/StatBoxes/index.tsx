@@ -1,5 +1,15 @@
 import classes from "./StatBoxes.module.scss";
-import {IconCash, IconCreditCardRefund, IconEye, IconReceipt, IconShoppingCart, IconUsers} from "@tabler/icons-react";
+import {
+    IconCash,
+    IconCoin,
+    IconCreditCardRefund,
+    IconEye,
+    IconPercentage,
+    IconReceipt,
+    IconReceiptTax,
+    IconShoppingCart,
+    IconUsers
+} from "@tabler/icons-react";
 import {Card} from "../Card";
 import {useGetEventStats} from "../../../queries/useGetEventStats.ts";
 import {useParams} from "react-router";
@@ -9,6 +19,7 @@ import {formatCurrency} from "../../../utilites/currency.ts";
 import {formatNumber} from "../../../utilites/helpers.ts";
 import {ReactNode} from "react";
 import {useGetMe} from "../../../queries/useGetMe.ts";
+import {useIsCurrentUserAdmin} from "../../../hooks/useIsCurrentUserAdmin.ts";
 
 interface StatBoxProps {
     number: string | number;
@@ -41,10 +52,34 @@ export const StatBoxes = () => {
     const {data: eventStats} = eventStatsQuery;
     const {data: me} = useGetMe();
     const isOrganizerRole = me?.role === 'ORGANIZER';
+    const isAdmin = useIsCurrentUserAdmin();
 
     const grossSales = eventStats?.total_gross_sales || 0;
     const totalFees = eventStats?.total_fees || 0;
+    const totalTax = eventStats?.total_tax || 0;
     const salesValue = isOrganizerRole ? grossSales - totalFees : grossSales;
+    const netSales = grossSales - totalTax - totalFees;
+
+    const adminRevenueBoxes = isAdmin ? [
+        {
+            number: formatCurrency(totalTax, event?.currency),
+            description: t`Taxes`,
+            icon: <IconReceiptTax size={18}/>,
+            backgroundColor: '#B7794B'
+        },
+        {
+            number: formatCurrency(totalFees, event?.currency),
+            description: t`Fees`,
+            icon: <IconPercentage size={18}/>,
+            backgroundColor: '#A14BB7'
+        },
+        {
+            number: formatCurrency(netSales, event?.currency),
+            description: t`Net (ex tax & fees)`,
+            icon: <IconCoin size={18}/>,
+            backgroundColor: '#4BB77C'
+        }
+    ] : [];
 
     const data = [
         {
@@ -82,7 +117,8 @@ export const StatBoxes = () => {
             description: t`Completed orders`,
             icon: <IconReceipt size={18}/>,
             backgroundColor: '#E67D49'
-        }
+        },
+        ...adminRevenueBoxes
     ];
 
     return (

@@ -3,10 +3,12 @@
 namespace HiEvents\Services\Domain\Event;
 
 use Carbon\Carbon;
+use HiEvents\DomainObjects\Status\OrderStatus;
 use HiEvents\Services\Application\Handlers\Event\DTO\EventStatsRequestDTO;
 use HiEvents\Services\Application\Handlers\Event\DTO\EventStatsResponseDTO;
 use HiEvents\Services\Domain\Event\DTO\EventCheckInStatsResponseDTO;
 use HiEvents\Services\Domain\Event\DTO\EventDailyStatsResponseDTO;
+use HiEvents\Services\Domain\Event\DTO\EventTaxFeeBreakdownItemDTO;
 use Illuminate\Database\DatabaseManager;
 use Illuminate\Support\Collection;
 
@@ -55,7 +57,84 @@ readonly class EventStatsFetchService
             total_tax: $totalsResult->total_tax ?? 0,
             total_views: $totalsResult->total_views ?? 0,
             total_refunded: $totalsResult->total_refunded ?? 0,
+            taxes_and_fees_breakdown: $requestData->include_breakdown
+                ? $this->getTaxAndFeeBreakdown($eventId)
+                : null,
         );
+    }
+
+    /**
+     * Aggregate the per-name tax and fee breakdown for an event from the
+     * `taxes_and_fees_rollup` JSONB column on completed orders.
+     *
+     * Refunds are netted off proportionally per order using the same approach as
+     * EventStatisticsRefundService (each item is scaled by 1 - total_refunded/total_gross),
+     * so these figures reconcile with the refund-adjusted aggregate total_tax/total_fee.
+     * Refunds are not stored per tax/fee name, so a proportional split is the best available.
+     *
+     * @return Collection<EventTaxFeeBreakdownItemDTO>
+     */
+    public function getTaxAndFeeBreakdown(int $eventId): Collection
+    {
+        $completedStatus = OrderStatus::COMPLETED->name;
+
+        // Per-order factor that nets off refunds proportionally. Defaults to 1 (no refund)
+        // when total_gross is 0 to avoid division by zero on free orders.
+        $refundFactor = "COALESCE(1 - o.total_refunded / NULLIF(o.total_gross, 0), 1)";
+
+        $query = <<<SQL
+            WITH items AS (
+                SELECT
+                    'TAX' AS kind,
+                    tax_item->>'name' AS name,
+                    (tax_item->>'rate')::numeric AS rate,
+                    (tax_item->>'value')::numeric * $refundFactor AS value
+                FROM orders o
+                CROSS JOIN LATERAL jsonb_array_elements(
+                    COALESCE(o.taxes_and_fees_rollup->'taxes', '[]'::jsonb)
+                ) AS tax_item
+                WHERE o.event_id = :eventId
+                    AND o.status = '$completedStatus'
+                    AND o.deleted_at IS NULL
+
+                UNION ALL
+
+                SELECT
+                    'FEE' AS kind,
+                    fee_item->>'name' AS name,
+                    (fee_item->>'rate')::numeric AS rate,
+                    (fee_item->>'value')::numeric * $refundFactor AS value
+                FROM orders o
+                CROSS JOIN LATERAL jsonb_array_elements(
+                    COALESCE(o.taxes_and_fees_rollup->'fees', '[]'::jsonb)
+                ) AS fee_item
+                WHERE o.event_id = :eventIdFee
+                    AND o.status = '$completedStatus'
+                    AND o.deleted_at IS NULL
+            )
+            SELECT
+                kind,
+                name,
+                rate,
+                SUM(value) AS total_collected,
+                COUNT(*) AS order_count
+            FROM items
+            GROUP BY kind, name, rate
+            ORDER BY kind, name;
+        SQL;
+
+        $results = $this->db->select($query, [
+            'eventId' => $eventId,
+            'eventIdFee' => $eventId,
+        ]);
+
+        return collect($results)->map(fn(object $row) => new EventTaxFeeBreakdownItemDTO(
+            kind: $row->kind,
+            name: $row->name ?? '',
+            rate: (float)($row->rate ?? 0),
+            total_collected: (float)($row->total_collected ?? 0),
+            order_count: (int)($row->order_count ?? 0),
+        ));
     }
 
     public function getDailyEventStats(EventStatsRequestDTO $requestData): Collection

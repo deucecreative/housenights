@@ -22,10 +22,13 @@ class GetEventStatsAction extends BaseAction
     {
         $this->isActionAuthorized($eventId, EventDomainObject::class);
 
+        $isAdmin = $this->isAuthenticatedUserAdmin();
+
         $stats = $this->eventStatsHandler->handle(EventStatsRequestDTO::fromArray([
             'event_id' => $eventId,
             'start_date' => Carbon::now()->subDays(7)->format('Y-m-d H:i:s'),
-            'end_date' => Carbon::now()->format('Y-m-d H:i:s')
+            'end_date' => Carbon::now()->format('Y-m-d H:i:s'),
+            'include_breakdown' => $isAdmin,
         ]));
 
         return $this->resourceResponse(JsonResource::class, $stats);

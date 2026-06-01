@@ -6,6 +6,7 @@ use HiEvents\DataTransferObjects\Attributes\CollectionOf;
 use HiEvents\DataTransferObjects\BaseDTO;
 use HiEvents\Services\Domain\Event\DTO\EventCheckInStatsResponseDTO;
 use HiEvents\Services\Domain\Event\DTO\EventDailyStatsResponseDTO;
+use HiEvents\Services\Domain\Event\DTO\EventTaxFeeBreakdownItemDTO;
 use Illuminate\Support\Collection;
 
 class EventStatsResponseDTO extends BaseDTO
@@ -25,6 +26,9 @@ class EventStatsResponseDTO extends BaseDTO
         public float                        $total_tax,
         public float                        $total_views,
         public float                        $total_refunded,
+
+        #[CollectionOf(EventTaxFeeBreakdownItemDTO::class)]
+        public readonly ?Collection         $taxes_and_fees_breakdown = null,
     )
     {
     }

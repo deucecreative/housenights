@@ -32,12 +32,15 @@ class GetReportAction extends BaseAction
             throw new BadRequestHttpException('Invalid report type.');
         }
 
+        $isAdmin = $this->isAuthenticatedUserAdmin();
+
         $reportData = $this->reportHandler->handle(
             reportData: new GetReportDTO(
                 eventId: $eventId,
                 reportType: ReportTypes::from($reportType),
                 startDate: $request->validated('start_date'),
                 endDate: $request->validated('end_date'),
+                isAdmin: $isAdmin,
             ),
         );
 

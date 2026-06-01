@@ -3,6 +3,7 @@ import {useParams} from "react-router";
 import {PageTitle} from "../../../common/PageTitle";
 import {PageBody} from "../../../common/PageBody";
 import {StatBoxes} from "../../../common/StatBoxes";
+import {TaxAndFeeBreakdown} from "../../../common/TaxAndFeeBreakdown";
 import {useGetMe} from "../../../../queries/useGetMe.ts";
 import {t, Trans} from "@lingui/macro";
 import {AreaChart} from "@mantine/charts";
@@ -144,6 +145,8 @@ export const EventDashboard = () => {
 
             {event && (<>
                 <StatBoxes/>
+
+                <TaxAndFeeBreakdown/>
 
                 {shouldShowChecklist && (
                     <Card className={classes.setupCard}>

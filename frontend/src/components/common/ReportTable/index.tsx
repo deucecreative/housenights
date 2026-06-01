@@ -24,6 +24,8 @@ interface Column<T> {
     label: string;
     render?: (value: any, row: T) => React.ReactNode;
     sortable?: boolean;
+    /** Raw value accessor for sorting/CSV when the value isn't a plain `row[key]` field. */
+    accessor?: (row: T) => any;
 }
 
 interface ReportProps<T> {
@@ -38,6 +40,23 @@ interface ReportProps<T> {
     enableDownload?: boolean;
     downloadFileName?: string;
     showCustomDatePicker?: boolean;
+    /**
+     * Columns derived from the fetched data (e.g. one per distinct fee name).
+     * Appended after the static `columns`.
+     */
+    getDynamicColumns?: (rows: T[]) => Column<T>[];
+    /**
+     * When set, rows are grouped by this key. Each group renders a summary row
+     * (labelled by `groupLabelKey`) followed by indented sub-rows (labelled by
+     * `subRowLabelKey`). Groups with a single sub-row render as one row.
+     */
+    groupByKey?: keyof T;
+    groupLabelKey?: keyof T;
+    subRowLabelKey?: keyof T;
+    /** Numeric keys summed into the group summary row. */
+    aggregatableKeys?: (keyof T)[];
+    /** Object-valued keys (name -> number maps) deep-summed into the summary row. */
+    mergeObjectKeys?: (keyof T)[];
 }
 
 const TIME_PERIODS = [
@@ -63,7 +82,13 @@ const ReportTable = <T extends Record<string, any>>({
                                                         enableDownload = true,
                                                         downloadFileName = 'report.csv',
                                                         showCustomDatePicker = false,
-                                                        event
+                                                        event,
+                                                        getDynamicColumns,
+                                                        groupByKey,
+                                                        groupLabelKey,
+                                                        subRowLabelKey,
+                                                        aggregatableKeys = [],
+                                                        mergeObjectKeys = [],
                                                     }: ReportProps<T>) => {
     const [dateRange, setDateRange] = useState<[Date | null, Date | null]>([
         dayjs(defaultStartDate).tz(event.timezone).toDate(),
@@ -76,6 +101,13 @@ const ReportTable = <T extends Record<string, any>>({
     const {reportType, eventId} = useParams();
     const reportQuery = useGetEventReport(eventId, reportType, dateRange[0], dateRange[1]);
     const data = (reportQuery.data || []) as T[];
+
+    const allColumns = useMemo(
+        () => [...columns, ...(getDynamicColumns ? getDynamicColumns(data) : [])],
+        [columns, getDynamicColumns, data]
+    );
+
+    const isGrouped = Boolean(groupByKey);
 
     const calculateDateRange = (period: string): [Date | null, Date | null] => {
         if (period === 'custom') {
@@ -189,10 +221,98 @@ const ReportTable = <T extends Record<string, any>>({
         });
     }, [data, sortField, sortDirection]);
 
-    const csvHeaders = columns.map(col => col.label);
-    const csvData = sortedData.map(row =>
-        columns.map(col => {
-            const value = row[col.key];
+    type DisplayEntry = { type: 'header' | 'sub' | 'single'; row: T };
+
+    const groupedDisplay = useMemo<DisplayEntry[]>(() => {
+        if (!isGrouped || !groupByKey) return [];
+
+        const groupMap = new Map<unknown, T[]>();
+        data.forEach(row => {
+            const key = row[groupByKey];
+            const existing = groupMap.get(key);
+            if (existing) {
+                existing.push(row);
+            } else {
+                groupMap.set(key, [row]);
+            }
+        });
+
+        const buildSummary = (rows: T[]): T => {
+            const summary: any = {};
+            if (groupLabelKey) summary[groupLabelKey] = rows[0]?.[groupLabelKey];
+            aggregatableKeys.forEach(k => {
+                summary[k] = rows.reduce((sum, r) => sum + Number(r[k] ?? 0), 0);
+            });
+            mergeObjectKeys.forEach(k => {
+                const merged: Record<string, number> = {};
+                rows.forEach(r => {
+                    const obj = r[k] as Record<string, any> | undefined | null;
+                    if (obj && typeof obj === 'object') {
+                        Object.entries(obj).forEach(([name, val]) => {
+                            merged[name] = (merged[name] ?? 0) + Number(val ?? 0);
+                        });
+                    }
+                });
+                summary[k] = merged;
+            });
+            return summary as T;
+        };
+
+        let groups = Array.from(groupMap.values()).map(rows => ({
+            summary: buildSummary(rows),
+            subRows: rows,
+        }));
+
+        if (sortField && sortDirection) {
+            groups = [...groups].sort((a, b) => {
+                const aValue = a.summary[sortField];
+                const bValue = b.summary[sortField];
+                const aNum = Number(aValue);
+                const bNum = Number(bValue);
+                if (!isNaN(aNum) && !isNaN(bNum)) {
+                    return sortDirection === 'asc' ? aNum - bNum : bNum - aNum;
+                }
+                if (typeof aValue === 'string' && typeof bValue === 'string') {
+                    return sortDirection === 'asc'
+                        ? aValue.toLowerCase().localeCompare(bValue.toLowerCase())
+                        : bValue.toLowerCase().localeCompare(aValue.toLowerCase());
+                }
+                return 0;
+            });
+        }
+
+        const display: DisplayEntry[] = [];
+        groups.forEach(g => {
+            if (g.subRows.length <= 1) {
+                display.push({type: 'single', row: g.summary});
+            } else {
+                display.push({type: 'header', row: g.summary});
+                g.subRows.forEach(sub => display.push({type: 'sub', row: sub}));
+            }
+        });
+        return display;
+    }, [isGrouped, groupByKey, groupLabelKey, data, aggregatableKeys, mergeObjectKeys, sortField, sortDirection]);
+
+    const firstColumnKey = allColumns[0]?.key;
+
+    const getRawCellValue = (col: Column<T>, entry: DisplayEntry) => {
+        if (isGrouped && col.key === firstColumnKey) {
+            if (entry.type === 'sub') {
+                return subRowLabelKey ? entry.row[subRowLabelKey] : entry.row[col.key];
+            }
+            return groupLabelKey ? entry.row[groupLabelKey] : entry.row[col.key];
+        }
+        return col.accessor ? col.accessor(entry.row) : entry.row[col.key];
+    };
+
+    const csvEntries: DisplayEntry[] = isGrouped
+        ? groupedDisplay
+        : sortedData.map(row => ({type: 'single', row}));
+
+    const csvHeaders = allColumns.map(col => col.label);
+    const csvData = csvEntries.map(entry =>
+        allColumns.map(col => {
+            const value = getRawCellValue(col, entry);
             return typeof value === 'number' ? value.toString() : value;
         })
     );
@@ -200,7 +320,7 @@ const ReportTable = <T extends Record<string, any>>({
     const loadingMessage = () => {
         const wrapper = (message: React.ReactNode) => (
             <MantineTable.Tr>
-                <MantineTable.Td colSpan={columns.length} align="center">
+                <MantineTable.Td colSpan={allColumns.length} align="center">
                     {message}
                 </MantineTable.Td>
             </MantineTable.Tr>
@@ -293,7 +413,7 @@ const ReportTable = <T extends Record<string, any>>({
             <Table>
                 <TableHead>
                     <MantineTable.Tr>
-                        {columns.map((column) => (
+                        {allColumns.map((column) => (
                             <MantineTable.Th
                                 key={String(column.key)}
                                 onClick={column.sortable ? () => handleSort(column.key) : undefined}
@@ -308,19 +428,65 @@ const ReportTable = <T extends Record<string, any>>({
                     </MantineTable.Tr>
                 </TableHead>
                 <MantineTable.Tbody>
-                    {!sortedData.length && loadingMessage()}
-                    {sortedData.map((row, index) => (
-                        <MantineTable.Tr key={index}>
-                            {columns.map((column) => (
-                                <MantineTable.Td key={String(column.key)}>
-                                    {column.render
-                                        ? column.render(row[column.key], row)
-                                        : row[column.key]
-                                    }
-                                </MantineTable.Td>
+                    {isGrouped ? (
+                        <>
+                            {!groupedDisplay.length && loadingMessage()}
+                            {groupedDisplay.map((entry, index) => (
+                                <MantineTable.Tr
+                                    key={index}
+                                    style={entry.type === 'header'
+                                        ? {fontWeight: 600}
+                                        : undefined}
+                                >
+                                    {allColumns.map((column, colIndex) => {
+                                        const isFirst = column.key === firstColumnKey;
+                                        const isSub = entry.type === 'sub';
+
+                                        // First column shows the group label (header/single)
+                                        // or the indented tier label (sub-row).
+                                        if (isFirst) {
+                                            const label = isSub
+                                                ? (subRowLabelKey ? entry.row[subRowLabelKey] : entry.row[column.key])
+                                                : (groupLabelKey ? entry.row[groupLabelKey] : entry.row[column.key]);
+                                            return (
+                                                <MantineTable.Td
+                                                    key={String(column.key)}
+                                                    style={isSub ? {paddingLeft: '2rem'} : undefined}
+                                                >
+                                                    {(label as React.ReactNode) ?? '—'}
+                                                </MantineTable.Td>
+                                            );
+                                        }
+
+                                        return (
+                                            <MantineTable.Td key={String(column.key) + colIndex}>
+                                                {column.render
+                                                    ? column.render(entry.row[column.key], entry.row)
+                                                    : (entry.row[column.key] as React.ReactNode)
+                                                }
+                                            </MantineTable.Td>
+                                        );
+                                    })}
+                                </MantineTable.Tr>
                             ))}
-                        </MantineTable.Tr>
-                    ))}
+                        </>
+                    ) : (
+                        <>
+                            {!sortedData.length && loadingMessage()}
+                            {sortedData.map((row, index) => (
+                                <MantineTable.Tr key={index}>
+                                    {allColumns.map((column, colIndex) => (
+                                        <MantineTable.Td key={String(column.key) + colIndex}>
+                                            {column.render
+                                                ? column.render(row[column.key], row)
+                                                : (row[column.key] as React.ReactNode)
+                                            }
+                                        </MantineTable.Td>
+                                    ))}
+                                </MantineTable.Tr>
+                            ))}
+                        </>
+                    )}
                 </MantineTable.Tbody>
             </Table>
         </>
