@@ -12,6 +12,14 @@ class Kernel extends ConsoleKernel
     {
         $schedule->job(new SendScheduledMessagesJob)->everyMinute()->withoutOverlapping();
         $schedule->command('app:send-pre-event-reminders')->hourly()->withoutOverlapping();
+
+        // Nightly reconcile of event statistics from order data (heals incremental drift,
+        // e.g. cancellations that didn't decrement financial totals).
+        $schedule->command('stats:recompute')
+            ->dailyAt('03:00')
+            ->withoutOverlapping()
+            ->onOneServer()
+            ->runInBackground();
     }
 
     protected function commands(): void
