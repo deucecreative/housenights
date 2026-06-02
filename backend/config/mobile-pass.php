@@ -12,13 +12,20 @@ use Spatie\LaravelMobilePass\Models\MobilePass;
 
 return [
     /*
+    * Default brand color for wallet passes (e.g. the Apple/Google pass
+    * background) when an event hasn't set its own ticket-design accent.
+    * Expressed as a `#RRGGBB` hex string. Carbon is the Grofomo default.
+    */
+    'brand_color' => env('WALLET_BRAND_COLOR', '#080808'),
+
+    /*
     * Read the "Getting credentials from Apple" section in the documentation
     * to learn how to get these values.
     */
     'apple' => [
         // Bridge to our existing APPLE_WALLET_* env vars so we don't need
         // to duplicate variables on Railway.
-        'organization_name' => env('APPLE_WALLET_ORGANIZATION_NAME', 'House Nights'),
+        'organization_name' => env('APPLE_WALLET_ORGANIZATION_NAME', 'Grofomo'),
         'type_identifier' => env('APPLE_WALLET_PASS_TYPE_ID'),
         'team_identifier' => env('APPLE_WALLET_TEAM_ID'),
 

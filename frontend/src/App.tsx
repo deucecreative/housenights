@@ -67,7 +67,8 @@ export const App: FC<
                         secondary: generateColors(getConfig("VITE_APP_SECONDARY_COLOR", "#3d0b44") as string),
                     },
                     primaryColor: "primary",
-                    fontFamily: "Outfit, sans-serif",
+                    fontFamily: getConfig("VITE_APP_FONT_FAMILY", "Outfit, sans-serif"),
+                    headings: { fontFamily: getConfig("VITE_APP_HEADING_FONT_FAMILY", "Outfit, sans-serif") },
                     primaryShade: 8,
                 }}
             >
@@ -80,9 +81,14 @@ export const App: FC<
                                 <ModalsProvider>
                                     <Helmet>
                                         <title>{getConfig("VITE_APP_NAME", "Hi.Events")}</title>
+                                        <meta name="theme-color" content={getConfig("VITE_APP_THEME_COLOR", "#080808")} />
                                         <link rel="icon"
                                             type="image/svg+xml"
                                             href={getConfig("VITE_APP_FAVICON", "/manifest-icons/favicon.svg")}
+                                        />
+                                        <link
+                                            rel="stylesheet"
+                                            href={getConfig("VITE_APP_FONT_CSS_URL", "https://fonts.bunny.net/css?family=outfit:400,500,600,700,800|plus-jakarta-sans:400,500,600,700&display=swap")}
                                         />
                                     </Helmet>
                                     {props.children}

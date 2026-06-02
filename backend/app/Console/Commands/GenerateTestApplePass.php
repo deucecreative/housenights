@@ -38,13 +38,13 @@ class GenerateTestApplePass extends Command
         $attendee->setOrder($order);
 
         $event = new EventDomainObject();
-        $event->setTitle('House Nights — Local Test');
+        $event->setTitle('Grofomo — Local Test');
         $event->setStartDate(now()->addDays(7)->setTime(20, 0, 0)->toDateTimeString());
         $event->setTimezone('Europe/London');
 
         $organizer = new OrganizerDomainObject();
-        $organizer->setName('House Nights');
-        $organizer->setEmail('hello@housenights.co');
+        $organizer->setName('Grofomo');
+        $organizer->setEmail('hello@grofomo.com');
 
         $settings = new EventSettingDomainObject();
         $settings->setLocationDetails([
@@ -53,7 +53,7 @@ class GenerateTestApplePass extends Command
             'city' => 'London',
             'country' => 'GB',
         ]);
-        $settings->setSupportEmail('support@housenights.com');
+        $settings->setSupportEmail('support@grofomo.com');
 
         $output = (string)$this->option('output');
 

@@ -201,8 +201,8 @@ class GoogleWalletPassService
             }
         }
 
-        // House Nights brand purple
-        return '#57398e';
+        // Fall back to the configured brand color (Grofomo Carbon by default).
+        return config('mobile-pass.brand_color', '#080808');
     }
 
     /**

@@ -70,7 +70,7 @@ class AppleWalletPassService
         $fullName = trim($attendee->getFirstName() . ' ' . $attendee->getLastName());
         $productTitle = $attendee->getProduct()?->getTitle() ?? __('Ticket');
         $venue = $eventSettings->getAddressString() ?: (string)__('Online Event');
-        $organizerName = $organizer->getName() ?: 'House Nights';
+        $organizerName = $organizer->getName() ?: config('mobile-pass.apple.organization_name');
         $publicId = $attendee->getPublicId();
 
         $builder = EventTicketPassBuilder::make()
@@ -235,9 +235,9 @@ class AppleWalletPassService
             }
         }
 
-        // House Nights brand purple — used when the event hasn't set a ticket
-        // design accent color.
-        return '#57398e';
+        // Fall back to the configured brand color (Grofomo Carbon by default),
+        // used when the event hasn't set a ticket design accent color.
+        return config('mobile-pass.brand_color', '#080808');
     }
 
     /**

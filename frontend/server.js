@@ -37,6 +37,28 @@ async function main() {
 
     app.use('/.well-known', express.static(path.join(__dirname, 'public/.well-known')));
 
+    // Serve the PWA manifest with brand fields pulled from the environment so the
+    // app is rebrandable by config alone. Registered before the static/vite
+    // middleware so it wins over the on-disk public/site.webmanifest.
+    app.get('/site.webmanifest', (req, res) => {
+        const appName = process.env.VITE_APP_NAME || 'Hi.Events';
+        const manifest = {
+            name: appName,
+            short_name: appName,
+            icons: [
+                { src: '/manifest-icons/favicon-48x48.png', sizes: '48x48', type: 'image/png' },
+                { src: '/manifest-icons/favicon-192x192.png', sizes: '192x192', type: 'image/png' },
+                { src: '/manifest-icons/favicon-512x512.png', sizes: '512x512', type: 'image/png' },
+            ],
+            theme_color: process.env.VITE_APP_THEME_COLOR || '#080808',
+            background_color: process.env.VITE_APP_BACKGROUND_COLOR || '#FAFAF7',
+            display: 'standalone',
+        };
+        res.setHeader('Content-Type', 'application/manifest+json');
+        res.setHeader('Cache-Control', 'public, max-age=3600');
+        res.status(200).send(JSON.stringify(manifest, null, 2));
+    });
+
     let vite;
 
     if (!isProduction) {

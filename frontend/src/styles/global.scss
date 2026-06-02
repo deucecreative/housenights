@@ -41,7 +41,8 @@ html {
 }
 
 body {
-  font-family: 'Outfit', sans-serif;
+  // Follows the Mantine theme font (driven by VITE_APP_FONT_FAMILY); falls back to Outfit
+  font-family: var(--mantine-font-family, 'Outfit', sans-serif);
   color: var(--hi-text);
   background-color: var(--checkout-background, var(--hi-color-gray)) !important;
   height: auto;
