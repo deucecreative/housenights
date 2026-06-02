@@ -795,6 +795,13 @@ $transition-slow: 0.4s cubic-bezier(0.4, 0, 0.2, 1);
     padding-top: 16px;
   }
 
+  // When a description leads the card, separate it from the tiers below.
+  // Without a description the title's own separator (.hi-product-content
+  // border-top) already sits directly above the tiers, so no extra line.
+  :global(.hi-product-description-row + .hi-price-tiers-rows) {
+    border-top: 1px solid var(--border-color);
+  }
+
   :global(.hi-price-tier-row) {
     margin-bottom: 12px;
 
@@ -876,9 +883,7 @@ $transition-slow: 0.4s cubic-bezier(0.4, 0, 0.2, 1);
     color: var(--secondary-color);
     font-size: 0.875rem;
     line-height: 1.6;
-    margin-top: 12px;
-    padding-top: 12px;
-    border-top: 1px solid var(--border-color);
+    margin-bottom: 16px;
   }
 
   :global(.hi-product-quantity-error) {

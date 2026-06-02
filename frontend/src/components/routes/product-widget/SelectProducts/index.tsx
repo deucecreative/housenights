@@ -471,6 +471,18 @@ const SelectProducts = (props: SelectProductsProps) => {
                                                     </div>
                                                     <Collapse transitionDuration={100} in={!isProductCollapsed}
                                                               className={'hi-product-content'} hidden={isProductCollapsed}>
+                                                        {product.description && (
+                                                            <div
+                                                                className={'hi-product-description-row'}>
+                                                                <Spoiler maxHeight={87} showLabel={t`Show more`}
+                                                                         hideLabel={t`Hide`}>
+                                                                    <div dangerouslySetInnerHTML={{
+                                                                        __html: product.description
+                                                                    }}/>
+                                                                </Spoiler>
+                                                            </div>
+                                                        )}
+
                                                         <div className={'hi-price-tiers-rows'}>
                                                             <TieredPricing
                                                                 productIndex={productIndex++}
@@ -491,18 +503,6 @@ const SelectProducts = (props: SelectProductsProps) => {
                                                         {form.errors[`products.${currentProductIndex}`] && (
                                                             <div className={'hi-product-quantity-error'}>
                                                                 {form.errors[`products.${currentProductIndex}`]}
-                                                            </div>
-                                                        )}
-
-                                                        {product.description && (
-                                                            <div
-                                                                className={'hi-product-description-row'}>
-                                                                <Spoiler maxHeight={87} showLabel={t`Show more`}
-                                                                         hideLabel={t`Hide`}>
-                                                                    <div dangerouslySetInnerHTML={{
-                                                                        __html: product.description
-                                                                    }}/>
-                                                                </Spoiler>
                                                             </div>
                                                         )}
                                                     </Collapse>
