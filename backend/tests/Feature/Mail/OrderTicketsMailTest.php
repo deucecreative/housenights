@@ -34,6 +34,41 @@ class OrderTicketsMailTest extends TestCase
         $this->assertSame('application/pdf', $this->getAttachmentMime($pdfAttachment));
     }
 
+    public function test_attaches_event_ics(): void
+    {
+        $mail = $this->buildMail();
+
+        $attachments = $mail->attachments();
+
+        $icsAttachment = $this->findAttachmentByName($attachments, 'event.ics');
+        $this->assertNotNull($icsAttachment, 'Expected an event.ics attachment');
+        $this->assertSame('text/calendar', $this->getAttachmentMime($icsAttachment));
+
+        $bytes = $this->resolveAttachmentBytes($icsAttachment);
+        $this->assertStringStartsWith('BEGIN:VCALENDAR', $bytes, 'ICS should start with BEGIN:VCALENDAR');
+    }
+
+    public function test_mentions_all_attendees_and_other_attendee_copies(): void
+    {
+        // Default fixtures: two attendees on different emails (jane is also the purchaser).
+        $mail = $this->buildMail();
+
+        $rendered = $mail->render();
+
+        $this->assertStringContainsString('everyone in your order', $rendered);
+        $this->assertStringContainsString('other attendees has also been emailed', $rendered);
+    }
+
+    public function test_hides_other_attendee_copy_line_for_solo_order(): void
+    {
+        $mail = $this->buildMail(soloPurchaserAttendee: true);
+
+        $rendered = $mail->render();
+
+        $this->assertStringContainsString('everyone in your order', $rendered);
+        $this->assertStringNotContainsString('other attendees has also been emailed', $rendered);
+    }
+
     public function test_embeds_qr_per_attendee(): void
     {
         $mail = $this->buildMail();
@@ -113,8 +148,9 @@ class OrderTicketsMailTest extends TestCase
         bool $isReminder = false,
         bool $includeCancelledAttendee = false,
         bool $walletPassesEnabled = false,
+        bool $soloPurchaserAttendee = false,
     ): OrderTicketsMail {
-        [$order, $event, $eventSettings, $organizer] = $this->buildFixtures($includeCancelledAttendee, $walletPassesEnabled);
+        [$order, $event, $eventSettings, $organizer] = $this->buildFixtures($includeCancelledAttendee, $walletPassesEnabled, $soloPurchaserAttendee);
 
         return new OrderTicketsMail(
             order: $order,
@@ -128,7 +164,7 @@ class OrderTicketsMailTest extends TestCase
     /**
      * @return array{0: OrderDomainObject, 1: EventDomainObject, 2: EventSettingDomainObject, 3: OrganizerDomainObject}
      */
-    private function buildFixtures(bool $includeCancelledAttendee, bool $walletPassesEnabled = false): array
+    private function buildFixtures(bool $includeCancelledAttendee, bool $walletPassesEnabled = false, bool $soloPurchaserAttendee = false): array
     {
         $product = (new ProductDomainObject())
             ->setId(101)
@@ -187,7 +223,11 @@ class OrderTicketsMailTest extends TestCase
             ->setStatus(AttendeeStatus::ACTIVE->name);
         $activeTwo->setProduct($product);
 
-        $attendees = new Collection([$activeOne, $activeTwo]);
+        // Solo order: only the purchaser (jane) is an attendee, so there are no
+        // "other attendees" and the per-attendee-copy line must not render.
+        $attendees = $soloPurchaserAttendee
+            ? new Collection([$activeOne])
+            : new Collection([$activeOne, $activeTwo]);
 
         if ($includeCancelledAttendee) {
             $cancelled = (new AttendeeDomainObject())

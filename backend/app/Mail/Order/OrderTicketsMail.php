@@ -10,6 +10,7 @@ use HiEvents\DomainObjects\OrganizerDomainObject;
 use HiEvents\DomainObjects\Status\AttendeeStatus;
 use HiEvents\Helper\Url;
 use HiEvents\Mail\BaseMail;
+use HiEvents\Services\Domain\Event\GenerateEventIcsService;
 use HiEvents\Services\Domain\Order\GenerateOrderTicketsPDFService;
 use HiEvents\Services\Domain\QrCode\QrCodeService;
 use HiEvents\Services\Domain\Wallet\GoogleWalletPassService;
@@ -107,6 +108,7 @@ class OrderTicketsMail extends BaseMail
                 'qrFilenames' => $qrFilenames,
                 'attendeeTicketUrls' => $attendeeTicketUrls,
                 'googleWalletUrls' => $googleWalletUrls,
+                'hasOtherAttendees' => $this->hasOtherAttendees($activeAttendees),
                 'isReminder' => $this->isReminder,
             ],
         );
@@ -114,12 +116,35 @@ class OrderTicketsMail extends BaseMail
 
     public function attachments(): array
     {
+        $calendar = app(GenerateEventIcsService::class)->generate(
+            $this->event,
+            $this->eventSettings,
+            $this->organizer,
+            'event-order-' . $this->order->getId(),
+        );
+
         return [
             Attachment::fromData(
                 fn() => app(GenerateOrderTicketsPDFService::class)->generate($this->order, $this->event),
                 'tickets.pdf',
             )->withMime('application/pdf'),
+            Attachment::fromData(static fn() => $calendar, 'event.ics')
+                ->withMime('text/calendar'),
         ];
+    }
+
+    /**
+     * Whether any active attendee has an email that differs from the purchaser's.
+     * Drives the "the other attendees have also been emailed their own ticket"
+     * line in the template — which must not show for a solo / single-email order.
+     */
+    private function hasOtherAttendees(Collection $activeAttendees): bool
+    {
+        $purchaserEmail = strtolower((string) $this->order->getEmail());
+
+        return $activeAttendees->contains(
+            fn(AttendeeDomainObject $attendee) => strtolower((string) $attendee->getEmail()) !== $purchaserEmail,
+        );
     }
 
     /**

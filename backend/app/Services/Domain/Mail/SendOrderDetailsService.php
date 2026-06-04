@@ -92,11 +92,21 @@ class SendOrderDetailsService
             ->send($mail);
     }
 
+    /**
+     * Send the individual ticket email to each attendee.
+     *
+     * The purchaser is seeded into the dedupe set up front so that an attendee
+     * sharing the purchaser's email is skipped — they already receive the
+     * consolidated OrderTicketsMail. This mirrors SendEventReminderJob, which
+     * excludes the purchaser from the per-attendee emails. Comparison is
+     * case-insensitive, also matching the reminder job.
+     */
     private function sendAttendeeTicketEmails(OrderDomainObject $order, EventDomainObject $event): void
     {
-        $sentEmails = [];
+        $sentEmails = [strtolower((string) $order->getEmail())];
         foreach ($order->getAttendees() as $attendee) {
-            if (in_array($attendee->getEmail(), $sentEmails, true)) {
+            $email = strtolower((string) $attendee->getEmail());
+            if (in_array($email, $sentEmails, true)) {
                 continue;
             }
 
@@ -108,7 +118,7 @@ class SendOrderDetailsService
                 organizer: $event->getOrganizer(),
             );
 
-            $sentEmails[] = $attendee->getEmail();
+            $sentEmails[] = $email;
         }
     }
 

@@ -7,6 +7,7 @@
 @php /** @var array<int,string> $qrFilenames */ @endphp
 @php /** @var array<int,string> $attendeeTicketUrls */ @endphp
 @php /** @var array<int,string> $googleWalletUrls */ @endphp
+@php /** @var bool $hasOtherAttendees */ @endphp
 @php /** @var bool $isReminder */ @endphp
 @php /** @see \HiEvents\Mail\Order\OrderTicketsMail */ @endphp
 
@@ -18,9 +19,13 @@
 @endif
 
 @if(!empty($isReminder))
-{{ __('Your event is coming up! Here are your tickets — save this email, the QR codes scan offline once opened. A printable PDF is attached as backup.') }}
+{{ __('Your event is coming up! This email holds the tickets for everyone in your order, including your own — save it, the QR codes scan offline once opened. A printable PDF is attached as backup.') }}
 @else
-{{ __('Here are your tickets. Save this email or the attached PDF for easy access on the day.') }}
+{{ __('Here are the tickets for everyone in your order, including your own. Save this email or the attached PDF for easy access on the day.') }}
+@endif
+
+@if(!empty($hasOtherAttendees))
+{{ __('Each of the other attendees has also been emailed a copy of their own individual ticket.') }}
 @endif
 
 @if($order->isOrderAwaitingOfflinePayment())
