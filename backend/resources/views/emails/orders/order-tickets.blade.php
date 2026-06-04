@@ -15,8 +15,10 @@
 <x-mail::message>
 @if(!empty($isReminder))
 # {{ __('Your event is coming up!') }} 🎟️
-@else
+@elseif(!empty($purchaserIsAttendee))
 # {{ __('You\'re going to') }} {{ $event->getTitle() }}! 🎉
+@else
+# {{ __('Tickets for') }} {{ $event->getTitle() }} 🎟️
 @endif
 
 @if(!empty($isReminder))

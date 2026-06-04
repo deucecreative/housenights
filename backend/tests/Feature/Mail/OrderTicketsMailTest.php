@@ -90,6 +90,8 @@ class OrderTicketsMailTest extends TestCase
 
         $this->assertStringContainsString('everyone in your order', $rendered);
         $this->assertStringNotContainsString('including your own', $rendered);
+        // The heading must not claim the recipient is attending either.
+        $this->assertStringNotContainsString("You're going to", $rendered);
         // Other attendees were still emailed their individual tickets.
         $this->assertStringContainsString('other attendees has also been emailed', $rendered);
     }

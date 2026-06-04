@@ -108,6 +108,32 @@ class SendOrderDetailsServiceTest extends TestCase
         $this->assertTrue(true);
     }
 
+    public function test_sends_attendee_email_to_awaiting_payment_attendees_on_offline_orders(): void
+    {
+        // Offline-payment order: the order is awaiting payment and attendees are
+        // AWAITING_PAYMENT, not yet ACTIVE. They must still get their ticket
+        // (with the pending-payment banner) — the filter only excludes CANCELLED.
+        $order = $this->buildOrder('buyer@example.com', [
+            ['buyer@example.com', AttendeeStatus::AWAITING_PAYMENT->name],
+            ['guest@example.com', AttendeeStatus::AWAITING_PAYMENT->name],
+        ], OrderStatus::AWAITING_OFFLINE_PAYMENT->name);
+
+        $this->primeMailFlow($order);
+
+        $sentTo = [];
+        $this->sendAttendeeTicketService
+            ->shouldReceive('send')
+            ->once()
+            ->withArgs(function ($ord, AttendeeDomainObject $attendee) use ($order, &$sentTo) {
+                $sentTo[] = $attendee->getEmail();
+                return $ord === $order;
+            });
+
+        $this->service->sendOrderSummaryAndTicketEmails($order);
+
+        $this->assertSame(['guest@example.com'], $sentTo);
+    }
+
     /**
      * Stub out the repository reloads and the purchaser-facing summary/tickets
      * mail so the test can focus on which attendee emails are dispatched.
@@ -153,7 +179,7 @@ class SendOrderDetailsServiceTest extends TestCase
     /**
      * @param array<int, array{0: string, 1: string}> $attendees [email, status]
      */
-    private function buildOrder(string $purchaserEmail, array $attendees): OrderDomainObject
+    private function buildOrder(string $purchaserEmail, array $attendees, ?string $orderStatus = null): OrderDomainObject
     {
         $attendeeObjects = new Collection();
         $id = 500;
@@ -172,7 +198,7 @@ class SendOrderDetailsServiceTest extends TestCase
             ->setId(701)
             ->setEventId(33)
             ->setEmail($purchaserEmail)
-            ->setStatus(OrderStatus::COMPLETED->name);
+            ->setStatus($orderStatus ?? OrderStatus::COMPLETED->name);
         $order->setAttendees($attendeeObjects);
 
         return $order;

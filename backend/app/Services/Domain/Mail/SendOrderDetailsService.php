@@ -101,14 +101,19 @@ class SendOrderDetailsService
      * excludes the purchaser from the per-attendee emails. Comparison is
      * case-insensitive, also matching the reminder job.
      *
-     * Only ACTIVE attendees are emailed, matching SendEventReminderJob and
-     * OrderTicketsMail — a cancelled attendee must not receive a ticket.
+     * CANCELLED attendees are skipped so they don't receive a ticket. We must
+     * NOT restrict to ACTIVE only: on offline-payment orders this flow runs while
+     * the order is AWAITING_OFFLINE_PAYMENT and attendees are AWAITING_PAYMENT,
+     * and those attendees are intended to receive their ticket (with the
+     * pending-payment banner). Unlike SendEventReminderJob — which is safely
+     * ACTIVE-only because it pre-filters to COMPLETED orders — this method also
+     * runs for awaiting-payment orders.
      */
     private function sendAttendeeTicketEmails(OrderDomainObject $order, EventDomainObject $event): void
     {
         $sentEmails = [strtolower((string) $order->getEmail())];
         foreach ($order->getAttendees() as $attendee) {
-            if ($attendee->getStatus() !== AttendeeStatus::ACTIVE->name) {
+            if ($attendee->getStatus() === AttendeeStatus::CANCELLED->name) {
                 continue;
             }
 
