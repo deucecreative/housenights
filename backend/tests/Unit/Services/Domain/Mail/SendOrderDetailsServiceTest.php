@@ -90,6 +90,24 @@ class SendOrderDetailsServiceTest extends TestCase
         $this->assertSame(['guest@example.com'], $sentTo);
     }
 
+    public function test_does_not_send_attendee_email_to_cancelled_attendees(): void
+    {
+        $order = $this->buildOrder('buyer@example.com', [
+            ['buyer@example.com', AttendeeStatus::ACTIVE->name],
+            ['guest@example.com', AttendeeStatus::CANCELLED->name],
+        ]);
+
+        $this->primeMailFlow($order);
+
+        // The purchaser is skipped (consolidated email) and the other attendee is
+        // cancelled, so no per-attendee ticket should go out.
+        $this->sendAttendeeTicketService->shouldReceive('send')->never();
+
+        $this->service->sendOrderSummaryAndTicketEmails($order);
+
+        $this->assertTrue(true);
+    }
+
     /**
      * Stub out the repository reloads and the purchaser-facing summary/tickets
      * mail so the test can focus on which attendee emails are dispatched.

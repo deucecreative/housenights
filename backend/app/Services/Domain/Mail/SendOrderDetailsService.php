@@ -100,11 +100,18 @@ class SendOrderDetailsService
      * consolidated OrderTicketsMail. This mirrors SendEventReminderJob, which
      * excludes the purchaser from the per-attendee emails. Comparison is
      * case-insensitive, also matching the reminder job.
+     *
+     * Only ACTIVE attendees are emailed, matching SendEventReminderJob and
+     * OrderTicketsMail — a cancelled attendee must not receive a ticket.
      */
     private function sendAttendeeTicketEmails(OrderDomainObject $order, EventDomainObject $event): void
     {
         $sentEmails = [strtolower((string) $order->getEmail())];
         foreach ($order->getAttendees() as $attendee) {
+            if ($attendee->getStatus() !== AttendeeStatus::ACTIVE->name) {
+                continue;
+            }
+
             $email = strtolower((string) $attendee->getEmail());
             if (in_array($email, $sentEmails, true)) {
                 continue;
@@ -132,7 +139,9 @@ class SendOrderDetailsService
             invoice: $order->getLatestInvoice(),
         );
 
-        $this->sendOrderTicketsToPurchaser($order, $event);
+        // The initial-order flow also fans out the per-attendee emails (below),
+        // so the consolidated email may truthfully say the others were emailed.
+        $this->sendOrderTicketsToPurchaser($order, $event, attendeesAlsoEmailed: true);
 
         if ($order->getIsManuallyCreated() || !$event->getEventSettings()->getNotifyOrganizerOfNewOrders()) {
             return;
@@ -147,11 +156,16 @@ class SendOrderDetailsService
      * Send the purchaser a consolidated tickets email (inline QR per attendee + multi-ticket PDF).
      *
      * Skips when the order has no ACTIVE attendees, since the PDF service requires at least one.
+     *
+     * $attendeesAlsoEmailed must only be true when the caller is also dispatching
+     * the per-attendee emails in the same flow — the resend-to-purchaser paths
+     * leave it false so the email doesn't falsely claim the others were emailed.
      */
     public function sendOrderTicketsToPurchaser(
         OrderDomainObject $order,
         EventDomainObject $event,
         bool              $isReminder = false,
+        bool              $attendeesAlsoEmailed = false,
     ): void
     {
         if (!$this->orderHasActiveAttendees($order)) {
@@ -167,6 +181,7 @@ class SendOrderDetailsService
                 eventSettings: $event->getEventSettings(),
                 organizer: $event->getOrganizer(),
                 isReminder: $isReminder,
+                attendeesAlsoEmailed: $attendeesAlsoEmailed,
             ));
     }
 
