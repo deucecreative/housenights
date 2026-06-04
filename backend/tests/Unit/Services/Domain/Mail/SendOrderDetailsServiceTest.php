@@ -111,8 +111,11 @@ class SendOrderDetailsServiceTest extends TestCase
     public function test_sends_attendee_email_to_awaiting_payment_attendees_on_offline_orders(): void
     {
         // Offline-payment order: the order is awaiting payment and attendees are
-        // AWAITING_PAYMENT, not yet ACTIVE. They must still get their ticket
-        // (with the pending-payment banner) — the filter only excludes CANCELLED.
+        // AWAITING_PAYMENT, not yet ACTIVE. The consolidated OrderTicketsMail is
+        // gated out (no ACTIVE attendees), so EVERY attendee — including the
+        // purchaser-attendee — must get their own AttendeeTicketMail (with the
+        // pending-payment banner). The purchaser is only deduped when the
+        // consolidated email actually goes out.
         $order = $this->buildOrder('buyer@example.com', [
             ['buyer@example.com', AttendeeStatus::AWAITING_PAYMENT->name],
             ['guest@example.com', AttendeeStatus::AWAITING_PAYMENT->name],
@@ -123,7 +126,7 @@ class SendOrderDetailsServiceTest extends TestCase
         $sentTo = [];
         $this->sendAttendeeTicketService
             ->shouldReceive('send')
-            ->once()
+            ->twice()
             ->withArgs(function ($ord, AttendeeDomainObject $attendee) use ($order, &$sentTo) {
                 $sentTo[] = $attendee->getEmail();
                 return $ord === $order;
@@ -131,7 +134,33 @@ class SendOrderDetailsServiceTest extends TestCase
 
         $this->service->sendOrderSummaryAndTicketEmails($order);
 
-        $this->assertSame(['guest@example.com'], $sentTo);
+        $this->assertSame(['buyer@example.com', 'guest@example.com'], $sentTo);
+    }
+
+    public function test_sole_purchaser_attendee_still_gets_ticket_on_offline_orders(): void
+    {
+        // The common case: a single-attendee offline-payment order where the
+        // buyer is the attendee. The consolidated email can't carry their ticket
+        // (no ACTIVE attendees), so the per-attendee email must still be sent —
+        // otherwise they receive no ticket at all.
+        $order = $this->buildOrder('buyer@example.com', [
+            ['buyer@example.com', AttendeeStatus::AWAITING_PAYMENT->name],
+        ], OrderStatus::AWAITING_OFFLINE_PAYMENT->name);
+
+        $this->primeMailFlow($order);
+
+        $sentTo = [];
+        $this->sendAttendeeTicketService
+            ->shouldReceive('send')
+            ->once()
+            ->withArgs(function ($ord, AttendeeDomainObject $attendee) use (&$sentTo) {
+                $sentTo[] = $attendee->getEmail();
+                return true;
+            });
+
+        $this->service->sendOrderSummaryAndTicketEmails($order);
+
+        $this->assertSame(['buyer@example.com'], $sentTo);
     }
 
     /**

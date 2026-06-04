@@ -95,11 +95,12 @@ class SendOrderDetailsService
     /**
      * Send the individual ticket email to each attendee.
      *
-     * The purchaser is seeded into the dedupe set up front so that an attendee
-     * sharing the purchaser's email is skipped — they already receive the
-     * consolidated OrderTicketsMail. This mirrors SendEventReminderJob, which
-     * excludes the purchaser from the per-attendee emails. Comparison is
-     * case-insensitive, also matching the reminder job.
+     * When the consolidated OrderTicketsMail is being sent (the order has ACTIVE
+     * attendees), the purchaser is seeded into the dedupe set so an attendee
+     * sharing their email is skipped — they already receive that consolidated
+     * email. This mirrors SendEventReminderJob, which excludes the purchaser from
+     * the per-attendee emails. Comparison is case-insensitive, also matching the
+     * reminder job.
      *
      * CANCELLED attendees are skipped so they don't receive a ticket. We must
      * NOT restrict to ACTIVE only: on offline-payment orders this flow runs while
@@ -111,7 +112,15 @@ class SendOrderDetailsService
      */
     private function sendAttendeeTicketEmails(OrderDomainObject $order, EventDomainObject $event): void
     {
-        $sentEmails = [strtolower((string) $order->getEmail())];
+        // Only skip the purchaser when the consolidated OrderTicketsMail will
+        // actually be sent — which is exactly when the order has ACTIVE attendees
+        // (see sendOrderTicketsToPurchaser). On offline-payment orders every
+        // attendee is AWAITING_PAYMENT, the consolidated email is gated out, so a
+        // purchaser-attendee must still receive their own AttendeeTicketMail
+        // (with the pending-payment banner) rather than be deduped into nothing.
+        $sentEmails = $this->orderHasActiveAttendees($order)
+            ? [strtolower((string) $order->getEmail())]
+            : [];
         foreach ($order->getAttendees() as $attendee) {
             if ($attendee->getStatus() === AttendeeStatus::CANCELLED->name) {
                 continue;
