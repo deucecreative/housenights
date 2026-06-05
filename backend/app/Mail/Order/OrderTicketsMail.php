@@ -10,6 +10,7 @@ use HiEvents\DomainObjects\OrganizerDomainObject;
 use HiEvents\DomainObjects\Status\AttendeeStatus;
 use HiEvents\Helper\Url;
 use HiEvents\Mail\BaseMail;
+use HiEvents\Services\Domain\Event\GenerateEventIcsService;
 use HiEvents\Services\Domain\Order\GenerateOrderTicketsPDFService;
 use HiEvents\Services\Domain\QrCode\QrCodeService;
 use HiEvents\Services\Domain\Wallet\GoogleWalletPassService;
@@ -34,6 +35,13 @@ class OrderTicketsMail extends BaseMail
         private readonly EventSettingDomainObject $eventSettings,
         private readonly OrganizerDomainObject    $organizer,
         private readonly bool                     $isReminder = false,
+        /**
+         * Whether the per-attendee ticket emails are also being dispatched as
+         * part of this send. Only the initial-order and reminder flows fan those
+         * out; the resend-to-purchaser paths do not. Defaults to false so the
+         * "other attendees were also emailed" line is never claimed falsely.
+         */
+        private readonly bool                     $attendeesAlsoEmailed = false,
     )
     {
         parent::__construct();
@@ -107,6 +115,8 @@ class OrderTicketsMail extends BaseMail
                 'qrFilenames' => $qrFilenames,
                 'attendeeTicketUrls' => $attendeeTicketUrls,
                 'googleWalletUrls' => $googleWalletUrls,
+                'purchaserIsAttendee' => $this->purchaserIsAttendee($activeAttendees),
+                'otherAttendeesEmailed' => $this->attendeesAlsoEmailed && $this->hasOtherAttendees($activeAttendees),
                 'isReminder' => $this->isReminder,
             ],
         );
@@ -114,12 +124,49 @@ class OrderTicketsMail extends BaseMail
 
     public function attachments(): array
     {
+        $calendar = app(GenerateEventIcsService::class)->generate(
+            $this->event,
+            $this->eventSettings,
+            $this->organizer,
+            'event-order-' . $this->order->getId(),
+        );
+
         return [
             Attachment::fromData(
                 fn() => app(GenerateOrderTicketsPDFService::class)->generate($this->order, $this->event),
                 'tickets.pdf',
             )->withMime('application/pdf'),
+            Attachment::fromData(static fn() => $calendar, 'event.ics')
+                ->withMime('text/calendar'),
         ];
+    }
+
+    /**
+     * Whether any active attendee has an email that differs from the purchaser's.
+     * Drives the "the other attendees have also been emailed their own ticket"
+     * line in the template — which must not show for a solo / single-email order.
+     */
+    private function hasOtherAttendees(Collection $activeAttendees): bool
+    {
+        $purchaserEmail = strtolower((string) $this->order->getEmail());
+
+        return $activeAttendees->contains(
+            fn(AttendeeDomainObject $attendee) => strtolower((string) $attendee->getEmail()) !== $purchaserEmail,
+        );
+    }
+
+    /**
+     * Whether the purchaser is themselves one of the active attendees. Gates the
+     * "including your own" phrasing — false for gift / buy-for-others orders where
+     * the purchaser holds no ticket of their own.
+     */
+    private function purchaserIsAttendee(Collection $activeAttendees): bool
+    {
+        $purchaserEmail = strtolower((string) $this->order->getEmail());
+
+        return $activeAttendees->contains(
+            fn(AttendeeDomainObject $attendee) => strtolower((string) $attendee->getEmail()) === $purchaserEmail,
+        );
     }
 
     /**

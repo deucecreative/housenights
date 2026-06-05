@@ -105,6 +105,7 @@ class SendEventReminderJob implements ShouldQueue
                                 eventSettings: $eventSettings,
                                 organizer: $organizer,
                                 isReminder: true,
+                                attendeesAlsoEmailed: true,
                             ));
 
                         $orderRepository->updateWhere(

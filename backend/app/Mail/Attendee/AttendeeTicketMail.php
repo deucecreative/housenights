@@ -2,25 +2,22 @@
 
 namespace HiEvents\Mail\Attendee;
 
-use Carbon\Carbon;
 use HiEvents\DomainObjects\AttendeeDomainObject;
 use HiEvents\DomainObjects\EventDomainObject;
 use HiEvents\DomainObjects\EventSettingDomainObject;
 use HiEvents\DomainObjects\OrderDomainObject;
 use HiEvents\DomainObjects\OrganizerDomainObject;
-use HiEvents\Helper\StringHelper;
 use HiEvents\Helper\Url;
 use HiEvents\Mail\BaseMail;
 use HiEvents\Services\Domain\Attendee\GenerateAttendeeTicketPDFService;
 use HiEvents\Services\Domain\Email\DTO\RenderedEmailTemplateDTO;
+use HiEvents\Services\Domain\Event\GenerateEventIcsService;
 use HiEvents\Services\Domain\QrCode\QrCodeService;
 use HiEvents\Services\Domain\Wallet\GoogleWalletPassService;
 use Illuminate\Mail\Mailables\Attachment;
 use Illuminate\Mail\Mailables\Content;
 use Illuminate\Mail\Mailables\Envelope;
 use Illuminate\Support\Str;
-use Spatie\IcalendarGenerator\Components\Calendar;
-use Spatie\IcalendarGenerator\Components\Event;
 use Throwable;
 
 /**
@@ -128,33 +125,14 @@ class AttendeeTicketMail extends BaseMail
 
     public function attachments(): array
     {
-        $startDateTime = Carbon::parse($this->event->getStartDate(), $this->event->getTimezone());
-        $endDateTime = $this->event->getEndDate() ? Carbon::parse($this->event->getEndDate(), $this->event->getTimezone()) : null;
+        $calendar = app(GenerateEventIcsService::class)->generate(
+            $this->event,
+            $this->eventSettings,
+            $this->organizer,
+            'event-' . $this->attendee->getId(),
+        );
 
-        $event = Event::create()
-            ->name($this->event->getTitle())
-            ->uniqueIdentifier('event-' . $this->attendee->getId())
-            ->startsAt($startDateTime)
-            ->url($this->event->getEventUrl())
-            ->organizer($this->organizer->getEmail(), $this->organizer->getName());
-
-        if ($this->event->getDescription()) {
-            $event->description(StringHelper::previewFromHtml($this->event->getDescription()));
-        }
-
-        if ($this->eventSettings->getLocationDetails()) {
-            $event->address($this->eventSettings->getAddressString());
-        }
-
-        if ($endDateTime) {
-            $event->endsAt($endDateTime);
-        }
-
-        $calendar = Calendar::create()
-            ->event($event)
-            ->get();
-
-        $attachments = [
+        return [
             Attachment::fromData(static fn() => $calendar, 'event.ics')
                 ->withMime('text/calendar'),
             Attachment::fromData(
@@ -163,8 +141,6 @@ class AttendeeTicketMail extends BaseMail
                 'ticket.pdf'
             )->withMime('application/pdf'),
         ];
-
-        return $attachments;
     }
 
     /**
