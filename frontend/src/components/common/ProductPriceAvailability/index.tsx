@@ -4,13 +4,17 @@ import {Tooltip} from "@mantine/core";
 import {prettyDate, relativeDate} from "../../../utilites/dates.ts";
 import {IconInfoCircle} from "@tabler/icons-react";
 
-const ProductPriceSaleDateMessage = ({price, event}: { price: ProductPrice, event: Event }) => {
+const ProductPriceSaleDateMessage = ({price, event, showSoldOutWhenSalesEnded}: {
+    price: ProductPrice,
+    event: Event,
+    showSoldOutWhenSalesEnded?: boolean
+}) => {
     if (price.is_sold_out) {
         return t`Sold out`;
     }
 
     if (price.is_after_sale_end_date) {
-        return t`Sales ended`;
+        return showSoldOutWhenSalesEnded ? t`Sold out` : t`Sales ended`;
     }
 
     if (price.is_before_sale_start_date) {
@@ -32,7 +36,7 @@ export const ProductAvailabilityMessage = ({product, event}: { product: Product,
         return t`Sold out`;
     }
     if (product.is_after_sale_end_date) {
-        return t`Sales ended`;
+        return product.show_sold_out_when_sales_ended ? t`Sold out` : t`Sales ended`;
     }
     if (product.is_before_sale_start_date) {
         return (
@@ -57,7 +61,8 @@ interface ProductAndPriceAvailabilityProps {
 export const ProductPriceAvailability = ({product, price, event}: ProductAndPriceAvailabilityProps) => {
 
     if (product.type === 'TIERED') {
-        return <ProductPriceSaleDateMessage price={price} event={event}/>
+        return <ProductPriceSaleDateMessage price={price} event={event}
+                                            showSoldOutWhenSalesEnded={product.show_sold_out_when_sales_ended}/>
     }
 
     return <ProductAvailabilityMessage product={product} event={event}/>

@@ -36,6 +36,7 @@ class UpsertProductRequest extends BaseRequest
             'hide_when_sold_out' => 'boolean',
             'start_collapsed' => 'boolean',
             'show_quantity_remaining' => 'boolean',
+            'show_sold_out_when_sales_ended' => 'boolean',
             'is_hidden_without_promo_code' => 'boolean',
             'affiliate_link_visibility' => 'in:SHOW_ALWAYS,AFFILIATE_ONLY,NORMAL_ONLY',
             'type' => ['required', Rule::in(ProductPriceType::valuesArray())],

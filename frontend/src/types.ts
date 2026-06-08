@@ -553,6 +553,7 @@ export interface Product {
     hide_when_sold_out?: boolean;
     start_collapsed?: boolean;
     show_quantity_remaining?: boolean;
+    show_sold_out_when_sales_ended?: boolean;
     quantity_available?: number;
     status?: ProductStatus;
     is_sold_out?: boolean;

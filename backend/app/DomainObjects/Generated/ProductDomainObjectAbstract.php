@@ -25,6 +25,7 @@ abstract class ProductDomainObjectAbstract extends \HiEvents\DomainObjects\Abstr
     final public const HIDE_AFTER_SALE_END_DATE = 'hide_after_sale_end_date';
     final public const HIDE_WHEN_SOLD_OUT = 'hide_when_sold_out';
     final public const SHOW_QUANTITY_REMAINING = 'show_quantity_remaining';
+    final public const SHOW_SOLD_OUT_WHEN_SALES_ENDED = 'show_sold_out_when_sales_ended';
     final public const IS_HIDDEN_WITHOUT_PROMO_CODE = 'is_hidden_without_promo_code';
     final public const ORDER = 'order';
     final public const CREATED_AT = 'created_at';
@@ -54,6 +55,7 @@ abstract class ProductDomainObjectAbstract extends \HiEvents\DomainObjects\Abstr
     protected bool $hide_after_sale_end_date = false;
     protected bool $hide_when_sold_out = false;
     protected bool $show_quantity_remaining = false;
+    protected bool $show_sold_out_when_sales_ended = false;
     protected bool $is_hidden_without_promo_code = false;
     protected int $order;
     protected string $created_at;
@@ -86,6 +88,7 @@ abstract class ProductDomainObjectAbstract extends \HiEvents\DomainObjects\Abstr
                     'hide_after_sale_end_date' => $this->hide_after_sale_end_date ?? null,
                     'hide_when_sold_out' => $this->hide_when_sold_out ?? null,
                     'show_quantity_remaining' => $this->show_quantity_remaining ?? null,
+                    'show_sold_out_when_sales_ended' => $this->show_sold_out_when_sales_ended ?? null,
                     'is_hidden_without_promo_code' => $this->is_hidden_without_promo_code ?? null,
                     'order' => $this->order ?? null,
                     'created_at' => $this->created_at ?? null,
@@ -265,6 +268,17 @@ abstract class ProductDomainObjectAbstract extends \HiEvents\DomainObjects\Abstr
     public function getShowQuantityRemaining(): bool
     {
         return $this->show_quantity_remaining;
+    }
+
+    public function setShowSoldOutWhenSalesEnded(bool $show_sold_out_when_sales_ended): self
+    {
+        $this->show_sold_out_when_sales_ended = $show_sold_out_when_sales_ended;
+        return $this;
+    }
+
+    public function getShowSoldOutWhenSalesEnded(): bool
+    {
+        return $this->show_sold_out_when_sales_ended;
     }
 
     public function setIsHiddenWithoutPromoCode(bool $is_hidden_without_promo_code): self

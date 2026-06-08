@@ -475,6 +475,8 @@ export const ProductForm = ({ form, product }: ProductFormProps) => {
                                 label={t`Show available product quantity`} />
                             <Switch {...form.getInputProps('hide_when_sold_out', { type: 'checkbox' })}
                                 label={t`Hide product when sold out`} />
+                            <Switch {...form.getInputProps('show_sold_out_when_sales_ended', { type: 'checkbox' })}
+                                label={t`Show "Sold out" instead of "Sales ended" when sales have ended`} />
                             <Switch
                                 description={<>{t`You can create a promo code which targets this product on the`} <NavLink
                                     target={'_blank'}

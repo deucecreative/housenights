@@ -28,6 +28,7 @@ class ProductResourcePublic extends JsonResource
             'is_before_sale_start_date' => $this->isBeforeSaleStartDate(),
             'is_after_sale_end_date' => $this->isAfterSaleEndDate(),
             'start_collapsed' => $this->getStartCollapsed(),
+            'show_sold_out_when_sales_ended' => $this->getShowSoldOutWhenSalesEnded(),
             $this->mergeWhen($this->getShowQuantityRemaining(), fn() => [
                 'quantity_available' => $this->getQuantityAvailable(),
             ]),

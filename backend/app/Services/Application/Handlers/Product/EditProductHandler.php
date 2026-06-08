@@ -110,6 +110,7 @@ class EditProductHandler
                 'hide_after_sale_end_date' => $productsData->hide_after_sale_end_date,
                 'hide_when_sold_out' => $productsData->hide_when_sold_out,
                 'show_quantity_remaining' => $productsData->show_quantity_remaining,
+                'show_sold_out_when_sales_ended' => $productsData->show_sold_out_when_sales_ended,
                 'is_hidden_without_promo_code' => $productsData->is_hidden_without_promo_code,
                 'affiliate_link_visibility' => $productsData->affiliate_link_visibility,
                 'product_type' => $productsData->product_type->name,
