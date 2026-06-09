@@ -35,6 +35,7 @@ class UpsertProductDTO extends BaseDTO
         public readonly ?bool            $hide_when_sold_out = false,
         public readonly ?bool            $start_collapsed = false,
         public readonly ?bool            $show_quantity_remaining = false,
+        public readonly ?bool            $show_sold_out_when_sales_ended = false,
         public readonly ?bool            $is_hidden_without_promo_code = false,
         public readonly ?string          $affiliate_link_visibility = 'SHOW_ALWAYS',
         public readonly ?array           $tax_and_fee_ids = [],

@@ -58,6 +58,7 @@ class CreateProductHandler
                 ->setHideAfterSaleEndDate($productsData->hide_after_sale_end_date)
                 ->setHideWhenSoldOut($productsData->hide_when_sold_out)
                 ->setShowQuantityRemaining($productsData->show_quantity_remaining)
+                ->setShowSoldOutWhenSalesEnded($productsData->show_sold_out_when_sales_ended)
                 ->setIsHiddenWithoutPromoCode($productsData->is_hidden_without_promo_code)
                 ->setAffiliateLinkVisibility($productsData->affiliate_link_visibility)
                 ->setIsHighlighted($productsData->is_highlighted ?? false)

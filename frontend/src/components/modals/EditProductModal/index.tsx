@@ -63,6 +63,7 @@ export const EditProductModal = ({ onClose, productId }: GenericModalProps & { p
             hide_before_sale_start_date: product.hide_before_sale_start_date,
             hide_after_sale_end_date: product.hide_after_sale_end_date,
             show_quantity_remaining: product.show_quantity_remaining,
+            show_sold_out_when_sales_ended: product.show_sold_out_when_sales_ended,
             start_collapsed: product.start_collapsed,
             hide_when_sold_out: product.hide_when_sold_out,
             is_hidden_without_promo_code: product.is_hidden_without_promo_code,

@@ -30,6 +30,7 @@ export const CreateProductModal = ({ onClose, selectedCategoryId = undefined }: 
             hide_before_sale_start_date: false,
             hide_after_sale_end_date: false,
             show_quantity_remaining: false,
+            show_sold_out_when_sales_ended: false,
             hide_when_sold_out: false,
             is_hidden_without_promo_code: false,
             affiliate_link_visibility: 'SHOW_ALWAYS',
