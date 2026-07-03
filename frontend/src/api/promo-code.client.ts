@@ -32,6 +32,13 @@ export const promoCodeClient = {
         const response = await api.delete<GenericDataResponse<PromoCode>>(`events/${eventId}/promo-codes/${promoCodeId}`);
         return response.data;
     },
+    exportPromoCodes: async (eventId: IdParam): Promise<Blob> => {
+        const response = await api.post(`events/${eventId}/promo-codes/export`, {}, {
+            responseType: 'blob',
+        });
+
+        return new Blob([response.data]);
+    },
 }
 
 export const promoCodeClientPublic = {

@@ -1,3 +1,4 @@
+import {useState} from "react";
 import {useParams} from "react-router";
 import {useGetEvent} from "../../../queries/useGetEvent.ts";
 import {PageTitle} from "../../common/PageTitle";
@@ -7,14 +8,17 @@ import {SearchBarWrapper} from "../../common/SearchBar";
 import {useDisclosure} from "@mantine/hooks";
 import {Pagination} from "../../common/Pagination";
 import {Button} from "@mantine/core";
-import {IconPlus} from "@tabler/icons-react";
+import {IconDownload, IconPlus} from "@tabler/icons-react";
 import {ToolBar} from "../../common/ToolBar";
 import {useGetEventPromoCodes} from "../../../queries/useGetEventPromoCodes.ts";
 import {CreatePromoCodeModal} from "../../modals/CreatePromoCodeModal";
 import {useFilterQueryParamSync} from "../../../hooks/useFilterQueryParamSync.ts";
-import {QueryFilters} from "../../../types.ts";
+import {IdParam, QueryFilters} from "../../../types.ts";
 import {TableSkeleton} from "../../common/TableSkeleton";
 import {t} from "@lingui/macro";
+import {promoCodeClient} from "../../../api/promo-code.client.ts";
+import {downloadBinary} from "../../../utilites/download.ts";
+import {withLoadingNotification} from "../../../utilites/withLoadingNotification.tsx";
 
 export const PromoCodes = () => {
     const {eventId} = useParams();
@@ -24,6 +28,31 @@ export const PromoCodes = () => {
     const promoCodes = promoCodesQuery?.data?.data;
     const pagination = promoCodesQuery?.data?.meta;
     const [createModalOpen, {open: openCreateModal, close: closeCreateModal}] = useDisclosure(false);
+    const [downloadPending, setDownloadPending] = useState(false);
+
+    const handleExport = async (eventId: IdParam) => {
+        await withLoadingNotification(async () => {
+                setDownloadPending(true);
+                const blob = await promoCodeClient.exportPromoCodes(eventId);
+                downloadBinary(blob, 'promo-codes.xlsx');
+            },
+            {
+                loading: {
+                    title: t`Exporting Promo Codes`,
+                    message: t`Please wait while we prepare your promo codes for export...`
+                },
+                success: {
+                    title: t`Promo Codes Exported`,
+                    message: t`Your promo codes have been exported successfully.`,
+                    onRun: () => setDownloadPending(false)
+                },
+                error: {
+                    title: t`Failed to export promo codes`,
+                    message: t`Please try again.`,
+                    onRun: () => setDownloadPending(false)
+                }
+            });
+    };
 
     return (
         <>
@@ -39,8 +68,18 @@ export const PromoCodes = () => {
                         pagination={pagination}
                     />
                 )}>
+                    <Button
+                        onClick={() => handleExport(eventId)}
+                        rightSection={<IconDownload size={14}/>}
+                        color={'green'}
+                        variant={'light'}
+                        loading={downloadPending}
+                        size={'sm'}
+                    >
+                        {t`Export`}
+                    </Button>
                     <Button color={'green'} size={'sm'} onClick={openCreateModal} rightSection={<IconPlus/>}>
-                        Create
+                        {t`Create`}
                     </Button>
 
                 </ToolBar>

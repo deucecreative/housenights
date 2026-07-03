@@ -134,6 +134,7 @@ use HiEvents\Http\Actions\Products\GetProductsAction;
 use HiEvents\Http\Actions\Products\SortProductsAction;
 use HiEvents\Http\Actions\PromoCodes\CreatePromoCodeAction;
 use HiEvents\Http\Actions\PromoCodes\DeletePromoCodeAction;
+use HiEvents\Http\Actions\PromoCodes\ExportPromoCodesAction;
 use HiEvents\Http\Actions\PromoCodes\GetPromoCodeAction;
 use HiEvents\Http\Actions\PromoCodes\GetPromoCodePublic;
 use HiEvents\Http\Actions\PromoCodes\GetPromoCodesAction;
@@ -371,6 +372,7 @@ $router->middleware(['auth:api'])->group(
         $router->get('/events/{event_id}/promo-codes', GetPromoCodesAction::class);
         $router->get('/events/{event_id}/promo-codes/{promo_code_id}', GetPromoCodeAction::class);
         $router->delete('/events/{event_id}/promo-codes/{promo_code_id}', DeletePromoCodeAction::class);
+        $router->post('/events/{event_id}/promo-codes/export', ExportPromoCodesAction::class);
 
         // Affiliates
         $router->post('/events/{event_id}/affiliates', CreateAffiliateAction::class);
