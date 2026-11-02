@@ -101,5 +101,8 @@
     "vite": "^5.4.19",
     "vite-bundle-visualizer": "^1.2.1",
     "vite-plugin-copy": "^0.1.6"
+  },
+  "resolutions": {
+    "decode-uri-component": "^0.5.1"
   }
 }

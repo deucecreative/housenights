@@ -1,4 +1,4 @@
-FROM laravelphp/vapor:php83
+FROM laravelphp/vapor:php84
 
 # Install ImageMagick with WebP support
 # The imagemagick-webp package provides WebP delegate support
