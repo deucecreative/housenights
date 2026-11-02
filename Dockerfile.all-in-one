@@ -10,9 +10,13 @@ COPY ./frontend .
 
 RUN yarn install && yarn build
 
-FROM serversideup/php:beta-8.3.2-fpm-alpine
+FROM serversideup/php:8.4-fpm-alpine
 
 ENV PHP_OPCACHE_ENABLE=1
+
+# The stable serversideup images run as www-data by default; this image
+# installs packages and runs supervisord, nginx and php-fpm as root.
+USER root
 
 RUN install-php-extensions intl imagick gd
 
